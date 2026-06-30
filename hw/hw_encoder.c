@@ -4,8 +4,8 @@
  * If one encoder count decreases while the car moves forward, flip only that
  * motor's polarity between 1 and -1.
  */
-#define LEFT_ENCODER_POLARITY  (1)
-#define RIGHT_ENCODER_POLARITY (-1)
+#define LEFT_ENCODER_POLARITY  (-1)
+#define RIGHT_ENCODER_POLARITY (1)
 
 static volatile int32_t gLeftEncoderCount;
 static volatile int32_t gRightEncoderCount;

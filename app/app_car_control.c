@@ -1,31 +1,37 @@
 #include "app_car_control.h"
-#include "bsp_tb6612.h"
-#include "hw_encoder.h"
-#include "hw_uart.h"
-#include "mid_pid.h"
+#include "app_line_follow.h"
+#include "app_motion_control.h"
+#include "bsp/bsp_tb6612.h"
+#include "hw/hw_encoder.h"
+#include "hw/hw_uart.h"
+#include "mid/mid_pid.h"
 #include "ti_msp_dl_config.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#define TELEMETRY_BUFFER_SIZE (128U)
+#define TELEMETRY_BUFFER_SIZE (256U)
 #define FIRMWARE_VERSION "diag-20260630-refactor"
 
 #define MIN_DUTY_PERCENT (0.0f)
-#define MIN_TARGET_SPEED_COUNTS (0.0f)
-#define MIN_RUNNING_TARGET_SPEED_COUNTS (1.0f)
+#define MIN_TARGET_SPEED_COUNTS (-60.0f)
+#define MIN_RUNNING_TARGET_SPEED_COUNTS (0.0f)
 #define MAX_TARGET_SPEED_COUNTS (60.0f)
-#define SPEED_LOOP_START_DUTY_PERCENT (8.0f)
-#define SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT (0.7f)
+#define SPEED_LOOP_START_DUTY_PERCENT (5.0f)
+#define SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT (0.35f)
 #define MAX_DUTY_PERCENT (85.0f)
-#define TARGET_SPEED_RAMP_STEP_COUNTS (0.5f)
+#define TARGET_SPEED_RAMP_STEP_COUNTS (0.25f)
 #define MANUAL_DUTY_RAMP_STEP_PERCENT (0.5f)
 #define MANUAL_MOTOR_DEFAULT_TIMEOUT_MS (2000U)
 #define MANUAL_MOTOR_MAX_TIMEOUT_MS (10000U)
 #define PID_INTEGRAL_LIMIT (200.0f)
 #define PID_OUTPUT_LIMIT (85.0f)
 #define SPEED_FILTER_ALPHA (0.25f)
+#define LINE_LOST_SPEED_SCALE (0.35f)
+#define LINE_FOLLOW_BASE_COUNTS (10.0f)
+#define LINE_FOLLOW_MIN_FORWARD_COUNTS (0.0f)
+#define LINE_FOLLOW_MAX_COUNTS (14.0f)
 
 static PID gLeftSpeedPid;
 static PID gRightSpeedPid;
@@ -46,6 +52,8 @@ static int32_t gLastRightDelta;
 static int32_t gLastPidError;
 static float gLastLeftOutput;
 static float gLastRightOutput;
+static float gLastLeftTargetSpeed;
+static float gLastRightTargetSpeed;
 static float gFilteredLeftSpeed;
 static float gFilteredRightSpeed;
 
@@ -54,6 +62,7 @@ static void update_speed_target_ramp(void);
 static void update_manual_motor_ramp(uint32_t nowMs);
 static uint32_t duty_percent_to_speed(float dutyPercent);
 static float clamp_speed_target_command(float speedCounts);
+static float clamp_line_follow_speed(float speedCounts);
 static float clamp_motor_test_duty_command(float dutyPercent);
 static float apply_speed_loop_start_duty(float pidOutput, float targetSpeed);
 static float lowpass_filter(float previous, float current);
@@ -68,7 +77,7 @@ static char *normalize_command(char *command);
 static void send_unknown_command(const char *command);
 static int32_t scale_float_100(float value);
 static int32_t scale_float_1000(float value);
-static int32_t abs_i32(int32_t value);
+static float abs_float(float value);
 
 void app_car_control_init(void)
 {
@@ -76,6 +85,8 @@ void app_car_control_init(void)
         PID_OUTPUT_LIMIT);
     pid_init(&gRightSpeedPid, 1.0f, 0.02f, 0.0f, PID_INTEGRAL_LIMIT,
         PID_OUTPUT_LIMIT);
+    line_follow_init();
+    motion_control_init();
 
     DL_GPIO_setPins(GPIO_STATUS_LED_PORT,
         GPIO_STATUS_LED_PB22_LED_PIN | GPIO_STATUS_LED_PB26_LED_PIN |
@@ -104,22 +115,61 @@ void app_car_control_update(uint32_t nowMs)
 
     update_speed_target_ramp();
 
-    int32_t leftSpeed = abs_i32(leftDelta);
-    int32_t rightSpeed = abs_i32(rightDelta);
+    int32_t leftSpeed = leftDelta;
+    int32_t rightSpeed = rightDelta;
     gFilteredLeftSpeed = lowpass_filter(gFilteredLeftSpeed, (float) leftSpeed);
     gFilteredRightSpeed = lowpass_filter(gFilteredRightSpeed, (float) rightSpeed);
 
     gLastLeftDelta = scale_float_100(gFilteredLeftSpeed);
     gLastRightDelta = scale_float_100(gFilteredRightSpeed);
     gLastPidError = gLastLeftDelta - gLastRightDelta;
-    gLastLeftOutput = pid_calc(&gLeftSpeedPid, gSpeedTargetCounts,
+    float leftTargetSpeed = gSpeedTargetCounts;
+    float rightTargetSpeed = gSpeedTargetCounts;
+    float lineTurnAdjust = line_follow_get_turn_adjust(nowMs);
+    bool lineAutoDrive = false;
+
+    motion_control_update(counts, &leftTargetSpeed, &rightTargetSpeed);
+
+    if (line_follow_is_active(nowMs) && !motion_control_is_active() &&
+        (leftTargetSpeed == 0.0f) && (rightTargetSpeed == 0.0f)) {
+        leftTargetSpeed = LINE_FOLLOW_BASE_COUNTS;
+        rightTargetSpeed = LINE_FOLLOW_BASE_COUNTS;
+        lineAutoDrive = true;
+    }
+
+    if (line_follow_is_valid(nowMs)) {
+        leftTargetSpeed += lineTurnAdjust;
+        rightTargetSpeed -= lineTurnAdjust;
+        if (!motion_control_is_active()) {
+            if (leftTargetSpeed < LINE_FOLLOW_MIN_FORWARD_COUNTS) {
+                leftTargetSpeed = LINE_FOLLOW_MIN_FORWARD_COUNTS;
+            }
+            if (rightTargetSpeed < LINE_FOLLOW_MIN_FORWARD_COUNTS) {
+                rightTargetSpeed = LINE_FOLLOW_MIN_FORWARD_COUNTS;
+            }
+        }
+    } else if (line_follow_is_active(nowMs)) {
+        leftTargetSpeed *= LINE_LOST_SPEED_SCALE;
+        rightTargetSpeed *= LINE_LOST_SPEED_SCALE;
+    }
+
+    leftTargetSpeed = clamp_speed_target_command(leftTargetSpeed);
+    rightTargetSpeed = clamp_speed_target_command(rightTargetSpeed);
+    if (lineAutoDrive) {
+        leftTargetSpeed = clamp_line_follow_speed(leftTargetSpeed);
+        rightTargetSpeed = clamp_line_follow_speed(rightTargetSpeed);
+    }
+    gLastLeftTargetSpeed = leftTargetSpeed;
+    gLastRightTargetSpeed = rightTargetSpeed;
+
+    gLastLeftOutput = pid_calc(&gLeftSpeedPid, leftTargetSpeed,
         gFilteredLeftSpeed);
-    gLastRightOutput = pid_calc(&gRightSpeedPid, gSpeedTargetCounts,
+    gLastRightOutput = pid_calc(&gRightSpeedPid, rightTargetSpeed,
         gFilteredRightSpeed);
     gLastLeftOutput = apply_speed_loop_start_duty(gLastLeftOutput,
-        gSpeedTargetCounts);
+        leftTargetSpeed);
     gLastRightOutput = apply_speed_loop_start_duty(gLastRightOutput,
-        gSpeedTargetCounts);
+        rightTargetSpeed);
 
     set_motor_duty(gLastLeftOutput, gLastRightOutput);
 }
@@ -128,7 +178,13 @@ void app_car_control_process_command(char *command)
 {
     command = normalize_command(command);
 
-    if (strncmp(command, "PID ", 4U) == 0) {
+    if (line_follow_parse_command(command, gLastUpdateMs)) {
+        return;
+    } else if (motion_control_parse_command(command, encoder_get_counts())) {
+        gTargetSpeedCounts = 0.0f;
+        gSpeedTargetCounts = 0.0f;
+        uart_debug_write_string("OK MOTION\r\n");
+    } else if (strncmp(command, "PID ", 4U) == 0) {
         float kp;
         float ki;
         float kd;
@@ -150,6 +206,7 @@ void app_car_control_process_command(char *command)
         float base = strtof(command + 5, NULL);
         base = clamp_speed_target_command(base);
         gManualMotorMode = false;
+        motion_control_init();
         gTargetSpeedCounts = base;
         if (base == 0.0f) {
             gSpeedTargetCounts = 0.0f;
@@ -171,6 +228,7 @@ void app_car_control_process_command(char *command)
             durationMs = MANUAL_MOTOR_MAX_TIMEOUT_MS;
         }
         gManualMotorMode = true;
+        motion_control_init();
         gTargetManualLeftDutyPercent = duty;
         gTargetManualRightDutyPercent = duty;
         gManualPulseStopMs = (durationMs == 0U) ? 0U :
@@ -191,6 +249,7 @@ void app_car_control_process_command(char *command)
                 durationMs = MANUAL_MOTOR_MAX_TIMEOUT_MS;
             }
             gManualMotorMode = true;
+            motion_control_init();
             gTargetManualLeftDutyPercent = leftDuty;
             gTargetManualRightDutyPercent = rightDuty;
             gManualPulseStopMs = (durationMs == 0U) ? 0U :
@@ -211,6 +270,7 @@ void app_car_control_process_command(char *command)
                 durationMs = 2000U;
             }
             gManualMotorMode = true;
+            motion_control_init();
             gTargetManualLeftDutyPercent = duty;
             gTargetManualRightDutyPercent = duty;
             gManualPulseStopMs = gLastUpdateMs + (uint32_t) durationMs;
@@ -230,6 +290,7 @@ void app_car_control_process_command(char *command)
                                                     "OK TELE 0\r\n");
     } else if (strcmp(command, "STOP") == 0) {
         gManualMotorMode = false;
+        motion_control_init();
         gTargetSpeedCounts = 0.0f;
         gSpeedTargetCounts = 0.0f;
         gManualLeftDutyPercent = 0.0f;
@@ -265,16 +326,24 @@ void app_car_control_send_telemetry(void)
 
     counts = encoder_get_counts();
     length = snprintf(message, sizeof(message),
-        "L=%ld R=%ld LD=%ld RD=%ld ERR=%ld OUT=%ld LO=%ld RO=%ld KP=%ld KI=%ld KD=%ld BASE=%ld\r\n",
+        "L=%ld R=%ld LD=%ld RD=%ld ERR=%ld OUT=%ld LO=%ld RO=%ld LT=%ld RT=%ld KP=%ld KI=%ld KD=%ld BASE=%ld LINE=%ld LV=%d MM=%ld DG=%ld MO=%ld MB=%d\r\n",
         (long) counts.left_count, (long) counts.right_count,
         (long) gLastLeftDelta, (long) gLastRightDelta, (long) gLastPidError,
         (long) scale_float_100(gLastRightOutput - gLastLeftOutput),
         (long) scale_float_100(gLastLeftOutput),
         (long) scale_float_100(gLastRightOutput),
+        (long) scale_float_100(gLastLeftTargetSpeed),
+        (long) scale_float_100(gLastRightTargetSpeed),
         (long) scale_float_1000(gLeftSpeedPid.kp),
         (long) scale_float_1000(gLeftSpeedPid.ki),
         (long) scale_float_1000(gLeftSpeedPid.kd),
-        (long) scale_float_100(gSpeedTargetCounts));
+        (long) scale_float_100(gSpeedTargetCounts),
+        (long) line_follow_get_error(),
+        line_follow_is_valid(gLastUpdateMs) ? 1 : 0,
+        (long) motion_control_get_target_mm_s(),
+        (long) motion_control_get_target_deg_s(),
+        (long) motion_control_get_mode(),
+        motion_control_is_busy() ? 1 : 0);
 
     if ((length > 0) && (length < (int) sizeof(message))) {
         uart_debug_write_string(message);
@@ -306,7 +375,7 @@ void app_car_control_toggle_status_led(void)
 
 static void set_motor_duty(float leftDutyPercent, float rightDutyPercent)
 {
-    if ((leftDutyPercent <= 0.0f) && (rightDutyPercent <= 0.0f)) {
+    if ((leftDutyPercent == 0.0f) && (rightDutyPercent == 0.0f)) {
         TB6612_Motor_Stop();
         return;
     }
@@ -315,8 +384,10 @@ static void set_motor_duty(float leftDutyPercent, float rightDutyPercent)
      * Board wiring: TB6612 channel A drives the physical left wheel, and
      * channel B drives the physical right wheel.
      */
-    AO_Control(1U, duty_percent_to_speed(leftDutyPercent));
-    BO_Control(1U, duty_percent_to_speed(rightDutyPercent));
+    AO_Control((leftDutyPercent >= 0.0f) ? 1U : 0U,
+        duty_percent_to_speed(abs_float(leftDutyPercent)));
+    BO_Control((rightDutyPercent >= 0.0f) ? 1U : 0U,
+        duty_percent_to_speed(abs_float(rightDutyPercent)));
 }
 
 static void update_speed_target_ramp(void)
@@ -366,12 +437,27 @@ static float clamp_speed_target_command(float speedCounts)
     if (speedCounts < MIN_TARGET_SPEED_COUNTS) {
         return MIN_TARGET_SPEED_COUNTS;
     }
-    if ((speedCounts > 0.0f) &&
-        (speedCounts < MIN_RUNNING_TARGET_SPEED_COUNTS)) {
+    if ((speedCounts > 0.0f) && (speedCounts < MIN_RUNNING_TARGET_SPEED_COUNTS)) {
         return MIN_RUNNING_TARGET_SPEED_COUNTS;
+    }
+    if ((speedCounts < 0.0f) &&
+        (speedCounts > -MIN_RUNNING_TARGET_SPEED_COUNTS)) {
+        return -MIN_RUNNING_TARGET_SPEED_COUNTS;
     }
     if (speedCounts > MAX_TARGET_SPEED_COUNTS) {
         return MAX_TARGET_SPEED_COUNTS;
+    }
+
+    return speedCounts;
+}
+
+static float clamp_line_follow_speed(float speedCounts)
+{
+    if (speedCounts < 0.0f) {
+        return 0.0f;
+    }
+    if (speedCounts > LINE_FOLLOW_MAX_COUNTS) {
+        return LINE_FOLLOW_MAX_COUNTS;
     }
 
     return speedCounts;
@@ -391,11 +477,17 @@ static float clamp_motor_test_duty_command(float dutyPercent)
 
 static float apply_speed_loop_start_duty(float pidOutput, float targetSpeed)
 {
-    if (targetSpeed <= 0.0f) {
+    if (targetSpeed == 0.0f) {
         return 0.0f;
     }
 
-    return SPEED_LOOP_START_DUTY_PERCENT +
+    if (targetSpeed > 0.0f) {
+        return SPEED_LOOP_START_DUTY_PERCENT +
+            (targetSpeed * SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT) +
+            pidOutput;
+    }
+
+    return -SPEED_LOOP_START_DUTY_PERCENT +
         (targetSpeed * SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT) + pidOutput;
 }
 
@@ -540,7 +632,7 @@ static int32_t scale_float_1000(float value)
     return (int32_t) ((value * 1000.0f) - 0.5f);
 }
 
-static int32_t abs_i32(int32_t value)
+static float abs_float(float value)
 {
-    return (value < 0) ? -value : value;
+    return (value < 0.0f) ? -value : value;
 }

@@ -1,6 +1,6 @@
 # FIXED
 
-hw_encoder.o: ../hw_encoder.c ../hw_encoder.h \
+hw/hw_openmv_uart.o: ../hw/hw_openmv_uart.c ../hw/hw_openmv_uart.h \
  ti_msp_dl_config.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/msp.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/DeviceFamily.h \
@@ -84,7 +84,7 @@ hw_encoder.o: ../hw_encoder.c ../hw_encoder.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_wwdt.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_interrupt.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_systick.h
-../hw_encoder.h:
+../hw/hw_openmv_uart.h:
 ti_msp_dl_config.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/msp.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/DeviceFamily.h:

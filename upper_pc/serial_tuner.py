@@ -14,9 +14,15 @@ except ImportError:
 
 
 BAUD_RATES = ("9600", "19200", "38400", "57600", "115200", "230400", "460800")
-PLOT_KEYS = ("L", "R", "TARGET", "LD", "RD", "ERR", "OUT", "LO", "RO", "KP", "KI", "KD")
+PLOT_KEYS = (
+    "L", "R", "TARGET", "LT", "RT", "LD", "RD", "ERR", "OUT", "LO", "RO",
+    "KP", "KI", "KD",
+)
 KEY_VALUE_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(-?\d+(?:\.\d+)?)")
-SCALE_100_KEYS = {"BASE", "LD", "RD", "ERR", "OUT", "LO", "RO", "ML", "MR", "SPEED", "TARGET"}
+SCALE_100_KEYS = {
+    "BASE", "LT", "RT", "LD", "RD", "ERR", "OUT", "LO", "RO", "ML", "MR",
+    "SPEED", "TARGET",
+}
 SCALE_1000_KEYS = {"KP", "KI", "KD"}
 
 
@@ -251,6 +257,8 @@ class SerialTunerApp:
 
         series = {
             "TARGET": "#d0d7de",
+            "LT": "#8ecae6",
+            "RT": "#ffafcc",
             "LD": "#4cc9f0",
             "RD": "#f72585",
             "ERR": "#f9c74f",

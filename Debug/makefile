@@ -10,14 +10,17 @@ GEN_OPTS__FLAG := @"./device.opt"
 GEN_CMDS__FLAG := -Wl,-l"./device_linker.cmd" 
 
 ORDERED_OBJS += \
-"./app_car_control.o" \
-"./bsp_tb6612.o" \
-"./gpio_toggle_output.o" \
 "./ti_msp_dl_config.o" \
 "./startup_mspm0g350x_ticlang.o" \
-"./hw_encoder.o" \
-"./hw_uart.o" \
-"./mid_pid.o" \
+"./main.o" \
+"./app/app_car_control.o" \
+"./app/app_line_follow.o" \
+"./app/app_motion_control.o" \
+"./bsp/bsp_tb6612.o" \
+"./hw/hw_encoder.o" \
+"./hw/hw_openmv_uart.o" \
+"./hw/hw_uart.o" \
+"./mid/mid_pid.o" \
 $(GEN_CMDS__FLAG) \
 -Wl,-ldevice.cmd.genlibs \
 -Wl,-llibc.a \
@@ -30,7 +33,15 @@ RMDIR := RMDIR /S/Q
 # All of the sources participating in the build are defined here
 -include sources.mk
 -include subdir_vars.mk
+-include app/subdir_vars.mk
+-include bsp/subdir_vars.mk
+-include hw/subdir_vars.mk
+-include mid/subdir_vars.mk
 -include subdir_rules.mk
+-include app/subdir_rules.mk
+-include bsp/subdir_rules.mk
+-include hw/subdir_rules.mk
+-include mid/subdir_rules.mk
 -include objects.mk
 
 ifneq ($(MAKECMDGOALS),clean)
@@ -142,8 +153,8 @@ gpio_toggle_output.out: $(OBJS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "app_car_control.o" "bsp_tb6612.o" "gpio_toggle_output.o" "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "hw_encoder.o" "hw_uart.o" "mid_pid.o" 
-	-$(RM) "app_car_control.d" "bsp_tb6612.d" "gpio_toggle_output.d" "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "hw_encoder.d" "hw_uart.d" "mid_pid.d" 
+	-$(RM) "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "main.o" "app\app_car_control.o" "app\app_line_follow.o" "app\app_motion_control.o" "bsp\bsp_tb6612.o" "hw\hw_encoder.o" "hw\hw_openmv_uart.o" "hw\hw_uart.o" "mid\mid_pid.o" 
+	-$(RM) "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "main.d" "app\app_car_control.d" "app\app_line_follow.d" "app\app_motion_control.d" "bsp\bsp_tb6612.d" "hw\hw_encoder.d" "hw\hw_openmv_uart.d" "hw\hw_uart.d" "mid\mid_pid.d" 
 	-@echo ' '
 
 post-build:

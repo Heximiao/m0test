@@ -9,6 +9,16 @@ It provides:
 - UART0 telemetry and live PID tuning at 115200 8N1.
 - A Python serial tuner in `upper_pc/`.
 
+## Source Layout
+
+| Path | Purpose |
+| --- | --- |
+| `main.c` | Entry point, scheduler, interrupt dispatch |
+| `app/` | Car behavior, line following, motion commands |
+| `bsp/` | Board-level motor driver |
+| `hw/` | Encoder and UART drivers |
+| `mid/` | Reusable control logic such as PID |
+
 ## Current Wiring
 
 | Function | Pin |
@@ -35,10 +45,22 @@ TELE 0|1
 PWM <left_duty_percent> <right_duty_percent> [duration_ms]
 MOTOR <duty_percent> [duration_ms]
 PULSE <duty_percent> <duration_ms>
+DRIVE <linear_mm_s> <angular_deg_s>
+SPEED <linear_mm_s>
+DIST <distance_mm> <linear_mm_s>
+TURN <angle_deg> <angular_deg_s>
+ANGLE <angle_deg> <angular_deg_s>
+MSTOP
 ```
 
 `BASE` sets the shared speed target in encoder counts per 20 ms control period.
-The tuned speed-loop defaults live in `app_car_control.c`.
+The tuned speed-loop defaults live in `app/app_car_control.c`.
+
+The motion commands in `app/app_motion_control.c` wrap the wheel speed PID into
+robot units. The defaults assume MG310 motors, 1:20 reduction, 11 PPR motor
+encoder, two counted encoder edges per motor pulse, 48 mm wheels, and a 120 mm
+wheelbase. Measure the actual wheelbase and encoder counts per wheel revolution
+on the car and update the constants there for accurate distance/angle control.
 
 ## Upper PC Tool
 

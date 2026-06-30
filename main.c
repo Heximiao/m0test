@@ -6,10 +6,11 @@
  * logic, and app_car_control owns the vehicle behavior.
  */
 
-#include "app_car_control.h"
-#include "bsp_tb6612.h"
-#include "hw_encoder.h"
-#include "hw_uart.h"
+#include "app/app_car_control.h"
+#include "bsp/bsp_tb6612.h"
+#include "hw/hw_encoder.h"
+#include "hw/hw_openmv_uart.h"
+#include "hw/hw_uart.h"
 #include "ti_msp_dl_config.h"
 #include <stdbool.h>
 
@@ -50,8 +51,8 @@ int main(void)
      *   E1B -> PB1, right wheel encoder phase B, reported as telemetry R/RD
      *
      * Encoder notes:
-     *   Right encoder polarity is inverted in hw_encoder.c so that forward
-     *   wheel rotation gives positive RD. Encoder GPIOs use rising-edge
+     *   Encoder polarity is set in hw/hw_encoder.c so that forward wheel
+     *   rotation gives positive counts. Encoder GPIOs use rising-edge
      *   interrupts like EasyPidKit; the speed loop reads the accumulated
      *   counts every control period.
      *
@@ -60,11 +61,17 @@ int main(void)
      *   PA11 -> UART0 RX, MCU receives tuning commands from PC
      *   Baud rate: 115200, 8N1
      *
+     * OpenMV vision UART:
+     *   PA23 -> UART2 TX, optional MCU-to-OpenMV line
+     *   PA24 -> UART2 RX, connect to OpenMV TX
+     *   Baud rate: 115200, 8N1
+     *
      * LaunchPad status LED:
      *   PB22/PB26/PB27 -> LED2 blue/red/green
      */
     encoder_init();
     uart_debug_init();
+    uart_openmv_init();
     TB6612_Init();
     app_car_control_init();
 
@@ -74,6 +81,10 @@ int main(void)
         char command[UART_DEBUG_LINE_BUFFER_SIZE];
 
         while (uart_debug_read_line(command, sizeof(command))) {
+            app_car_control_process_command(command);
+        }
+
+        while (uart_openmv_read_line(command, sizeof(command))) {
             app_car_control_process_command(command);
         }
 
@@ -124,6 +135,11 @@ void SysTick_Handler(void)
 void UART_DEBUG_INST_IRQHandler(void)
 {
     uart_debug_handle_irq();
+}
+
+void UART_OPENMV_INST_IRQHandler(void)
+{
+    uart_openmv_handle_irq();
 }
 
 void GROUP1_IRQHandler(void)

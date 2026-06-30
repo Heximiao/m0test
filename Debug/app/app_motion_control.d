@@ -1,6 +1,8 @@
 # FIXED
 
-bsp_tb6612.o: ../bsp_tb6612.c ../bsp_tb6612.h \
+app/app_motion_control.o: ../app/app_motion_control.c \
+ ../app/app_motion_control.h \
+ C:/Users/14166/workspace_ccstheia/gpio_toggle_output/hw/hw_encoder.h \
  ti_msp_dl_config.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/msp.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/DeviceFamily.h \
@@ -84,7 +86,8 @@ bsp_tb6612.o: ../bsp_tb6612.c ../bsp_tb6612.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_wwdt.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_interrupt.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_systick.h
-../bsp_tb6612.h:
+../app/app_motion_control.h:
+C:/Users/14166/workspace_ccstheia/gpio_toggle_output/hw/hw_encoder.h:
 ti_msp_dl_config.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/msp.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/DeviceFamily.h:

@@ -114,6 +114,22 @@ extern "C" {
 #define UART_DEBUG_BAUD_RATE                                            (115200)
 #define UART_DEBUG_IBRD_32_MHZ_115200_BAUD                                  (17)
 #define UART_DEBUG_FBRD_32_MHZ_115200_BAUD                                  (23)
+/* Defines for UART_OPENMV */
+#define UART_OPENMV_INST                                                   UART2
+#define UART_OPENMV_INST_FREQUENCY                                      32000000
+#define UART_OPENMV_INST_IRQHandler                             UART2_IRQHandler
+#define UART_OPENMV_INST_INT_IRQN                                 UART2_INT_IRQn
+#define GPIO_UART_OPENMV_RX_PORT                                           GPIOA
+#define GPIO_UART_OPENMV_TX_PORT                                           GPIOA
+#define GPIO_UART_OPENMV_RX_PIN                                   DL_GPIO_PIN_24
+#define GPIO_UART_OPENMV_TX_PIN                                   DL_GPIO_PIN_23
+#define GPIO_UART_OPENMV_IOMUX_RX                                (IOMUX_PINCM54)
+#define GPIO_UART_OPENMV_IOMUX_TX                                (IOMUX_PINCM53)
+#define GPIO_UART_OPENMV_IOMUX_RX_FUNC                 IOMUX_PINCM54_PF_UART2_RX
+#define GPIO_UART_OPENMV_IOMUX_TX_FUNC                 IOMUX_PINCM53_PF_UART2_TX
+#define UART_OPENMV_BAUD_RATE                                           (115200)
+#define UART_OPENMV_IBRD_32_MHZ_115200_BAUD                                 (17)
+#define UART_OPENMV_FBRD_32_MHZ_115200_BAUD                                 (23)
 
 
 
@@ -188,6 +204,7 @@ void SYSCFG_DL_GPIO_init(void);
 void SYSCFG_DL_SYSCTL_init(void);
 void SYSCFG_DL_PWM_MOTORS_init(void);
 void SYSCFG_DL_UART_DEBUG_init(void);
+void SYSCFG_DL_UART_OPENMV_init(void);
 
 
 bool SYSCFG_DL_saveConfiguration(void);

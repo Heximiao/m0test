@@ -1,6 +1,8 @@
 # FIXED
 
-hw_uart.o: ../hw_uart.c ../hw_uart.h \
+app/app_car_control.o: ../app/app_car_control.c ../app/app_car_control.h \
+ ../app/app_line_follow.h ../app/app_motion_control.h \
+ C:/Users/14166/workspace_ccstheia/gpio_toggle_output/hw/hw_encoder.h \
  ti_msp_dl_config.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/msp.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/DeviceFamily.h \
@@ -83,8 +85,14 @@ hw_uart.o: ../hw_uart.c ../hw_uart.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_vref.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_wwdt.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_interrupt.h \
- C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_systick.h
-../hw_uart.h:
+ C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_systick.h \
+ C:/Users/14166/workspace_ccstheia/gpio_toggle_output/bsp/bsp_tb6612.h \
+ C:/Users/14166/workspace_ccstheia/gpio_toggle_output/hw/hw_uart.h \
+ C:/Users/14166/workspace_ccstheia/gpio_toggle_output/mid/mid_pid.h
+../app/app_car_control.h:
+../app/app_line_follow.h:
+../app/app_motion_control.h:
+C:/Users/14166/workspace_ccstheia/gpio_toggle_output/hw/hw_encoder.h:
 ti_msp_dl_config.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/msp.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/DeviceFamily.h:
@@ -168,3 +176,6 @@ C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_vref.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_wwdt.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_interrupt.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_systick.h:
+C:/Users/14166/workspace_ccstheia/gpio_toggle_output/bsp/bsp_tb6612.h:
+C:/Users/14166/workspace_ccstheia/gpio_toggle_output/hw/hw_uart.h:
+C:/Users/14166/workspace_ccstheia/gpio_toggle_output/mid/mid_pid.h:

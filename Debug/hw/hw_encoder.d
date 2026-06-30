@@ -1,7 +1,6 @@
 # FIXED
 
-gpio_toggle_output.o: ../gpio_toggle_output.c ../app_car_control.h \
- ../bsp_tb6612.h \
+hw/hw_encoder.o: ../hw/hw_encoder.c ../hw/hw_encoder.h \
  ti_msp_dl_config.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/msp.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/DeviceFamily.h \
@@ -84,10 +83,8 @@ gpio_toggle_output.o: ../gpio_toggle_output.c ../app_car_control.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_vref.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_wwdt.h \
  C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_interrupt.h \
- C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_systick.h \
- ../hw_encoder.h ../hw_uart.h
-../app_car_control.h:
-../bsp_tb6612.h:
+ C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_systick.h
+../hw/hw_encoder.h:
 ti_msp_dl_config.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/msp/msp.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/devices/DeviceFamily.h:
@@ -171,5 +168,3 @@ C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_vref.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/dl_wwdt.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_interrupt.h:
 C:/TI/mspm0_sdk_2_10_00_04/source/ti/driverlib/m0p/dl_systick.h:
-../hw_encoder.h:
-../hw_uart.h:
