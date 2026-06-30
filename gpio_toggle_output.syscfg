@@ -1,0 +1,114 @@
+/**
+ * These arguments were used when this file was generated. They will be automatically applied on subsequent loads
+ * via the GUI or CLI. Run CLI with '--help' for additional information on how to override these arguments.
+ */
+//@cliArgs --device "MSPM0G350X" --package "LQFP-64(PM)" --part "Default"
+//@v2CliArgs --device "MSPM0G3507" --package "LQFP-64(PM)"
+// @cliArgs --board /ti/boards/LP_MSPM0G3507 --rtos nortos
+
+/**
+ * Import the modules used in this configuration.
+ */
+const GPIO   = scripting.addModule("/ti/driverlib/GPIO", {}, false);
+const GPIO1  = GPIO.addInstance();
+const GPIO2  = GPIO.addInstance();
+const GPIO3  = GPIO.addInstance();
+const GPIO4  = GPIO.addInstance();
+const GPIO5  = GPIO.addInstance();
+const PWM    = scripting.addModule("/ti/driverlib/PWM", {}, false);
+const PWM1   = PWM.addInstance();
+const SYSCTL = scripting.addModule("/ti/driverlib/SYSCTL");
+const UART   = scripting.addModule("/ti/driverlib/UART", {}, false);
+const UART1  = UART.addInstance();
+
+/**
+ * Write custom configuration values to the imported modules.
+ */
+GPIO1.$name                        = "GPIO_MOTOR_A";
+GPIO1.port                         = "PORTA";
+GPIO1.associatedPins.create(3);
+GPIO1.associatedPins[0].$name      = "AIN1";
+GPIO1.associatedPins[0].pin.$assign = "PA25";
+GPIO1.associatedPins[1].$name      = "AIN2";
+GPIO1.associatedPins[1].pin.$assign = "PA31";
+GPIO1.associatedPins[2].$name      = "STBY";
+GPIO1.associatedPins[2].pin.$assign = "PA27";
+
+GPIO2.$name                        = "GPIO_MOTOR_B";
+GPIO2.port                         = "PORTB";
+GPIO2.associatedPins.create(2);
+GPIO2.associatedPins[0].$name      = "BIN1";
+GPIO2.associatedPins[0].pin.$assign = "PB16";
+GPIO2.associatedPins[1].$name      = "BIN2";
+GPIO2.associatedPins[1].pin.$assign = "PB13";
+
+GPIO3.$name                         = "GPIO_STATUS_LED";
+GPIO3.port                          = "PORTB";
+GPIO3.associatedPins.create(3);
+GPIO3.associatedPins[0].$name       = "PB22_LED";
+GPIO3.associatedPins[0].assignedPin = "22";
+GPIO3.associatedPins[1].$name       = "PB26_LED";
+GPIO3.associatedPins[1].assignedPin = "26";
+GPIO3.associatedPins[2].$name       = "PB27_LED";
+GPIO3.associatedPins[2].assignedPin = "27";
+
+GPIO4.$name                         = "GPIO_ENCODER_LEFT";
+GPIO4.port                          = "PORTB";
+GPIO4.associatedPins.create(2);
+GPIO4.associatedPins[0].$name       = "LEFT_C0";
+GPIO4.associatedPins[0].pin.$assign = "PB2";
+GPIO4.associatedPins[0].direction   = "INPUT";
+GPIO4.associatedPins[0].internalResistor = "PULL_UP";
+GPIO4.associatedPins[0].interruptEn = true;
+GPIO4.associatedPins[0].interruptPriority = "0";
+GPIO4.associatedPins[0].polarity = "RISE";
+GPIO4.associatedPins[1].$name       = "LEFT_C1";
+GPIO4.associatedPins[1].pin.$assign = "PB3";
+GPIO4.associatedPins[1].direction   = "INPUT";
+GPIO4.associatedPins[1].internalResistor = "PULL_UP";
+GPIO4.associatedPins[1].interruptEn = true;
+GPIO4.associatedPins[1].interruptPriority = "0";
+GPIO4.associatedPins[1].polarity = "RISE";
+
+GPIO5.$name                         = "GPIO_ENCODER_RIGHT";
+GPIO5.port                          = "PORTB";
+GPIO5.associatedPins.create(2);
+GPIO5.associatedPins[0].$name       = "RIGHT_C0";
+GPIO5.associatedPins[0].pin.$assign = "PB0";
+GPIO5.associatedPins[0].direction   = "INPUT";
+GPIO5.associatedPins[0].internalResistor = "PULL_UP";
+GPIO5.associatedPins[0].interruptEn = true;
+GPIO5.associatedPins[0].interruptPriority = "0";
+GPIO5.associatedPins[0].polarity = "RISE";
+GPIO5.associatedPins[1].$name       = "RIGHT_C1";
+GPIO5.associatedPins[1].pin.$assign = "PB1";
+GPIO5.associatedPins[1].direction   = "INPUT";
+GPIO5.associatedPins[1].internalResistor = "PULL_UP";
+GPIO5.associatedPins[1].interruptEn = true;
+GPIO5.associatedPins[1].interruptPriority = "0";
+GPIO5.associatedPins[1].polarity = "RISE";
+
+PWM1.$name                      = "PWM_MOTORS";
+PWM1.clockPrescale              = 1;
+PWM1.timerCount                 = 1600;
+PWM1.peripheral.$assign         = "TIMA0";
+PWM1.peripheral.ccp0Pin.$assign = "PA8";
+PWM1.peripheral.ccp1Pin.$assign = "PB9";
+PWM1.PWM_CHANNEL_0.$name        = "PWMA";
+PWM1.PWM_CHANNEL_0.dutyCycle    = 60;
+PWM1.PWM_CHANNEL_1.$name        = "PWMB";
+PWM1.PWM_CHANNEL_1.dutyCycle    = 60;
+
+UART1.$name                    = "UART_DEBUG";
+UART1.targetBaudRate           = 115200;
+UART1.enableFIFO               = true;
+UART1.rxFifoThreshold          = "DL_UART_RX_FIFO_LEVEL_ONE_ENTRY";
+UART1.txFifoThreshold          = "DL_UART_TX_FIFO_LEVEL_1_2_EMPTY";
+UART1.peripheral.$assign       = "UART0";
+UART1.peripheral.rxPin.$assign = "PA11";
+UART1.peripheral.txPin.$assign = "PA10";
+
+const Board = scripting.addModule("/ti/driverlib/Board", {}, false);
+
+SYSCTL.forceDefaultClkConfig = true;
+SYSCTL.clockTreeEn  = true;

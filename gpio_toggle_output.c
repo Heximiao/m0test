@@ -1,0 +1,132 @@
+/*
+ * MSPM0 car controller entry point.
+ *
+ * The application is split like the EasyPidKit reference project:
+ * hardware drivers own pins/peripherals, middle modules own reusable control
+ * logic, and app_car_control owns the vehicle behavior.
+ */
+
+#include "app_car_control.h"
+#include "bsp_tb6612.h"
+#include "hw_encoder.h"
+#include "hw_uart.h"
+#include "ti_msp_dl_config.h"
+#include <stdbool.h>
+
+#define CONTROL_PERIOD_MS (20U)
+#define TELEMETRY_PERIOD_MS (20U)
+#define HEARTBEAT_PERIOD_MS (30000U)
+#define STATUS_LED_PERIOD_MS (500U)
+
+static volatile bool gControlUpdatePending;
+static volatile bool gTelemetryUpdatePending;
+static volatile bool gHeartbeatUpdatePending;
+static volatile bool gStatusLedUpdatePending;
+static volatile uint32_t gSysTickMs;
+
+int main(void)
+{
+    SYSCFG_DL_init();
+
+    /*
+     * Current wiring map.
+     *
+     * Wheel naming:
+     *   Left/right are viewed from behind the car, looking toward the front.
+     *
+     * TB6612 motor driver:
+     *   PA8  -> PWMA, left wheel PWM  (TIMA0_CCP0)
+     *   PA25 -> AIN1, left wheel direction
+     *   PA31 -> AIN2, left wheel direction
+     *   PB9  -> PWMB, right wheel PWM (TIMA0_CCP1)
+     *   PB16 -> BIN1, right wheel direction
+     *   PB13 -> BIN2, right wheel direction
+     *   PA27 -> STBY, TB6612 standby enable
+     *
+     * Encoder GPIO wiring:
+     *   E4A -> PB2, left wheel encoder phase A, reported as telemetry L/LD
+     *   E4B -> PB3, left wheel encoder phase B, reported as telemetry L/LD
+     *   E1A -> PB0, right wheel encoder phase A, reported as telemetry R/RD
+     *   E1B -> PB1, right wheel encoder phase B, reported as telemetry R/RD
+     *
+     * Encoder notes:
+     *   Right encoder polarity is inverted in hw_encoder.c so that forward
+     *   wheel rotation gives positive RD. Encoder GPIOs use rising-edge
+     *   interrupts like EasyPidKit; the speed loop reads the accumulated
+     *   counts every control period.
+     *
+     * UART debug/tuning port:
+     *   PA10 -> UART0 TX, MCU sends telemetry to PC
+     *   PA11 -> UART0 RX, MCU receives tuning commands from PC
+     *   Baud rate: 115200, 8N1
+     *
+     * LaunchPad status LED:
+     *   PB22/PB26/PB27 -> LED2 blue/red/green
+     */
+    encoder_init();
+    uart_debug_init();
+    TB6612_Init();
+    app_car_control_init();
+
+    SysTick_Config(CPUCLK_FREQ / 1000U);
+
+    while (1) {
+        char command[UART_DEBUG_LINE_BUFFER_SIZE];
+
+        while (uart_debug_read_line(command, sizeof(command))) {
+            app_car_control_process_command(command);
+        }
+
+        uart_debug_service_tx();
+
+        if (gControlUpdatePending) {
+            gControlUpdatePending = false;
+            app_car_control_update(gSysTickMs);
+        }
+
+        if (gTelemetryUpdatePending) {
+            gTelemetryUpdatePending = false;
+            app_car_control_send_telemetry();
+        }
+
+        if (gHeartbeatUpdatePending) {
+            gHeartbeatUpdatePending = false;
+            app_car_control_send_heartbeat(gSysTickMs);
+        }
+
+        if (gStatusLedUpdatePending) {
+            gStatusLedUpdatePending = false;
+            app_car_control_toggle_status_led();
+        }
+
+        uart_debug_service_tx();
+        __WFI();
+    }
+}
+
+void SysTick_Handler(void)
+{
+    gSysTickMs++;
+    if ((gSysTickMs % CONTROL_PERIOD_MS) == 0U) {
+        gControlUpdatePending = true;
+    }
+    if ((gSysTickMs % TELEMETRY_PERIOD_MS) == 0U) {
+        gTelemetryUpdatePending = true;
+    }
+    if ((gSysTickMs % HEARTBEAT_PERIOD_MS) == 0U) {
+        gHeartbeatUpdatePending = true;
+    }
+    if ((gSysTickMs % STATUS_LED_PERIOD_MS) == 0U) {
+        gStatusLedUpdatePending = true;
+    }
+}
+
+void UART_DEBUG_INST_IRQHandler(void)
+{
+    uart_debug_handle_irq();
+}
+
+void GROUP1_IRQHandler(void)
+{
+    encoder_handle_gpio_irq();
+}
