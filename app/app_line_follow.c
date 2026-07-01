@@ -4,8 +4,8 @@
 
 #define LINE_LOST_TIMEOUT_MS (500U) /* 超过这个时间没有 LINE 数据就认为巡线丢失，单位：ms */
 #define LINE_ERROR_LIMIT_PIXELS (160) /* OpenMV 发送的横向误差限幅，单位：像素，右侧为正 */
-#define LINE_TURN_KP (0.04f) /* 像素误差到左右轮目标速度差的比例 */
-#define LINE_TURN_LIMIT_COUNTS (4.0f) /* 巡线转向修正限幅，单位：counts/20ms */
+#define LINE_TURN_KP (0.02f) /* 像素误差到左右轮目标速度差的比例 */
+#define LINE_TURN_LIMIT_COUNTS (3.0f) /* 巡线转向修正限幅，单位：counts/20ms */
 
 static bool gLineEnabled;
 static bool gLineValid;

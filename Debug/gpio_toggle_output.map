@@ -1,7 +1,7 @@
 ******************************************************************************
             TI ARM Clang Linker PC v5.1.1                      
 ******************************************************************************
->> Linked Wed Jul  1 12:13:30 2026
+>> Linked Wed Jul  1 14:37:10 2026
 
 OUTPUT FILE NAME:   <gpio_toggle_output.out>
 ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000599d
@@ -11,7 +11,7 @@ MEMORY CONFIGURATION
 
          name            origin    length      used     unused   attr    fill
 ----------------------  --------  ---------  --------  --------  ----  --------
-  FLASH                 00000000   00020000  00006310  00019cf0  R  X
+  FLASH                 00000000   00020000  00006320  00019ce0  R  X
   SRAM                  20200000   00008000  00000d06  000072fa  RW X
   BCR_CONFIG            41c00000   000000ff  00000000  000000ff  R   
   BSL_CONFIG            41c00100   00000080  00000000  00000080  R   
@@ -21,11 +21,11 @@ SEGMENT ALLOCATION MAP
 
 run origin  load origin   length   init length attrs members
 ----------  ----------- ---------- ----------- ----- -------
-00000000    00000000    00006310   00006310    r-x
+00000000    00000000    00006320   00006320    r-x
   00000000    00000000    000000c0   000000c0    r-- .intvecs
-  000000c0    000000c0    00005c90   00005c90    r-x .text
-  00005d50    00005d50    00000590   00000590    r-- .rodata
-  000062e0    000062e0    00000030   00000030    r-- .cinit
+  000000c0    000000c0    00005ca0   00005ca0    r-x .text
+  00005d60    00005d60    00000590   00000590    r-- .rodata
+  000062f0    000062f0    00000030   00000030    r-- .cinit
 20200000    20200000    00000b08   00000000    rw-
   20200000    20200000    00000b02   00000000    rw- .bss
   20200b04    20200b04    00000004   00000000    rw- .data
@@ -41,7 +41,7 @@ section   page    origin      length       input sections
 .intvecs   0    00000000    000000c0     
                   00000000    000000c0     startup_mspm0g350x_ticlang.o (.intvecs)
 
-.text      0    000000c0    00005c90     
+.text      0    000000c0    00005ca0     
                   000000c0    00000c88     libc.a : _scanfi.c.obj (.text.__TI_scanfi)
                   00000d48    000008dc            : _printfi.c.obj (.text:__TI_printfi_nofloat)
                   00001624    0000062c     app_car_control.o (.text.app_car_control_process_command)
@@ -88,10 +88,9 @@ section   page    origin      length       input sections
                   00004c5c    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_DEBUG_init)
                   00004cd8    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_OPENMV_init)
                   00004d54    0000007c     libc.a : copy_decompress_lzss.c.obj (.text:decompress:lzss)
-                  00004dd0    00000074     libclang_rt.builtins.a : comparedf2.c.obj (.text.__gedf2)
-                  00004e44    00000074     libc.a : sscanf.c.obj (.text._chkmbc)
-                  00004eb8    00000074     app_line_follow.o (.text.line_follow_get_turn_adjust)
-                  00004f2c    00000004     libsysbm.a : hostexit.c.obj (.text.HOSTexit)
+                  00004dd0    00000078     app_line_follow.o (.text.line_follow_get_turn_adjust)
+                  00004e48    00000074     libclang_rt.builtins.a : comparedf2.c.obj (.text.__gedf2)
+                  00004ebc    00000074     libc.a : sscanf.c.obj (.text._chkmbc)
                   00004f30    00000074     libclang_rt.builtins.a : truncdfsf2.S.obj (.text)
                   00004fa4    00000070     hw_uart.o (.text.uart_debug_handle_irq)
                   00005014    00000070     hw_openmv_uart.o (.text.uart_openmv_handle_irq)
@@ -191,74 +190,75 @@ section   page    origin      length       input sections
                   00005d34    00000006     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_3)
                   00005d3a    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_4)
                   00005d40    00000006            : exit.c.obj (.text:abort)
-                  00005d46    00000004     startup_mspm0g350x_ticlang.o (.text.Reset_Handler)
-                  00005d4a    00000004     libc.a : pre_init.c.obj (.text._system_pre_init)
-                  00005d4e    00000002     --HOLE-- [fill = 0]
+                  00005d46    00000004     libsysbm.a : hostexit.c.obj (.text.HOSTexit)
+                  00005d4a    00000004     startup_mspm0g350x_ticlang.o (.text.Reset_Handler)
+                  00005d4e    00000004     libc.a : pre_init.c.obj (.text._system_pre_init)
+                  00005d52    0000000e     --HOLE-- [fill = 0]
 
-.cinit     0    000062e0    00000030     
-                  000062e0    0000000c     (__TI_handler_table)
-                  000062ec    00000008     (.cinit..bss.load) [load image, compression = zero_init]
-                  000062f4    00000007     (.cinit..data.load) [load image, compression = lzss]
-                  000062fb    00000001     --HOLE-- [fill = 0]
-                  000062fc    00000010     (__TI_cinit_table)
-                  0000630c    00000004     --HOLE-- [fill = 0]
+.cinit     0    000062f0    00000030     
+                  000062f0    0000000c     (__TI_handler_table)
+                  000062fc    00000008     (.cinit..bss.load) [load image, compression = zero_init]
+                  00006304    00000007     (.cinit..data.load) [load image, compression = lzss]
+                  0000630b    00000001     --HOLE-- [fill = 0]
+                  0000630c    00000010     (__TI_cinit_table)
+                  0000631c    00000004     --HOLE-- [fill = 0]
 
-.rodata    0    00005d50    00000590     
-                  00005d50    00000101     libc.a : aeabi_ctype.S.obj (.rodata:__aeabi_ctype_table_)
-                  00005e51    00000090     app_car_control.o (.rodata.str1.5259596890075649042.1)
-                  00005ee1    00000007     libc.a : _scanfi.c.obj (.rodata._sproc_int.flit)
-                  00005ee8    00000080            : strtod.c.obj (.rodata.digits)
-                  00005f68    00000077     app_car_control.o (.rodata.str1.18415326926820213635.1)
-                  00005fdf    0000004f     app_car_control.o (.rodata.str1.5964142759088803818.1)
-                  0000602e    00000002     ti_msp_dl_config.o (.rodata.gUART_DEBUGClockConfig)
-                  00006030    00000048     libc.a : strtod.c.obj (.rodata.powerof10)
-                  00006078    00000042     app_car_control.o (.rodata.str1.11820653816532915241.1)
-                  000060ba    00000002     ti_msp_dl_config.o (.rodata.gUART_OPENMVClockConfig)
-                  000060bc    00000040     libc.a : strtof.c.obj (.rodata.digits)
-                  000060fc    0000001b     app_car_control.o (.rodata.str1.14175076128169481003.1)
-                  00006117    0000001b     app_car_control.o (.rodata.str1.1822894261428252022.1)
-                  00006132    00000002     --HOLE-- [fill = 0]
-                  00006134    00000018     libc.a : strtof.c.obj (.rodata.powerof10)
-                  0000614c    00000017     app_car_control.o (.rodata.str1.10785656375763943663.1)
-                  00006163    00000016     app_car_control.o (.rodata.str1.11441606736553431316.1)
-                  00006179    00000014     app_car_control.o (.rodata.str1.26950527303777515.1)
-                  0000618d    00000012     app_car_control.o (.rodata.str1.14718060586108094866.1)
-                  0000619f    00000012     hw_uart.o (.rodata.str1.2093199925178161188.1)
-                  000061b1    00000011     libc.a : _printfi.c.obj (.rodata.str1.10348868589481759720.1)
-                  000061c2    00000011            : _printfi.c.obj (.rodata.str1.15363888844622738466.1)
-                  000061d3    0000000d     app_car_control.o (.rodata.str1.11272716704398869594.1)
-                  000061e0    0000000d     app_car_control.o (.rodata.str1.4874208870431229975.1)
-                  000061ed    0000000d     app_car_control.o (.rodata.str1.7569317419661685027.1)
-                  000061fa    0000000c     app_car_control.o (.rodata.str1.10416396766295915984.1)
-                  00006206    0000000c     app_car_control.o (.rodata.str1.10986280395233754576.1)
-                  00006212    0000000c     app_car_control.o (.rodata.str1.16566837512891204500.1)
-                  0000621e    0000000c     app_car_control.o (.rodata.str1.2882403439750828858.1)
-                  0000622a    0000000c     app_car_control.o (.rodata.str1.6493979626155181994.1)
-                  00006236    0000000a     ti_msp_dl_config.o (.rodata.gUART_DEBUGConfig)
-                  00006240    0000000a     ti_msp_dl_config.o (.rodata.gUART_OPENMVConfig)
-                  0000624a    0000000a     app_car_control.o (.rodata.str1.12484813675258476528.1)
-                  00006254    0000000a     app_car_control.o (.rodata.str1.2972993705525450585.1)
-                  0000625e    0000000a     app_car_control.o (.rodata.str1.6044509230432320655.1)
-                  00006268    0000000a     app_car_control.o (.rodata.str1.9822639397776744045.1)
-                  00006272    00000009     libc.a : _scanfi.c.obj (.rodata.str1.12964984209033246150.1)
-                  0000627b    00000009     app_car_control.o (.rodata.str1.8898464879457977813.1)
-                  00006284    00000009     app_car_control.o (.rodata.str1.9984945524575007645.1)
-                  0000628d    00000003     ti_msp_dl_config.o (.rodata.gPWM_MOTORSClockConfig)
-                  00006290    00000008     ti_msp_dl_config.o (.rodata.gPWM_MOTORSConfig)
-                  00006298    00000008     app_car_control.o (.rodata.str1.12234416300867838885.1)
-                  000062a0    00000007     app_car_control.o (.rodata.str1.13032410439314695910.1)
-                  000062a7    00000006     libc.a : _scanfi.c.obj (.rodata._sproc_int.barr)
-                  000062ad    00000006     app_car_control.o (.rodata.str1.10099187617512664200.1)
-                  000062b3    00000006     app_line_follow.o (.rodata.str1.13577393985823711167.1)
-                  000062b9    00000006     app_motion_control.o (.rodata.str1.15845094093975241062.1)
-                  000062bf    00000006     app_motion_control.o (.rodata.str1.4383496431151190140.1)
-                  000062c5    00000005     app_car_control.o (.rodata.str1.14187085924937509073.1)
-                  000062ca    00000005     app_car_control.o (.rodata.str1.14880763104044842744.1)
-                  000062cf    00000004     app_car_control.o (.rodata.str1.15872741239078135150.1)
-                  000062d3    00000004     app_car_control.o (.rodata.str1.1972896047161163948.1)
-                  000062d7    00000004     libc.a : _scanfi.c.obj (.rodata.str1.3403580589742030990.1)
-                  000062db    00000003     app_motion_control.o (.rodata.str1.825203759767528237.1)
-                  000062de    00000002     --HOLE-- [fill = 0]
+.rodata    0    00005d60    00000590     
+                  00005d60    00000101     libc.a : aeabi_ctype.S.obj (.rodata:__aeabi_ctype_table_)
+                  00005e61    00000090     app_car_control.o (.rodata.str1.5259596890075649042.1)
+                  00005ef1    00000007     libc.a : _scanfi.c.obj (.rodata._sproc_int.flit)
+                  00005ef8    00000080            : strtod.c.obj (.rodata.digits)
+                  00005f78    00000077     app_car_control.o (.rodata.str1.18415326926820213635.1)
+                  00005fef    0000004f     app_car_control.o (.rodata.str1.5964142759088803818.1)
+                  0000603e    00000002     ti_msp_dl_config.o (.rodata.gUART_DEBUGClockConfig)
+                  00006040    00000048     libc.a : strtod.c.obj (.rodata.powerof10)
+                  00006088    00000042     app_car_control.o (.rodata.str1.11820653816532915241.1)
+                  000060ca    00000002     ti_msp_dl_config.o (.rodata.gUART_OPENMVClockConfig)
+                  000060cc    00000040     libc.a : strtof.c.obj (.rodata.digits)
+                  0000610c    0000001b     app_car_control.o (.rodata.str1.14175076128169481003.1)
+                  00006127    0000001b     app_car_control.o (.rodata.str1.1822894261428252022.1)
+                  00006142    00000002     --HOLE-- [fill = 0]
+                  00006144    00000018     libc.a : strtof.c.obj (.rodata.powerof10)
+                  0000615c    00000017     app_car_control.o (.rodata.str1.10785656375763943663.1)
+                  00006173    00000016     app_car_control.o (.rodata.str1.11441606736553431316.1)
+                  00006189    00000014     app_car_control.o (.rodata.str1.26950527303777515.1)
+                  0000619d    00000012     app_car_control.o (.rodata.str1.14718060586108094866.1)
+                  000061af    00000012     hw_uart.o (.rodata.str1.2093199925178161188.1)
+                  000061c1    00000011     libc.a : _printfi.c.obj (.rodata.str1.10348868589481759720.1)
+                  000061d2    00000011            : _printfi.c.obj (.rodata.str1.15363888844622738466.1)
+                  000061e3    0000000d     app_car_control.o (.rodata.str1.11272716704398869594.1)
+                  000061f0    0000000d     app_car_control.o (.rodata.str1.4874208870431229975.1)
+                  000061fd    0000000d     app_car_control.o (.rodata.str1.7569317419661685027.1)
+                  0000620a    0000000c     app_car_control.o (.rodata.str1.10416396766295915984.1)
+                  00006216    0000000c     app_car_control.o (.rodata.str1.10986280395233754576.1)
+                  00006222    0000000c     app_car_control.o (.rodata.str1.16566837512891204500.1)
+                  0000622e    0000000c     app_car_control.o (.rodata.str1.2882403439750828858.1)
+                  0000623a    0000000c     app_car_control.o (.rodata.str1.6493979626155181994.1)
+                  00006246    0000000a     ti_msp_dl_config.o (.rodata.gUART_DEBUGConfig)
+                  00006250    0000000a     ti_msp_dl_config.o (.rodata.gUART_OPENMVConfig)
+                  0000625a    0000000a     app_car_control.o (.rodata.str1.12484813675258476528.1)
+                  00006264    0000000a     app_car_control.o (.rodata.str1.2972993705525450585.1)
+                  0000626e    0000000a     app_car_control.o (.rodata.str1.6044509230432320655.1)
+                  00006278    0000000a     app_car_control.o (.rodata.str1.9822639397776744045.1)
+                  00006282    00000009     libc.a : _scanfi.c.obj (.rodata.str1.12964984209033246150.1)
+                  0000628b    00000009     app_car_control.o (.rodata.str1.8898464879457977813.1)
+                  00006294    00000009     app_car_control.o (.rodata.str1.9984945524575007645.1)
+                  0000629d    00000003     ti_msp_dl_config.o (.rodata.gPWM_MOTORSClockConfig)
+                  000062a0    00000008     ti_msp_dl_config.o (.rodata.gPWM_MOTORSConfig)
+                  000062a8    00000008     app_car_control.o (.rodata.str1.12234416300867838885.1)
+                  000062b0    00000007     app_car_control.o (.rodata.str1.13032410439314695910.1)
+                  000062b7    00000006     libc.a : _scanfi.c.obj (.rodata._sproc_int.barr)
+                  000062bd    00000006     app_car_control.o (.rodata.str1.10099187617512664200.1)
+                  000062c3    00000006     app_line_follow.o (.rodata.str1.13577393985823711167.1)
+                  000062c9    00000006     app_motion_control.o (.rodata.str1.15845094093975241062.1)
+                  000062cf    00000006     app_motion_control.o (.rodata.str1.4383496431151190140.1)
+                  000062d5    00000005     app_car_control.o (.rodata.str1.14187085924937509073.1)
+                  000062da    00000005     app_car_control.o (.rodata.str1.14880763104044842744.1)
+                  000062df    00000004     app_car_control.o (.rodata.str1.15872741239078135150.1)
+                  000062e3    00000004     app_car_control.o (.rodata.str1.1972896047161163948.1)
+                  000062e7    00000004     libc.a : _scanfi.c.obj (.rodata.str1.3403580589742030990.1)
+                  000062eb    00000003     app_motion_control.o (.rodata.str1.825203759767528237.1)
+                  000062ee    00000002     --HOLE-- [fill = 0]
 
 .init_array 
 *          0    00000000    00000000     UNINITIALIZED
@@ -352,9 +352,9 @@ MODULE SUMMARY
     .\app\
        app_car_control.o              4766    741       150    
        app_motion_control.o           1300    15        22     
-       app_line_follow.o              408     6         10     
+       app_line_follow.o              412     6         10     
     +--+------------------------------+-------+---------+---------+
-       Total:                         6474    762       182    
+       Total:                         6478    762       182    
                                                                
     .\bsp\
        bsp_tb6612.o                   340     0         0      
@@ -449,19 +449,19 @@ MODULE SUMMARY
        Stack:                         0       0         512    
        Linker Generated:              0       43        0      
     +--+------------------------------+-------+---------+---------+
-       Grand Total:                   23674   1655      3334   
+       Grand Total:                   23678   1655      3334   
 
 
 LINKER GENERATED COPY TABLES
 
-__TI_cinit_table @ 000062fc records: 2, size/record: 8, table size: 16
-	.bss: load addr=000062ec, load size=00000008 bytes, run addr=20200000, run size=00000b02 bytes, compression=zero_init
-	.data: load addr=000062f4, load size=00000007 bytes, run addr=20200b04, run size=00000004 bytes, compression=lzss
+__TI_cinit_table @ 0000630c records: 2, size/record: 8, table size: 16
+	.bss: load addr=000062fc, load size=00000008 bytes, run addr=20200000, run size=00000b02 bytes, compression=zero_init
+	.data: load addr=00006304, load size=00000007 bytes, run addr=20200b04, run size=00000004 bytes, compression=lzss
 
 
 LINKER GENERATED HANDLER TABLE
 
-__TI_handler_table @ 000062e0 records: 3, size/record: 4, table size: 12
+__TI_handler_table @ 000062f0 records: 3, size/record: 4, table size: 12
 	index: 0, handler: __TI_decompress_lzss
 	index: 1, handler: __TI_decompress_none
 	index: 2, handler: __TI_zero_init
@@ -488,7 +488,7 @@ address   name
 00003837  AES_IRQHandler                   
 000052d5  AO_Control                       
 000051bd  BO_Control                       
-00004f2c  C$$EXIT                          
+00005d46  C$$EXIT                          
 00003837  CANFD0_IRQHandler                
 00003837  DAC0_IRQHandler                  
 00005cb1  DL_Common_delayCycles            
@@ -505,14 +505,14 @@ address   name
 00003837  Default_Handler                  
 00003837  GROUP0_IRQHandler                
 00004b49  GROUP1_IRQHandler                
-00004f2d  HOSTexit                         
+00005d47  HOSTexit                         
 00003837  HardFault_Handler                
 00003837  I2C0_IRQHandler                  
 00003837  I2C1_IRQHandler                  
 00003837  NMI_Handler                      
 00003837  PendSV_Handler                   
 00003837  RTC_IRQHandler                   
-00005d47  Reset_Handler                    
+00005d4b  Reset_Handler                    
 00003837  SPI0_IRQHandler                  
 00003837  SPI1_IRQHandler                  
 00003837  SVC_Handler                      
@@ -548,11 +548,11 @@ address   name
 00000000  __TI_ATRegion2_region_sz         
 00000000  __TI_ATRegion2_src_addr          
 00000000  __TI_ATRegion2_trg_addr          
-000062fc  __TI_CINIT_Base                  
-0000630c  __TI_CINIT_Limit                 
-0000630c  __TI_CINIT_Warm                  
-000062e0  __TI_Handler_Table_Base          
-000062ec  __TI_Handler_Table_Limit         
+0000630c  __TI_CINIT_Base                  
+0000631c  __TI_CINIT_Limit                 
+0000631c  __TI_CINIT_Warm                  
+000062f0  __TI_Handler_Table_Base          
+000062fc  __TI_Handler_Table_Limit         
 00005719  __TI_auto_init_nobinit_nopinit   
 00004d55  __TI_decompress_lzss             
 00005bd7  __TI_decompress_none             
@@ -565,8 +565,8 @@ ffffffff  __TI_prof_data_start
 00005c49  __TI_zero_init                   
 000036af  __adddf3                         
 00004287  __addsf3                         
-00005d50  __aeabi_ctype_table_             
-00005d50  __aeabi_ctype_table_C            
+00005d60  __aeabi_ctype_table_             
+00005d60  __aeabi_ctype_table_C            
 00004f31  __aeabi_d2f                      
 000036af  __aeabi_dadd                     
 0000521d  __aeabi_dcmpeq                   
@@ -621,9 +621,9 @@ ffffffff  __binit__
 00005839  __fixunssfsi                     
 00005755  __floatsisf                      
 000059c5  __floatunsisf                    
-00004dd1  __gedf2                          
+00004e49  __gedf2                          
 00004a6b  __gesf2                          
-00004dd1  __gtdf2                          
+00004e49  __gtdf2                          
 00004a6b  __gtsf2                          
 000050f1  __ledf2                          
 00004a31  __lesf2                          
@@ -648,7 +648,7 @@ UNDEFED   __mpu_init
 00004aa7  __unordsf2                       
 0000599d  _c_int00_noargs                  
 UNDEFED   _system_post_cinit               
-00005d4b  _system_pre_init                 
+00005d4f  _system_pre_init                 
 00005d41  abort                            
 00005085  app_car_control_init             
 00001625  app_car_control_process_command  
@@ -668,7 +668,7 @@ ffffffff  binit
 00004355  ldexpf                           
 000041a1  ldexpl                           
 00005c69  line_follow_get_error            
-00004eb9  line_follow_get_turn_adjust      
+00004dd1  line_follow_get_turn_adjust      
 000059ed  line_follow_init                 
 00005925  line_follow_is_active            
 0000586d  line_follow_is_valid             
@@ -818,11 +818,9 @@ address   name
 00004c5d  SYSCFG_DL_UART_DEBUG_init        
 00004cd9  SYSCFG_DL_UART_OPENMV_init       
 00004d55  __TI_decompress_lzss             
-00004dd1  __gedf2                          
-00004dd1  __gtdf2                          
-00004eb9  line_follow_get_turn_adjust      
-00004f2c  C$$EXIT                          
-00004f2d  HOSTexit                         
+00004dd1  line_follow_get_turn_adjust      
+00004e49  __gedf2                          
+00004e49  __gtdf2                          
 00004f31  __aeabi_d2f                      
 00004f31  __truncdfsf2                     
 00004fa5  uart_debug_handle_irq            
@@ -923,15 +921,17 @@ address   name
 00005d2d  __aeabi_memcpy4                  
 00005d2d  __aeabi_memcpy8                  
 00005d41  abort                            
-00005d47  Reset_Handler                    
-00005d4b  _system_pre_init                 
-00005d50  __aeabi_ctype_table_             
-00005d50  __aeabi_ctype_table_C            
-000062e0  __TI_Handler_Table_Base          
-000062ec  __TI_Handler_Table_Limit         
-000062fc  __TI_CINIT_Base                  
-0000630c  __TI_CINIT_Limit                 
-0000630c  __TI_CINIT_Warm                  
+00005d46  C$$EXIT                          
+00005d47  HOSTexit                         
+00005d4b  Reset_Handler                    
+00005d4f  _system_pre_init                 
+00005d60  __aeabi_ctype_table_             
+00005d60  __aeabi_ctype_table_C            
+000062f0  __TI_Handler_Table_Base          
+000062fc  __TI_Handler_Table_Limit         
+0000630c  __TI_CINIT_Base                  
+0000631c  __TI_CINIT_Limit                 
+0000631c  __TI_CINIT_Warm                  
 20200000  __start___llvm_prf_bits          
 20200000  __start___llvm_prf_cnts          
 20200000  __stop___llvm_prf_bits           

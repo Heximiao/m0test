@@ -31,9 +31,9 @@
 #define PID_OUTPUT_LIMIT (85.0f) /* 单个速度 PID 输出限幅，单位：占空比百分比 */
 #define SPEED_FILTER_ALPHA (0.25f) /* 编码器速度一阶低通滤波系数，越大响应越快但越抖 */
 #define LINE_LOST_SPEED_SCALE (0.35f) /* 巡线丢线时的速度缩放比例 */
-#define LINE_FOLLOW_BASE_COUNTS (10.0f) /* 巡线自动前进基础速度，单位：counts/20ms */
+#define LINE_FOLLOW_BASE_COUNTS (7.0f) /* 巡线自动前进基础速度，单位：counts/20ms */
 #define LINE_FOLLOW_MIN_FORWARD_COUNTS (0.0f) /* 巡线时单轮最小前进速度，单位：counts/20ms */
-#define LINE_FOLLOW_MAX_COUNTS (14.0f) /* 巡线自动前进速度上限，单位：counts/20ms */
+#define LINE_FOLLOW_MAX_COUNTS (10.0f) /* 巡线自动前进速度上限，单位：counts/20ms */
 
 static PID gLeftSpeedPid;
 static PID gRightSpeedPid;
@@ -142,12 +142,11 @@ void app_car_control_update(uint32_t nowMs)
 
     if (line_follow_is_valid(nowMs)) {
         /*
-         * OpenMV sends a positive line error when the target line is to the
-         * right side of the image. Positive correction should speed up the
-         * right wheel and slow down the left wheel.
+         * Positive correction should speed up the left wheel and slow down
+         * the right wheel for this camera/motor mounting direction.
          */
-        leftTargetSpeed -= lineTurnAdjust;
-        rightTargetSpeed += lineTurnAdjust;
+        leftTargetSpeed += lineTurnAdjust;
+        rightTargetSpeed -= lineTurnAdjust;
         if (!motion_control_is_active()) {
             if (leftTargetSpeed < LINE_FOLLOW_MIN_FORWARD_COUNTS) {
                 leftTargetSpeed = LINE_FOLLOW_MIN_FORWARD_COUNTS;
