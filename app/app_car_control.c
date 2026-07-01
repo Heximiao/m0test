@@ -35,6 +35,10 @@
 #define LINE_FOLLOW_MIN_FORWARD_COUNTS (0.0f) /* 巡线时单轮最小前进速度，单位：counts/20ms */
 #define LINE_FOLLOW_MAX_COUNTS (10.0f) /* 巡线自动前进速度上限，单位：counts/20ms */
 
+#define LTURN_TARGET_COUNTS_90 (180.0f) /* 90 degree in-place turn encoder target. */
+#define LTURN_SPEED_COUNTS (7.0f) /* In-place turn speed, counts/20ms. */
+#define LTURN_DONE_TOLERANCE_COUNTS (4.0f) /* Done tolerance, counts. */
+
 static PID gLeftSpeedPid;
 static PID gRightSpeedPid;
 static float gSpeedTargetCounts;
@@ -58,8 +62,16 @@ static float gLastLeftTargetSpeed;
 static float gLastRightTargetSpeed;
 static float gFilteredLeftSpeed;
 static float gFilteredRightSpeed;
+static bool gLTurnActive;
+static int32_t gLTurnDirection;
+static float gLTurnTargetCounts;
+static int32_t gLTurnStartLeftCount;
+static int32_t gLTurnStartRightCount;
 
 static void set_motor_duty(float leftDutyPercent, float rightDutyPercent);
+static bool parse_lturn_command(const char *command);
+static bool update_lturn(EncoderCounts counts, float *leftTargetSpeed,
+    float *rightTargetSpeed);
 static void update_speed_target_ramp(void);
 static void update_manual_motor_ramp(uint32_t nowMs);
 static uint32_t duty_percent_to_speed(float dutyPercent);
@@ -131,16 +143,19 @@ void app_car_control_update(uint32_t nowMs)
     float lineTurnAdjust = line_follow_get_turn_adjust(nowMs);
     bool lineAutoDrive = false;
 
-    motion_control_update(counts, &leftTargetSpeed, &rightTargetSpeed);
+    if (!update_lturn(counts, &leftTargetSpeed, &rightTargetSpeed)) {
+        motion_control_update(counts, &leftTargetSpeed, &rightTargetSpeed);
+    }
 
     if (line_follow_is_active(nowMs) && !motion_control_is_active() &&
+        !gLTurnActive &&
         (leftTargetSpeed == 0.0f) && (rightTargetSpeed == 0.0f)) {
         leftTargetSpeed = LINE_FOLLOW_BASE_COUNTS;
         rightTargetSpeed = LINE_FOLLOW_BASE_COUNTS;
         lineAutoDrive = true;
     }
 
-    if (line_follow_is_valid(nowMs)) {
+    if (line_follow_is_valid(nowMs) && !gLTurnActive) {
         /*
          * Positive correction should speed up the left wheel and slow down
          * the right wheel for this camera/motor mounting direction.
@@ -185,7 +200,9 @@ void app_car_control_process_command(char *command)
 {
     command = normalize_command(command);
 
-    if (line_follow_parse_command(command, gLastUpdateMs)) {
+    if (parse_lturn_command(command)) {
+        return;
+    } else if (line_follow_parse_command(command, gLastUpdateMs)) {
         return;
     } else if (motion_control_parse_command(command, encoder_get_counts())) {
         gTargetSpeedCounts = 0.0f;
@@ -213,6 +230,7 @@ void app_car_control_process_command(char *command)
         float base = strtof(command + 5, NULL);
         base = clamp_speed_target_command(base);
         gManualMotorMode = false;
+        gLTurnActive = false;
         motion_control_init();
         gTargetSpeedCounts = base;
         if (base == 0.0f) {
@@ -235,6 +253,7 @@ void app_car_control_process_command(char *command)
             durationMs = MANUAL_MOTOR_MAX_TIMEOUT_MS;
         }
         gManualMotorMode = true;
+        gLTurnActive = false;
         motion_control_init();
         gTargetManualLeftDutyPercent = duty;
         gTargetManualRightDutyPercent = duty;
@@ -256,6 +275,7 @@ void app_car_control_process_command(char *command)
                 durationMs = MANUAL_MOTOR_MAX_TIMEOUT_MS;
             }
             gManualMotorMode = true;
+            gLTurnActive = false;
             motion_control_init();
             gTargetManualLeftDutyPercent = leftDuty;
             gTargetManualRightDutyPercent = rightDuty;
@@ -277,6 +297,7 @@ void app_car_control_process_command(char *command)
                 durationMs = 2000U;
             }
             gManualMotorMode = true;
+            gLTurnActive = false;
             motion_control_init();
             gTargetManualLeftDutyPercent = duty;
             gTargetManualRightDutyPercent = duty;
@@ -297,6 +318,7 @@ void app_car_control_process_command(char *command)
                                                     "OK TELE 0\r\n");
     } else if (strcmp(command, "STOP") == 0) {
         gManualMotorMode = false;
+        gLTurnActive = false;
         motion_control_init();
         gTargetSpeedCounts = 0.0f;
         gSpeedTargetCounts = 0.0f;
@@ -395,6 +417,63 @@ static void set_motor_duty(float leftDutyPercent, float rightDutyPercent)
         duty_percent_to_speed(abs_float(leftDutyPercent)));
     BO_Control((rightDutyPercent >= 0.0f) ? 1U : 0U,
         duty_percent_to_speed(abs_float(rightDutyPercent)));
+}
+
+static bool parse_lturn_command(const char *command)
+{
+    float angleDeg;
+
+    if (strncmp(command, "LTURN ", 6U) != 0) {
+        return false;
+    }
+
+    if (sscanf(command + 6, "%f", &angleDeg) != 1) {
+        uart_debug_write_string("ERR LTURN\r\n");
+        return true;
+    }
+
+    EncoderCounts counts = encoder_get_counts();
+    gManualMotorMode = false;
+    motion_control_init();
+    gTargetSpeedCounts = 0.0f;
+    gSpeedTargetCounts = 0.0f;
+    gLTurnActive = true;
+    gLTurnDirection = (angleDeg >= 0.0f) ? 1 : -1;
+    gLTurnTargetCounts = (abs_float(angleDeg) / 90.0f) *
+        LTURN_TARGET_COUNTS_90;
+    gLTurnStartLeftCount = counts.left_count;
+    gLTurnStartRightCount = counts.right_count;
+    pid_reset(&gLeftSpeedPid);
+    pid_reset(&gRightSpeedPid);
+    uart_debug_write_string("OK LTURN\r\n");
+    return true;
+}
+
+static bool update_lturn(EncoderCounts counts, float *leftTargetSpeed,
+    float *rightTargetSpeed)
+{
+    if (!gLTurnActive) {
+        return false;
+    }
+
+    float leftTravel = abs_float((float) (counts.left_count -
+        gLTurnStartLeftCount));
+    float rightTravel = abs_float((float) (counts.right_count -
+        gLTurnStartRightCount));
+    float travel = (leftTravel + rightTravel) * 0.5f;
+
+    if (travel >= (gLTurnTargetCounts - LTURN_DONE_TOLERANCE_COUNTS)) {
+        gLTurnActive = false;
+        *leftTargetSpeed = 0.0f;
+        *rightTargetSpeed = 0.0f;
+        pid_reset(&gLeftSpeedPid);
+        pid_reset(&gRightSpeedPid);
+        return true;
+    }
+
+    *leftTargetSpeed = (float) -gLTurnDirection * LTURN_SPEED_COUNTS;
+    *rightTargetSpeed = (float) gLTurnDirection * LTURN_SPEED_COUNTS;
+    return true;
 }
 
 static void update_speed_target_ramp(void)
