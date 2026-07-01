@@ -2,17 +2,17 @@
 #include <stdio.h>
 #include <string.h>
 
-#define CONTROL_PERIOD_S (0.02f)
-#define WHEEL_DIAMETER_MM (48.0f)
-#define WHEEL_BASE_MM (120.0f)
-#define MOTOR_ENCODER_PPR (11.0f)
-#define MOTOR_REDUCTION_RATIO (20.0f)
-#define ENCODER_COUNT_MULTIPLIER (2.0f)
-#define PI_F (3.1415926f)
-#define MAX_LINEAR_SPEED_MM_S (100.0f)
-#define MAX_ANGULAR_SPEED_DEG_S (120.0f)
-#define DIST_DONE_TOLERANCE_COUNTS (8.0f)
-#define TURN_DONE_TOLERANCE_COUNTS (8.0f)
+#define CONTROL_PERIOD_S (0.02f) /* 速度控制周期，单位：秒 */
+#define WHEEL_DIAMETER_MM (48.0f) /* 车轮直径，影响 mm/s 到编码器 counts 的换算 */
+#define WHEEL_BASE_MM (120.0f) /* 左右轮中心距，影响原地转弯角度换算 */
+#define MOTOR_ENCODER_PPR (11.0f) /* 电机编码器每转脉冲数，按电机轴计算 */
+#define MOTOR_REDUCTION_RATIO (20.0f) /* 减速箱减速比，用来换算到车轮轴 */
+#define ENCODER_COUNT_MULTIPLIER (2.0f) /* 实际计数边沿倍率，本工程对 A/B 两相边沿计数 */
+#define PI_F (3.1415926f) /* 圆周率常量 */
+#define MAX_LINEAR_SPEED_MM_S (100.0f) /* 运动命令允许的最大直线速度，单位：mm/s */
+#define MAX_ANGULAR_SPEED_DEG_S (120.0f) /* 运动命令允许的最大角速度，单位：deg/s */
+#define DIST_DONE_TOLERANCE_COUNTS (8.0f) /* 距离运动到位容差，单位：编码器 counts */
+#define TURN_DONE_TOLERANCE_COUNTS (8.0f) /* 转角运动到位容差，单位：编码器 counts */
 
 typedef enum {
     MOTION_MODE_IDLE = 0,

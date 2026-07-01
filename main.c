@@ -15,7 +15,7 @@
 #include <stdbool.h>
 
 #define CONTROL_PERIOD_MS (20U)
-#define TELEMETRY_PERIOD_MS (20U)
+#define TELEMETRY_PERIOD_MS (100U)
 #define HEARTBEAT_PERIOD_MS (30000U)
 #define STATUS_LED_PERIOD_MS (500U)
 

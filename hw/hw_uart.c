@@ -1,7 +1,7 @@
 #include "hw_uart.h"
 #include "ti_msp_dl_config.h"
 
-#define UART_TX_BUFFER_SIZE (512U)
+#define UART_TX_BUFFER_SIZE (2048U)
 #define UART_RX_BUFFER_SIZE (128U)
 
 static uint8_t gUartTxBuffer[UART_TX_BUFFER_SIZE];

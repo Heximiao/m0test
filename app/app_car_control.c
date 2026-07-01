@@ -11,27 +11,29 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TELEMETRY_BUFFER_SIZE (256U)
-#define FIRMWARE_VERSION "diag-20260630-refactor"
+#define TELEMETRY_BUFFER_SIZE (256U) /* 串口遥测发送缓冲区字节数 */
+#define FIRMWARE_VERSION "diag-20260630-refactor" /* 上电时打印的固件版本 */
 
-#define MIN_DUTY_PERCENT (0.0f)
-#define MIN_TARGET_SPEED_COUNTS (-60.0f)
-#define MIN_RUNNING_TARGET_SPEED_COUNTS (0.0f)
-#define MAX_TARGET_SPEED_COUNTS (60.0f)
-#define SPEED_LOOP_START_DUTY_PERCENT (5.0f)
-#define SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT (0.35f)
-#define MAX_DUTY_PERCENT (85.0f)
-#define TARGET_SPEED_RAMP_STEP_COUNTS (0.25f)
-#define MANUAL_DUTY_RAMP_STEP_PERCENT (0.5f)
-#define MANUAL_MOTOR_DEFAULT_TIMEOUT_MS (2000U)
-#define MANUAL_MOTOR_MAX_TIMEOUT_MS (10000U)
-#define PID_INTEGRAL_LIMIT (200.0f)
-#define PID_OUTPUT_LIMIT (85.0f)
-#define SPEED_FILTER_ALPHA (0.25f)
-#define LINE_LOST_SPEED_SCALE (0.35f)
-#define LINE_FOLLOW_BASE_COUNTS (10.0f)
-#define LINE_FOLLOW_MIN_FORWARD_COUNTS (0.0f)
-#define LINE_FOLLOW_MAX_COUNTS (14.0f)
+#define MIN_DUTY_PERCENT (0.0f) /* 电机 PWM 占空比下限，单位：百分比 */
+#define MIN_TARGET_SPEED_COUNTS (-60.0f) /* BASE/目标速度允许的最小编码器增量，单位：counts/20ms */
+#define MIN_RUNNING_TARGET_SPEED_COUNTS (0.0f) /* 非零速度命令的最小绝对值；当前不强制起步速度 */
+#define MAX_TARGET_SPEED_COUNTS (60.0f) /* BASE/目标速度允许的最大编码器增量，单位：counts/20ms */
+#define SPEED_LOOP_START_DUTY_PERCENT (8.0f) /* 速度闭环前馈的起步占空比，用来克服静摩擦 */
+#define SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT (0.70f) /* 每 1 count/20ms 目标速度对应的基础占空比 */
+#define LEFT_SPEED_FEED_FORWARD_SCALE (1.00f) /* 左轮前馈比例，用来校准左右电机差异 */
+#define RIGHT_SPEED_FEED_FORWARD_SCALE (0.96f) /* 右轮前馈比例；小于 1 表示右轮基础输出略降 */
+#define MAX_DUTY_PERCENT (85.0f) /* 电机 PWM 占空比上限，避免满占空比失控 */
+#define TARGET_SPEED_RAMP_STEP_COUNTS (0.25f) /* BASE 目标斜坡步进，单位：counts/20ms/控制周期 */
+#define MANUAL_DUTY_RAMP_STEP_PERCENT (0.5f) /* PWM/MOTOR 手动模式占空比斜坡步进，单位：百分比/控制周期 */
+#define MANUAL_MOTOR_DEFAULT_TIMEOUT_MS (2000U) /* MOTOR 命令默认运行时间，单位：ms */
+#define MANUAL_MOTOR_MAX_TIMEOUT_MS (10000U) /* MOTOR/PWM 命令允许的最长运行时间，单位：ms */
+#define PID_INTEGRAL_LIMIT (200.0f) /* PID 积分项限幅，防止积分累积过大 */
+#define PID_OUTPUT_LIMIT (85.0f) /* 单个速度 PID 输出限幅，单位：占空比百分比 */
+#define SPEED_FILTER_ALPHA (0.25f) /* 编码器速度一阶低通滤波系数，越大响应越快但越抖 */
+#define LINE_LOST_SPEED_SCALE (0.35f) /* 巡线丢线时的速度缩放比例 */
+#define LINE_FOLLOW_BASE_COUNTS (10.0f) /* 巡线自动前进基础速度，单位：counts/20ms */
+#define LINE_FOLLOW_MIN_FORWARD_COUNTS (0.0f) /* 巡线时单轮最小前进速度，单位：counts/20ms */
+#define LINE_FOLLOW_MAX_COUNTS (14.0f) /* 巡线自动前进速度上限，单位：counts/20ms */
 
 static PID gLeftSpeedPid;
 static PID gRightSpeedPid;
@@ -64,7 +66,8 @@ static uint32_t duty_percent_to_speed(float dutyPercent);
 static float clamp_speed_target_command(float speedCounts);
 static float clamp_line_follow_speed(float speedCounts);
 static float clamp_motor_test_duty_command(float dutyPercent);
-static float apply_speed_loop_start_duty(float pidOutput, float targetSpeed);
+static float apply_speed_loop_start_duty(float pidOutput, float targetSpeed,
+    float feedForwardScale);
 static float lowpass_filter(float previous, float current);
 static float ramp_toward(float current, float target, float step);
 static void send_status(void);
@@ -81,9 +84,9 @@ static float abs_float(float value);
 
 void app_car_control_init(void)
 {
-    pid_init(&gLeftSpeedPid, 1.0f, 0.02f, 0.0f, PID_INTEGRAL_LIMIT,
+    pid_init(&gLeftSpeedPid, 4.0f, 0.2f, 0.4f, PID_INTEGRAL_LIMIT,
         PID_OUTPUT_LIMIT);
-    pid_init(&gRightSpeedPid, 1.0f, 0.02f, 0.0f, PID_INTEGRAL_LIMIT,
+    pid_init(&gRightSpeedPid, 4.0f, 0.2f, 0.4f, PID_INTEGRAL_LIMIT,
         PID_OUTPUT_LIMIT);
     line_follow_init();
     motion_control_init();
@@ -138,8 +141,13 @@ void app_car_control_update(uint32_t nowMs)
     }
 
     if (line_follow_is_valid(nowMs)) {
-        leftTargetSpeed += lineTurnAdjust;
-        rightTargetSpeed -= lineTurnAdjust;
+        /*
+         * OpenMV sends a positive line error when the target line is to the
+         * right side of the image. Positive correction should speed up the
+         * right wheel and slow down the left wheel.
+         */
+        leftTargetSpeed -= lineTurnAdjust;
+        rightTargetSpeed += lineTurnAdjust;
         if (!motion_control_is_active()) {
             if (leftTargetSpeed < LINE_FOLLOW_MIN_FORWARD_COUNTS) {
                 leftTargetSpeed = LINE_FOLLOW_MIN_FORWARD_COUNTS;
@@ -167,9 +175,9 @@ void app_car_control_update(uint32_t nowMs)
     gLastRightOutput = pid_calc(&gRightSpeedPid, rightTargetSpeed,
         gFilteredRightSpeed);
     gLastLeftOutput = apply_speed_loop_start_duty(gLastLeftOutput,
-        leftTargetSpeed);
+        leftTargetSpeed, LEFT_SPEED_FEED_FORWARD_SCALE);
     gLastRightOutput = apply_speed_loop_start_duty(gLastRightOutput,
-        rightTargetSpeed);
+        rightTargetSpeed, RIGHT_SPEED_FEED_FORWARD_SCALE);
 
     set_motor_duty(gLastLeftOutput, gLastRightOutput);
 }
@@ -475,20 +483,24 @@ static float clamp_motor_test_duty_command(float dutyPercent)
     return dutyPercent;
 }
 
-static float apply_speed_loop_start_duty(float pidOutput, float targetSpeed)
+static float apply_speed_loop_start_duty(float pidOutput, float targetSpeed,
+    float feedForwardScale)
 {
+    float feedForwardDuty;
+
     if (targetSpeed == 0.0f) {
         return 0.0f;
     }
 
+    feedForwardDuty = SPEED_LOOP_START_DUTY_PERCENT +
+        (abs_float(targetSpeed) * SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT);
+    feedForwardDuty *= feedForwardScale;
+
     if (targetSpeed > 0.0f) {
-        return SPEED_LOOP_START_DUTY_PERCENT +
-            (targetSpeed * SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT) +
-            pidOutput;
+        return feedForwardDuty + pidOutput;
     }
 
-    return -SPEED_LOOP_START_DUTY_PERCENT +
-        (targetSpeed * SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT) + pidOutput;
+    return -feedForwardDuty + pidOutput;
 }
 
 static float lowpass_filter(float previous, float current)

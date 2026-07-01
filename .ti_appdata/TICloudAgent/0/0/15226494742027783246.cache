@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<configurations>
+
+  <configuration id="configuration_0">
+    <connection desc="SEGGER J-Link Emulator" id="SEGGER J-Link Emulator" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\connections\segger_j-link_connection.xml">
+      <connectionType Type="JLink" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\connections\segger_j-link_connection.xml"/>
+      <property Type="hiddenfield" Value="No" id="dataFileRequired" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\connections\segger_j-link_connection.xml"/>
+      <drivers id="drivers" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\drivers\jlinkcs_dap.xml">
+        <isa ProcID="0x38000405" Type="CS_DAP" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\drivers\jlinkcs_dap.xml">
+          <driver file="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\NONE">
+            <connectionType Type="JLink"/>
+          </driver>
+        </isa>
+        <isa ProcID="0x75802800" Type="Cortex_M0P" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\drivers\jlinkcortexm0p.xml">
+          <driver file="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\DebugServer\drivers\JLINK2GTIAdapter.dvr">
+            <connectionType Type="JLink"/>
+            <property Type="hiddenfield" Value="CortexM0" id="Core Type"/>
+            <property Type="hiddenfield" Value="true" id="disableInternalFlashManager"/>
+            <property Type="hiddenfield" Value="true" id="disableMemoryMapOnDownload"/>
+            <property Type="hiddenfield" Value="true" id="supportsNonIntrusiveConnect"/>
+            <property Type="hiddenfield" Value="true" id="haltOnConnectByDefault"/>
+            <property Type="hiddenfield" id="disableArmAdvancedFeatures"/>
+            <property Type="filepathfield" id="J-Link Scriptfile Path"/>
+            <property Type="filepathfield" id="J-Link Logfile Path"/>
+            <property Type="stringfield" Value="auto" id="JTAG Frequency (Hz)"/>
+            <property Name="Target Interface" Type="choicelist" Value="1" desc="Target Interface" id="Target Interface Type">
+              <choice Name="JTAG" value="0"/>
+              <choice Name="SWD" value="1"/>
+              <choice Name="cJTAG" value="2"/>
+            </property>
+          </driver>
+        </isa>
+        <isa ProcID="0x38400004" Type="SEC_AP" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\drivers\jlinksec_ap.xml">
+          <driver file="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\NONE">
+            <connectionType Type="JLink"/>
+          </driver>
+        </isa>
+      </drivers>
+      <platform id="platform_0">
+        <device desc="MSPM0G3507" description="ARM Cortex-M0 Plus MCU" id="MSPM0G3507" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml" partnum="MSPM0G3507">
+          <property Type="stringfield" Value="MSPM0" id="FilterString" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Type="stringfield" Value="TICLANG" id="DefaultToolChain" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Type="stringfield" Value="true" id="PromoteSDKExamples" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Type="stringfield" Value="--romwidth=8 --memwidth=8 --intel" id="HexBuildOptions" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Type="stringfield" Value="--romwidth=8 --memwidth=8 --intel" id="TICLANGHexBuildOptions" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Name="Enable SWD Password" Type="choicelist" Value="0" id="EnableSWDPassword" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Name="SWD Password [0] (32-bit HEX format)" Type="numericfield" Value="0" id="MSPM0SWDPassword0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Name="SWD Password [1] (32-bit HEX format)" Type="numericfield" Value="0" id="MSPM0SWDPassword1" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Name="SWD Password [2] (32-bit HEX format)" Type="numericfield" Value="0" id="MSPM0SWDPassword2" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Name="SWD Password [3] (32-bit HEX format)" Type="numericfield" Value="0" id="MSPM0SWDPassword3" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Type="numericfield" Value="0" id="etparams.ahbap_index" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Type="numericfield" Value="3" id="etparams.etap_index" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Type="numericfield" Value="3" id="etparams.regsel_value" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Type="numericfield" Value="1" id="etparams.domainctrl_value" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Type="stringfield" Value="cmcu" id="AETT Platform" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <property Type="filepathfield" Value="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\emulation\analysis\dpk\devices\mspm0\AETT_database_cmcu_mspm0.jsonc" id="AETT Database File" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\devices\MSPM0G3507.xml"/>
+          <router desc="CS_DAP_0" description="CS_DAP Router" id="CS_DAP_0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\routers\cs_dap.xml" isa="CS_DAP">
+            <register acronym="IP_DUMMY" description="" id="IP_DUMMY" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\routers\cs_dap.xml" width="32"/>
+            <register acronym="DEVICE_ID" description="" id="DEVICE_ID" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\routers\cs_dap.xml" width="32"/>
+            <module accessnumbytes="4" baseaddr="0" description="" hidden="true" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\cs_dap_NotVisible.xml" permissions="p" requestor="CS_DAP" size="00"/>
+            <property Type="hiddenfield" Value="1" id="Use Board Reset"/>
+            <property Type="filepathfield" Value="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\emulation\gel\mspm0_cs_dap_init.gel" id="GEL File"/>
+            <module accessnumbytes="4" baseaddr="0x00020100" description="CFGAP" endaddr="0x000201FC" hidden="true" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\CFGAP.xml" permissions="p" requestor="MSP" size="0x100"/>
+            <module accessnumbytes="4" baseaddr="0x00020200" description="SECAP" endaddr="0x000202FC" hidden="true" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\AP\SECAP.xml" permissions="p" requestor="MSP" size="0x100"/>
+            <module accessnumbytes="4" baseaddr="0x00020400" description="PWRAP" endaddr="0x000204FC" hidden="true" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\AP\PWRAP.xml" permissions="p" requestor="MSP" size="0x100"/>
+            <property Type="choicelist" Value="1" id="Device Management"/>
+            <jtag>
+              <property Type="choicelist" Value="0" id="The Converter Usage"/>
+              <property Type="choicelist" Value="2" id="SWD Mode Settings">
+                <choice Name="SWD Mode - Aux COM port is target TDO pin"/>
+              </property>
+              <property Type="choicelist" Value="1" id="The JTAG TCLK Frequency (MHz)">
+                <choice Name="Fixed with user specified value" value="SPECIFIC">
+                  <property Type="stringfield" Value="1MHz" id="-- Enter a value from 100.0kHz to 2.5MHz"/>
+                </choice>
+              </property>
+              <property Type="choicelist" Value="4" id="The cJTAG / SWD Features">
+                <choice Name="SWD Mode - Aux COM port is target TDO pin"/>
+              </property>
+            </jtag>
+            <subpath id="subpath_0">
+              <property Type="numericfield" Value="0" id="Port Number"/>
+              <property Type="choicelist" Value="1" id="Initial Configuration"/>
+              <property Type="choicelist" Value="1" id="Customer Configuration"/>
+              <property Type="choicelist" Value="1" id="Pseudo"/>
+              <property Type="choicelist" Value="0" id="Type"/>
+              <cpu desc="CORTEX_M0P" description="Cortex M0+ CPU" id="CORTEX_M0P" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" isa="CORTEX_M0P">
+                <register acronym="PC" description="Program Counter" id="PC" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R13" description="General Purpose Register 13 - Stack Pointer" id="SP" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R14" description="General Purpose Register 14 - Link Register" id="LR" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="xPSR" description="Stores the status of interrupt enables and critical processor status signals" id="xPSR" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32">
+                  <bitfield begin="31" description="Stores bit 31 of the result of the instruction. In other words stores the sign of the number" end="31" id="N" range="" resetval="0" rwaccess="R" width="1"/>
+                  <bitfield begin="30" description="Is set to 1 if the result of the operation is zero else stays 0" end="30" id="Z" range="" resetval="0" rwaccess="R" width="1"/>
+                  <bitfield begin="29" description="Stores the value of the carry bit if it occurred in an addition or the borrow bit in a subtraction. In a shift stores the last bit shifted out." end="29" id="C" range="" resetval="0" rwaccess="R" width="1"/>
+                  <bitfield begin="28" description="Set to 1 if an overflow occurred " end="28" id="V" range="" resetval="0" rwaccess="R" width="1"/>
+                  <bitfield begin="27" description="Reserved " end="25" id="RESV" range="" resetval="0" rwaccess="R" width="3"/>
+                  <bitfield begin="24" description="Thumb State " end="24" id="T" range="" resetval="1" rwaccess="R" width="1"/>
+                  <bitfield begin="23" description="Reserved " end="10" id="RESV2" range="" resetval="0" rwaccess="R" width="14"/>
+                  <bitfield begin="9" description="Reserved " end="9" id="RESV3" range="" resetval="0" rwaccess="R" width="1"/>
+                  <bitfield begin="8" description="Reserved " end="6" id="RESV4" range="" resetval="0" rwaccess="R" width="3"/>
+                  <bitfield begin="5" description="Exception Number " end="0" id="EXCEPTION" range="" resetval="0" rwaccess="R" width="6"/>
+                </register>
+                <register acronym="R0" description="General Purpose Register 0" id="R0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R1" description="General Purpose Register 1" id="R1" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R2" description="General Purpose Register 2" id="R2" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R3" description="General Purpose Register 3" id="R3" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R4" description="General Purpose Register 4" id="R4" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R5" description="General Purpose Register 5" id="R5" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R6" description="General Purpose Register 6" id="R6" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R7" description="General Purpose Register 7" id="R7" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R8" description="General Purpose Register 8" id="R8" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R9" description="General Purpose Register 9" id="R9" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R10" description="General Purpose Register 10" id="R10" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R11" description="General Purpose Register 11" id="R11" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R12" description="General Purpose Register 12" id="R12" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R13" description="General Purpose Register 13" id="R13" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="R14" description="General Purpose Register 14" id="R14" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="MSP" description="MSP Register" id="MSP" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="PSP" description="PSP Register" id="PSP" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32"/>
+                <register acronym="CTRL_PRI" description="CM0+ Special Registers" id="CTRL_PRI" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\cortex_m0p.xml" width="32">
+                  <bitfield begin="31" description="Control" end="24" id="CONTROL" range="" resetval="0" rwaccess="RW" width="8"/>
+                  <bitfield begin="23" description="Reserved" end="8" id="RESV" range="" resetval="0" rwaccess="RW" width="16"/>
+                  <bitfield begin="7" description="Primask" end="0" id="PRIMASK" range="" resetval="0" rwaccess="RW" width="8"/>
+                </register>
+                <module accessnumbytes="4" baseaddr="0" description="" hidden="true" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\cortexM0_NotVisible.xml" permissions="p" requestor="Cortex_M0" size="00"/>
+                <module accessnumbytes="4" baseaddr="0x40000000" description="" id="adc0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\ADC0_4MSPS_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40002000" description="" id="adc1" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\ADC1_4MSPS_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40442000" description="" id="aes" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\AES_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40508000" description="" id="canfd0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\CANFD0_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40008000" description="" id="comp0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\COMP0_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x4000A000" description="" id="comp1" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\COMP1_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x4000C000" description="" id="comp2" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\COMP2_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40400000" description="" id="cpuss" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\CPUSS_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40440000" description="" id="crc" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\CRC_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40018000" description="" id="dac0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\DAC0_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x400C7000" description="" id="debugss" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\DEBUGSS_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x4042A000" description="" id="dma" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\DMA_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x00000000" description="" id="flash" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\FLASH_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x400CD000" description="" id="flashctl" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\FLASHCTL_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x400A0000" description="" id="gpioa" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\GPIOA_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x400A2000" description="" id="gpiob" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\GPIOB_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x400F0000" description="" id="i2c0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\I2C0_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x400F2000" description="" id="i2c1" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\I2C1_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40428000" description="" id="iomux" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\IOMUX_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40410000" description="" id="mathacl" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\MATHACL_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40020000" description="" id="opa0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\OPA0_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40022000" description="" id="opa1" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\OPA1_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40094000" description="" id="rtc" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\RTC_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40468000" description="" id="spi0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\SPI0_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x4046A000" description="" id="spi1" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\SPI1_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x400AF000" description="" id="sysctl" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\SYSCTL_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x20000000" description="" id="sysmem" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\SYSMEM_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40860000" description="" id="tima0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\TIMA0_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40862000" description="" id="tima1" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\TIMA1_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40084000" description="" id="timg0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\TIMG0_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40870000" description="" id="timg12" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\TIMG12_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40868000" description="" id="timg6" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\TIMG6_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x4086A000" description="" id="timg7" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\TIMG7_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40090000" description="" id="timg8" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\TIMG8_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40444000" description="" id="trng" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\TRNG_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40108000" description="" id="uart0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\UART0_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40100000" description="" id="uart1" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\UART1_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40102000" description="" id="uart2" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\UART2_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40500000" description="" id="uart3" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\UART3_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40030000" description="" id="vref" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\VREF_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40424000" description="" id="wuc" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\WUC_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40080000" description="" id="wwdt0" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\WWDT0_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x40082000" description="" id="wwdt1" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\mspm0g1x0x_g3x0x\WWDT1_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x00000000" description="" id="nvic" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\NVIC_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x00000000" description="" id="systick" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\SYSTICK_1.0.xml" permissions="p" requestor="MSP" size="10"/>
+                <module accessnumbytes="4" baseaddr="0x00000000" description="" hidden="true" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\Modules\msp\ETAP.xml" permissions="p" requestor="MSP" size="00"/>
+                <property Type="hiddenfield" Value="1" id="Auto Release WIR on Connect"/>
+                <property Type="filepathfield" Value="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\emulation\gel\mspm0g3507.gel" id="GEL File"/>
+                <property Type="numericfield" Value="0x02000000" id="Access Port Designator"/>
+                <property Type="stringfield" Value="mspm0g3507.cmd" id="TICLANGLinkerCmd"/>
+                <property Type="stringfield" Value="-D__MSPM0G3507__" id="TICLANGCompilerBuildOptions"/>
+                <property Type="stringfield" Value="-l${COM_TI_MSPM0_SDK_INSTALL_DIR}/source/ti/driverlib/lib/ticlang/m0p/mspm0g1x0x_g3x0x/driverlib.a" id="TICLANGLinkerBuildOptions"/>
+                <property Type="stringfield" Value="" id="TICLANGHexBuildOptions"/>
+                <property Type="stringfield" Value="../src/startup_mspm0g350x_ticlang.c" id="TICLANGFilesToCopy"/>
+                <property Type="stringfield" Value="mspm0g3507.lds" id="GNULinkerCmd"/>
+                <property Type="stringfield" Value="-D__MSPM0G3507__" id="GNUCompilerBuildOptions"/>
+                <property Type="stringfield" Value="-l${COM_TI_MSPM0_SDK_INSTALL_DIR}/source/ti/driverlib/lib/gcc/m0p/mspm0g1x0x_g3x0x/driverlib.a" id="GNULinkerBuildOptions"/>
+                <property Type="stringfield" Value="" id="GNUHexBuildOptions"/>
+                <property Type="stringfield" Value="../src/startup_mspm0g350x_gcc.c" id="GNUFilesToCopy"/>
+                <property Type="stringfield" Value="--romwidth=8 --memwidth=8 --intel" id="HexBuildOptions"/>
+                <property Type="stringfield" Value="libc.a" id="RTSlib"/>
+                <property Type="stringfield" Value="true" id="IsElfDefault"/>
+                <property Type="stringfield" Value="little" id="Endianness"/>
+                <property Type="stringfield" Value="6.3.1" id="MinCodegenVersion"/>
+                <property Type="stringfield" Value="TIXDS110_Connection.xml" id="DefaultConnection"/>
+                <property Type="stringfield" Value="auto" id="JTAG Frequency (Hz)"/>
+              </cpu>
+            </subpath>
+            <subpath id="subpath_1">
+              <property Type="numericfield" Value="1" id="Port Number"/>
+              <cpu desc="SEC_AP" description="SEC_AP" id="SEC_AP" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\sec_ap.xml" isa="SEC_AP">
+                <register acronym="TRANSMIT_DATA" description="Transmit Data Register" id="TRANSMIT_DATA" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\sec_ap.xml" width="32">
+                  <bitfield begin="31" description="Transmit Data.  Writing this sets the TXDATAVAIL bit in the Transmit Control Register" end="0" id="TXDAT" range="" resetval="0" rwaccess="RW" width="32"/>
+                </register>
+                <register acronym="TRANSMIT_CONTROL" description="Transmit Control Register" id="TRANSMIT_CONTROL" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\sec_ap.xml" width="32">
+                  <bitfield begin="31" description="Device specific control information for the system security logic." end="1" id="CONTROL" range="" resetval="0" rwaccess="RW" width="31"/>
+                  <bitfield begin="0" description="Set automatically when the TX Data Register is written.  Cleared automatically when the system debug logic indicates it has accepted TX Data" end="0" id="TXDATAVAIL" range="" resetval="0" rwaccess="R" width="1"/>
+                </register>
+                <register acronym="RECEIVE_DATA" description="Receive Data Register" id="RECEIVE_DATA" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\sec_ap.xml" width="32">
+                  <bitfield begin="31" description="Receive Data.  Reading this clears the RXDATAVAIL bit in the Receive Control Register" end="0" id="RXDAT" range="" resetval="0" rwaccess="RW" width="32"/>
+                </register>
+                <register acronym="RECEIVE_CONTROL" description="Receive Control Register" id="RECEIVE_CONTROL" instanceFile="F:\yingyong\tiflash\deskdb\content\TICloudAgent\win\ccs_base\common\targetdb\cpus\sec_ap.xml" width="32">
+                  <bitfield begin="31" description="Device specific control information for the system security logic." end="1" id="CONTROL" range="" resetval="0" rwaccess="RW" width="31"/>
+                  <bitfield begin="0" description="Set automatically when the system security logic indicates that RX Data Register is valid.  Cleared automatically when the RX data register is read" end="0" id="RXDATAVAIL" range="" resetval="0" rwaccess="R" width="1"/>
+                </register>
+                <property Type="numericfield" Value="0x02000002" id="Access Port Designator"/>
+              </cpu>
+            </subpath>
+          </router>
+        </device>
+      </platform>
+    </connection>
+  </configuration>
+
+</configurations>

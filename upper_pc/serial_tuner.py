@@ -38,14 +38,33 @@ class SerialTunerApp:
         self.rx_queue = queue.Queue()
         self.samples = []
         self.max_samples = 240
+        self.max_log_lines = 400
+        self.draw_interval_s = 0.10
+        self.plot_min_span = 6.0
+        self.pending_log_lines = []
+        self.log_line_count = 0
+        self.last_draw_time = 0.0
+        self.last_rx_time = 0.0
+        self.last_sample_time = 0.0
+        self.rx_line_count = 0
+        self.ui_line_count = 0
+        self.sample_count = 0
+        self.draw_count = 0
+        self.last_debug_time = time.time()
+        self.last_debug_rx_count = 0
+        self.last_debug_ui_count = 0
+        self.last_debug_sample_count = 0
+        self.last_debug_draw_count = 0
+        self.draw_pending = False
 
         self.port_var = tk.StringVar()
         self.baud_var = tk.StringVar(value="115200")
-        self.base_var = tk.StringVar(value="8.0")
-        self.kp_var = tk.StringVar(value="0.35")
-        self.ki_var = tk.StringVar(value="0.02")
-        self.kd_var = tk.StringVar(value="0.0")
+        self.base_var = tk.StringVar(value="20")
+        self.kp_var = tk.StringVar(value="4.0")
+        self.ki_var = tk.StringVar(value="0.2")
+        self.kd_var = tk.StringVar(value="0.4")
         self.status_var = tk.StringVar(value="Disconnected")
+        self.debug_var = tk.StringVar(value="RX 0/s  UI 0/s  Q 0  Draw 0/s  Last -")
 
         self._build_ui()
         self.refresh_ports()
@@ -68,6 +87,7 @@ class SerialTunerApp:
         self.connect_button = ttk.Button(top, text="Connect", command=self.toggle_connection)
         self.connect_button.pack(side=tk.LEFT)
         ttk.Label(top, textvariable=self.status_var).pack(side=tk.LEFT, padx=14)
+        ttk.Label(top, textvariable=self.debug_var).pack(side=tk.LEFT, padx=14)
 
         controls = ttk.LabelFrame(self.root, text="PID Commands", padding=8)
         controls.pack(fill=tk.X, padx=8, pady=(0, 8))
@@ -191,9 +211,14 @@ class SerialTunerApp:
 
             if raw:
                 line = raw.decode("utf-8", errors="replace").strip()
+                self.rx_line_count += 1
+                self.last_rx_time = time.time()
                 self.rx_queue.put(("line", line))
 
     def _poll_rx_queue(self):
+        latest_sample = None
+        should_draw = False
+
         while True:
             try:
                 kind, payload = self.rx_queue.get_nowait()
@@ -201,17 +226,67 @@ class SerialTunerApp:
                 break
 
             if kind == "line":
-                self._append_log(payload)
-                self._parse_sample(payload)
+                self.ui_line_count += 1
+                self._queue_log(payload)
+                sample = self._parse_sample(payload)
+                if sample is not None:
+                    latest_sample = sample
+                    should_draw = True
             else:
-                self._append_log(f"[ERROR] {payload}")
+                self._queue_log(f"[ERROR] {payload}")
                 self.disconnect()
+
+        if latest_sample is not None:
+            self._append_sample(latest_sample)
+        if self.pending_log_lines:
+            self._flush_log()
+        if should_draw:
+            self._request_draw_plot()
+        self._update_debug_status()
 
         self.root.after(50, self._poll_rx_queue)
 
-    def _append_log(self, line):
+    def _update_debug_status(self):
+        now = time.time()
+        elapsed = now - self.last_debug_time
+        if elapsed < 1.0:
+            return
+
+        rx_rate = (self.rx_line_count - self.last_debug_rx_count) / elapsed
+        ui_rate = (self.ui_line_count - self.last_debug_ui_count) / elapsed
+        sample_rate = (self.sample_count - self.last_debug_sample_count) / elapsed
+        draw_rate = (self.draw_count - self.last_debug_draw_count) / elapsed
+        queue_size = self.rx_queue.qsize()
+        last_age = (now - self.last_rx_time) if self.last_rx_time > 0.0 else -1.0
+        last_text = f"{last_age:.1f}s" if last_age >= 0.0 else "-"
+
+        debug_text = (
+            f"RX {rx_rate:.0f}/s  UI {ui_rate:.0f}/s  S {sample_rate:.0f}/s  "
+            f"Q {queue_size}  Draw {draw_rate:.0f}/s  Last {last_text}"
+        )
+        self.debug_var.set(debug_text)
+        self._queue_log(f"[DBG] {debug_text}")
+        self._flush_log()
+
+        self.last_debug_time = now
+        self.last_debug_rx_count = self.rx_line_count
+        self.last_debug_ui_count = self.ui_line_count
+        self.last_debug_sample_count = self.sample_count
+        self.last_debug_draw_count = self.draw_count
+
+    def _queue_log(self, line):
         timestamp = time.strftime("%H:%M:%S")
-        self.log_text.insert(tk.END, f"{timestamp}  {line}\n")
+        self.pending_log_lines.append(f"{timestamp}  {line}\n")
+
+    def _flush_log(self):
+        line_count = len(self.pending_log_lines)
+        self.log_text.insert(tk.END, "".join(self.pending_log_lines))
+        self.pending_log_lines.clear()
+        self.log_line_count += line_count
+        if self.log_line_count > self.max_log_lines:
+            delete_count = self.log_line_count - self.max_log_lines
+            self.log_text.delete("1.0", f"{delete_count + 1}.0")
+            self.log_line_count = self.max_log_lines
         self.log_text.see(tk.END)
 
     def _parse_sample(self, line):
@@ -224,13 +299,36 @@ class SerialTunerApp:
                 label.config(text=f"{pairs[key]:.3g}")
 
         if not (("LD" in pairs) or ("RD" in pairs)):
-            return
+            return None
 
         pairs["TIME"] = time.time()
+        self.last_sample_time = pairs["TIME"]
+        return pairs
+
+    def _append_sample(self, pairs):
         self.samples.append(pairs)
+        self.sample_count += 1
         if len(self.samples) > self.max_samples:
             self.samples = self.samples[-self.max_samples :]
 
+    def _request_draw_plot(self):
+        now = time.time()
+        if (now - self.last_draw_time) >= self.draw_interval_s:
+            self.last_draw_time = now
+            self._draw_plot()
+            return
+
+        if not self.draw_pending:
+            self.draw_pending = True
+            delay_ms = int((self.draw_interval_s - (now - self.last_draw_time)) * 1000)
+            self.root.after(max(delay_ms, 1), self._draw_plot_if_pending)
+
+    def _draw_plot_if_pending(self):
+        if not self.draw_pending:
+            return
+
+        self.draw_pending = False
+        self.last_draw_time = time.time()
         self._draw_plot()
 
     def _parse_key_values(self, line):
@@ -246,10 +344,13 @@ class SerialTunerApp:
 
         if "BASE" in pairs:
             pairs["TARGET"] = pairs["BASE"]
+        if ("LT" in pairs) and ("RT" in pairs):
+            pairs["TARGET"] = (pairs["LT"] + pairs["RT"]) * 0.5
 
         return pairs
 
     def _draw_plot(self):
+        self.draw_count += 1
         self.canvas.delete("all")
         width = max(self.canvas.winfo_width(), 2)
         height = max(self.canvas.winfo_height(), 2)
@@ -277,9 +378,10 @@ class SerialTunerApp:
 
         min_v = min(values)
         max_v = max(values)
-        if abs(max_v - min_v) < 1e-6:
-            max_v += 1.0
-            min_v -= 1.0
+        if (max_v - min_v) < self.plot_min_span:
+            center = (max_v + min_v) * 0.5
+            min_v = center - (self.plot_min_span * 0.5)
+            max_v = center + (self.plot_min_span * 0.5)
 
         self.canvas.create_line(pad, height - pad, width - pad, height - pad, fill="#35424d")
         self.canvas.create_line(pad, pad, pad, height - pad, fill="#35424d")
@@ -317,7 +419,8 @@ class SerialTunerApp:
 
         try:
             self.serial_port.write((line.strip() + "\n").encode("utf-8"))
-            self._append_log(f"> {line.strip()}")
+            self._queue_log(f"> {line.strip()}")
+            self._flush_log()
         except Exception as exc:
             messagebox.showerror("Send failed", str(exc))
 
@@ -342,6 +445,9 @@ class SerialTunerApp:
     def clear_data(self):
         self.samples.clear()
         self.log_text.delete("1.0", tk.END)
+        self.pending_log_lines.clear()
+        self.log_line_count = 0
+        self.draw_pending = False
         for label in self.value_labels.values():
             label.config(text="-")
         self._draw_plot()
