@@ -35,8 +35,8 @@
 #define LINE_FOLLOW_MIN_FORWARD_COUNTS (0.0f) /* 巡线时单轮最小前进速度，单位：counts/20ms */
 #define LINE_FOLLOW_MAX_COUNTS (10.0f) /* 巡线自动前进速度上限，单位：counts/20ms */
 
-#define LTURN_TARGET_COUNTS_90 (180.0f) /* 90 degree in-place turn encoder target. */
-#define LTURN_SPEED_COUNTS (7.0f) /* In-place turn speed, counts/20ms. */
+#define LTURN_TARGET_COUNTS_90 (260.0f) /* 90 degree in-place turn encoder target. */
+#define LTURN_SPEED_COUNTS (10.0f) /* In-place turn speed, counts/20ms. */
 #define LTURN_DONE_TOLERANCE_COUNTS (4.0f) /* Done tolerance, counts. */
 
 static PID gLeftSpeedPid;
@@ -155,7 +155,9 @@ void app_car_control_update(uint32_t nowMs)
         lineAutoDrive = true;
     }
 
-    if (line_follow_is_valid(nowMs) && !gLTurnActive) {
+    /* 显式运动命令执行期间不叠加巡线修正，保证 ANGLE/TURN 能独立转完。 */
+    if (line_follow_is_valid(nowMs) && !gLTurnActive &&
+        !motion_control_is_active()) {
         /*
          * Positive correction should speed up the left wheel and slow down
          * the right wheel for this camera/motor mounting direction.
@@ -170,7 +172,7 @@ void app_car_control_update(uint32_t nowMs)
                 rightTargetSpeed = LINE_FOLLOW_MIN_FORWARD_COUNTS;
             }
         }
-    } else if (line_follow_is_active(nowMs)) {
+    } else if (line_follow_is_active(nowMs) && !motion_control_is_active()) {
         leftTargetSpeed *= LINE_LOST_SPEED_SCALE;
         rightTargetSpeed *= LINE_LOST_SPEED_SCALE;
     }

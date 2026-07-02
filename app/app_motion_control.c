@@ -3,12 +3,13 @@
 #include <string.h>
 
 #define CONTROL_PERIOD_S (0.02f) /* 速度控制周期，单位：秒 */
-#define WHEEL_DIAMETER_MM (48.0f) /* 车轮直径，影响 mm/s 到编码器 counts 的换算 */
-#define WHEEL_BASE_MM (120.0f) /* 左右轮中心距，影响原地转弯角度换算 */
-#define MOTOR_ENCODER_PPR (11.0f) /* 电机编码器每转脉冲数，按电机轴计算 */
-#define MOTOR_REDUCTION_RATIO (20.0f) /* 减速箱减速比，用来换算到车轮轴 */
-#define ENCODER_COUNT_MULTIPLIER (2.0f) /* 实际计数边沿倍率，本工程对 A/B 两相边沿计数 */
-#define PI_F (3.1415926f) /* 圆周率常量 */
+#define WHEEL_DIAMETER_MM (48.0f) /* 实测车轮直径，用于 mm/s 和编码器 counts 换算 */
+#define WHEEL_BASE_MM (129.0f) /* 左右后驱轮中心距，原地转向角度按这个轴距换算 */
+#define MOTOR_ENCODER_PPR (11.0f) /* MG310 霍尔编码器电机轴每圈脉冲数 */
+#define MOTOR_REDUCTION_RATIO (20.0f) /* MG310 减速箱减速比，用于换算到车轮轴 */
+#define ENCODER_COUNT_MULTIPLIER (2.0f) /* A/B 两相边沿计数倍率 */
+#define PI_F (3.1415926f) /* 圆周率 */
+#define DEFAULT_ANGULAR_SPEED_DEG_S (90.0f) /* ANGLE/TURN 只给角度时使用的默认角速度 */
 #define MAX_LINEAR_SPEED_MM_S (100.0f) /* 运动命令允许的最大直线速度，单位：mm/s */
 #define MAX_ANGULAR_SPEED_DEG_S (120.0f) /* 运动命令允许的最大角速度，单位：deg/s */
 #define DIST_DONE_TOLERANCE_COUNTS (8.0f) /* 距离运动到位容差，单位：编码器 counts */
@@ -52,6 +53,7 @@ bool motion_control_parse_command(const char *command, EncoderCounts counts)
 {
     float first;
     float second;
+    int argCount;
 
     if (strncmp(command, "DRIVE ", 6U) == 0) {
         if (sscanf(command + 6, "%f %f", &first, &second) == 2) {
@@ -74,7 +76,11 @@ bool motion_control_parse_command(const char *command, EncoderCounts counts)
     if ((strncmp(command, "TURN ", 5U) == 0) ||
         (strncmp(command, "ANGLE ", 6U) == 0)) {
         const char *args = (command[0] == 'T') ? (command + 5) : (command + 6);
-        if (sscanf(args, "%f %f", &first, &second) == 2) {
+        argCount = sscanf(args, "%f %f", &first, &second);
+        if (argCount == 1) {
+            second = DEFAULT_ANGULAR_SPEED_DEG_S;
+            start_turn(first, second, counts);
+        } else if (argCount == 2) {
             start_turn(first, second, counts);
         }
         return true;
@@ -168,7 +174,8 @@ static void start_distance(float distanceMm, float speedMmS,
     gLinearSpeedMmS = direction * clamp_float(speed, 1.0f,
         MAX_LINEAR_SPEED_MM_S);
     gAngularSpeedDegS = 0.0f;
-    gTargetCounts = abs_float(distanceMm) * counts_per_mm();
+    gTargetCounts = (abs_float(distanceMm) * counts_per_mm()) +
+        DIST_DONE_TOLERANCE_COUNTS;
     gStartLeftCount = counts.left_count;
     gStartRightCount = counts.right_count;
     gBusy = true;
@@ -177,6 +184,7 @@ static void start_distance(float distanceMm, float speedMmS,
 static void start_turn(float angleDeg, float angularSpeedDegS,
     EncoderCounts counts)
 {
+    /* 角度正负号用于区分方向：正数左转，负数右转。 */
     float direction = (angleDeg >= 0.0f) ? 1.0f : -1.0f;
     float speed = abs_float(angularSpeedDegS);
     float wheelTravelMm = abs_float(angleDeg) * PI_F / 180.0f *
@@ -186,7 +194,8 @@ static void start_turn(float angleDeg, float angularSpeedDegS,
     gLinearSpeedMmS = 0.0f;
     gAngularSpeedDegS = direction * clamp_float(speed, 1.0f,
         MAX_ANGULAR_SPEED_DEG_S);
-    gTargetCounts = wheelTravelMm * counts_per_mm();
+    gTargetCounts = (wheelTravelMm * counts_per_mm()) +
+        TURN_DONE_TOLERANCE_COUNTS;
     gStartLeftCount = counts.left_count;
     gStartRightCount = counts.right_count;
     gBusy = true;
