@@ -65,6 +65,8 @@ int main(void)
      *   PA23 -> UART2 TX, optional MCU-to-OpenMV line
      *   PA24 -> UART2 RX, connect to OpenMV TX       openmv的4和5脚
      *   Baud rate: 115200, 8N1
+     *   OpenMV P4 TX -> PA24 RX
+     *   OpenMV P5 RX <- PA23 TX
      *
      * LaunchPad status LED:
      *   PB22/PB26/PB27 -> LED2 blue/red/green
