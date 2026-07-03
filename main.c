@@ -36,12 +36,12 @@ int main(void)
      *   Left/right are viewed from behind the car, looking toward the front.
      *
      * TB6612 motor driver:
-     *   PA8  -> PWMA, left wheel PWM  (TIMA0_CCP0)
-     *   PA25 -> AIN1, left wheel direction
-     *   PA31 -> AIN2, left wheel direction
-     *   PB9  -> PWMB, right wheel PWM (TIMA0_CCP1)
-     *   PB16 -> BIN1, right wheel direction
-     *   PB13 -> BIN2, right wheel direction
+     *   PA8  -> PWMD, left wheel PWM  (TIMA0_CCP0)
+     *   PA25 -> DIN1, left wheel direction
+     *   PA31 -> DIN2, left wheel direction
+     *   PB9  -> PWMA, right wheel PWM (TIMA0_CCP1)
+     *   PB16 -> AIN1, right wheel direction
+     *   PB13 -> AIN2, right wheel direction
      *   PA27 -> STBY, TB6612 standby enable
      *
      * Encoder GPIO wiring:
@@ -63,7 +63,7 @@ int main(void)
      *
      * OpenMV vision UART:
      *   PA23 -> UART2 TX, optional MCU-to-OpenMV line
-     *   PA24 -> UART2 RX, connect to OpenMV TX
+     *   PA24 -> UART2 RX, connect to OpenMV TX       openmv的4和5脚
      *   Baud rate: 115200, 8N1
      *
      * LaunchPad status LED:
