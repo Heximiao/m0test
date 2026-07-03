@@ -121,6 +121,7 @@ SUBDIRS := \
 . \
 app \
 bsp \
+bsp/mpu6050 \
 hw \
 mid \
 

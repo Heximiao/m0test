@@ -7,6 +7,7 @@
  */
 
 #include "app/app_car_control.h"
+#include "app/app_mpu6050_attitude.h"
 #include "bsp/bsp_tb6612.h"
 #include "hw/hw_encoder.h"
 #include "hw/hw_openmv_uart.h"
@@ -15,11 +16,13 @@
 #include <stdbool.h>
 
 #define CONTROL_PERIOD_MS (20U)
+#define ATTITUDE_PERIOD_MS (100U)
 #define TELEMETRY_PERIOD_MS (100U)
 #define HEARTBEAT_PERIOD_MS (30000U)
 #define STATUS_LED_PERIOD_MS (500U)
 
 static volatile bool gControlUpdatePending;
+static volatile bool gAttitudeUpdatePending;
 static volatile bool gTelemetryUpdatePending;
 static volatile bool gHeartbeatUpdatePending;
 static volatile bool gStatusLedUpdatePending;
@@ -70,6 +73,11 @@ int main(void)
      *
      * LaunchPad status LED:
      *   PB22/PB26/PB27 -> LED2 blue/red/green
+     *
+     * MPU6050 software I2C:
+     *   PA1 -> SCL
+     *   PA0 -> SDA
+     *   DMP attitude telemetry: ATT PITCH/ROLL/YAW, degrees * 100
      */
     encoder_init();
     uart_debug_init();
@@ -77,13 +85,17 @@ int main(void)
     TB6612_Init();
     app_car_control_init();
 
+    app_mpu6050_attitude_init();
+
     SysTick_Config(CPUCLK_FREQ / 1000U);
 
     while (1) {
         char command[UART_DEBUG_LINE_BUFFER_SIZE];
 
         while (uart_debug_read_line(command, sizeof(command))) {
-            app_car_control_process_command(command);
+            if (!app_mpu6050_attitude_process_command(command)) {
+                app_car_control_process_command(command);
+            }
         }
 
         while (uart_openmv_read_line(command, sizeof(command))) {
@@ -95,6 +107,11 @@ int main(void)
         if (gControlUpdatePending) {
             gControlUpdatePending = false;
             app_car_control_update(gSysTickMs);
+        }
+
+        if (gAttitudeUpdatePending) {
+            gAttitudeUpdatePending = false;
+            app_mpu6050_attitude_send();
         }
 
         if (gTelemetryUpdatePending) {
@@ -122,6 +139,9 @@ void SysTick_Handler(void)
     gSysTickMs++;
     if ((gSysTickMs % CONTROL_PERIOD_MS) == 0U) {
         gControlUpdatePending = true;
+    }
+    if ((gSysTickMs % ATTITUDE_PERIOD_MS) == 0U) {
+        gAttitudeUpdatePending = true;
     }
     if ((gSysTickMs % TELEMETRY_PERIOD_MS) == 0U) {
         gTelemetryUpdatePending = true;

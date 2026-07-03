@@ -1,4 +1,5 @@
 import csv
+import math
 import queue
 import re
 import threading
@@ -16,14 +17,17 @@ except ImportError:
 BAUD_RATES = ("9600", "19200", "38400", "57600", "115200", "230400", "460800")
 PLOT_KEYS = (
     "L", "R", "TARGET", "LT", "RT", "LD", "RD", "ERR", "OUT", "LO", "RO",
-    "KP", "KI", "KD",
+    "KP", "KI", "KD", "PITCH", "ROLL", "YAW",
 )
 KEY_VALUE_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(-?\d+(?:\.\d+)?)")
 SCALE_100_KEYS = {
     "BASE", "LT", "RT", "LD", "RD", "ERR", "OUT", "LO", "RO", "ML", "MR",
-    "SPEED", "TARGET",
+    "SPEED", "TARGET", "PITCH", "ROLL", "YAW",
 }
 SCALE_1000_KEYS = {"KP", "KI", "KD"}
+CUBE_PITCH_SIGN = -1.0
+CUBE_ROLL_SIGN = -1.0
+CUBE_YAW_SIGN = 1.0
 
 
 class SerialTunerApp:
@@ -50,6 +54,11 @@ class SerialTunerApp:
         self.ui_line_count = 0
         self.sample_count = 0
         self.draw_count = 0
+        self.cube_draw_count = 0
+        self.attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
+        self.raw_attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
+        self.attitude_zero = None
+        self.last_attitude_log_time = 0.0
         self.last_debug_time = time.time()
         self.last_debug_rx_count = 0
         self.last_debug_ui_count = 0
@@ -68,6 +77,7 @@ class SerialTunerApp:
 
         self._build_ui()
         self.refresh_ports()
+        self.root.after(100, self._draw_cube)
         self.root.after(50, self._poll_rx_queue)
 
     def _build_ui(self):
@@ -130,6 +140,14 @@ class SerialTunerApp:
             value = ttk.Label(box, text="-", width=8, anchor=tk.CENTER)
             value.pack()
             self.value_labels[key] = value
+
+        cube_frame = ttk.LabelFrame(right, text="MPU6050 Attitude", padding=6)
+        cube_frame.pack(fill=tk.X, pady=(0, 8))
+        ttk.Button(cube_frame, text="Zero MPU", command=self.zero_attitude).pack(
+            anchor=tk.E, pady=(0, 4)
+        )
+        self.cube_canvas = tk.Canvas(cube_frame, height=240, bg="#0b1020", highlightthickness=0)
+        self.cube_canvas.pack(fill=tk.X, expand=False)
 
         log_frame = ttk.LabelFrame(right, text="Serial Log", padding=6)
         log_frame.pack(fill=tk.BOTH, expand=True)
@@ -227,7 +245,8 @@ class SerialTunerApp:
 
             if kind == "line":
                 self.ui_line_count += 1
-                self._queue_log(payload)
+                if self._should_log_line(payload):
+                    self._queue_log(payload)
                 sample = self._parse_sample(payload)
                 if sample is not None:
                     latest_sample = sample
@@ -278,6 +297,16 @@ class SerialTunerApp:
         timestamp = time.strftime("%H:%M:%S")
         self.pending_log_lines.append(f"{timestamp}  {line}\n")
 
+    def _should_log_line(self, line):
+        if not line.startswith("ATT "):
+            return True
+
+        now = time.time()
+        if (now - self.last_attitude_log_time) >= 1.0:
+            self.last_attitude_log_time = now
+            return True
+        return False
+
     def _flush_log(self):
         line_count = len(self.pending_log_lines)
         self.log_text.insert(tk.END, "".join(self.pending_log_lines))
@@ -298,12 +327,41 @@ class SerialTunerApp:
             if key in pairs:
                 label.config(text=f"{pairs[key]:.3g}")
 
+        if all(key in pairs for key in ("PITCH", "ROLL", "YAW")):
+            self._update_attitude(pairs)
+            self._draw_cube()
+
         if not (("LD" in pairs) or ("RD" in pairs)):
             return None
 
         pairs["TIME"] = time.time()
         self.last_sample_time = pairs["TIME"]
         return pairs
+
+    def _update_attitude(self, pairs):
+        self.raw_attitude["PITCH"] = pairs["PITCH"]
+        self.raw_attitude["ROLL"] = pairs["ROLL"]
+        self.raw_attitude["YAW"] = pairs["YAW"]
+
+        if self.attitude_zero is None:
+            self.attitude_zero = dict(self.raw_attitude)
+
+        self.attitude["PITCH"] = self._wrap_angle(
+            self.raw_attitude["PITCH"] - self.attitude_zero["PITCH"]
+        )
+        self.attitude["ROLL"] = self._wrap_angle(
+            self.raw_attitude["ROLL"] - self.attitude_zero["ROLL"]
+        )
+        self.attitude["YAW"] = self._wrap_angle(
+            self.raw_attitude["YAW"] - self.attitude_zero["YAW"]
+        )
+
+    def _wrap_angle(self, value):
+        while value > 180.0:
+            value -= 360.0
+        while value < -180.0:
+            value += 360.0
+        return value
 
     def _append_sample(self, pairs):
         self.samples.append(pairs)
@@ -400,6 +458,85 @@ class SerialTunerApp:
                 pad + 50 * idx, 14, anchor=tk.W, fill=color, text=key
             )
 
+    def _draw_cube(self):
+        self.cube_draw_count += 1
+        canvas = self.cube_canvas
+        canvas.delete("all")
+        width = max(canvas.winfo_width(), 2)
+        height = max(canvas.winfo_height(), 2)
+        cx = width * 0.5
+        cy = height * 0.52
+        size = min(width, height) * 0.34
+        distance = 4.0
+
+        pitch = math.radians(self.attitude["PITCH"] * CUBE_PITCH_SIGN)
+        roll = math.radians(self.attitude["ROLL"] * CUBE_ROLL_SIGN)
+        yaw = math.radians(self.attitude["YAW"] * CUBE_YAW_SIGN)
+
+        corners = [
+            (-1, -1, -1), (1, -1, -1), (1, 1, -1), (-1, 1, -1),
+            (-1, -1, 1), (1, -1, 1), (1, 1, 1), (-1, 1, 1),
+        ]
+        edges = (
+            (0, 1), (1, 2), (2, 3), (3, 0),
+            (4, 5), (5, 6), (6, 7), (7, 4),
+            (0, 4), (1, 5), (2, 6), (3, 7),
+        )
+        faces = (
+            ((0, 1, 2, 3), "#1d4ed8"),
+            ((4, 5, 6, 7), "#0f766e"),
+            ((0, 1, 5, 4), "#7c3aed"),
+            ((2, 3, 7, 6), "#b45309"),
+            ((1, 2, 6, 5), "#be123c"),
+            ((0, 3, 7, 4), "#047857"),
+        )
+
+        projected = []
+        rotated = []
+        for x, y, z in corners:
+            x1 = x
+            y1 = (y * math.cos(pitch)) - (z * math.sin(pitch))
+            z1 = (y * math.sin(pitch)) + (z * math.cos(pitch))
+
+            x2 = (x1 * math.cos(yaw)) + (z1 * math.sin(yaw))
+            y2 = y1
+            z2 = (-x1 * math.sin(yaw)) + (z1 * math.cos(yaw))
+
+            x3 = (x2 * math.cos(roll)) - (y2 * math.sin(roll))
+            y3 = (x2 * math.sin(roll)) + (y2 * math.cos(roll))
+            z3 = z2
+            rotated.append((x3, y3, z3))
+
+            perspective = distance / (distance - z3)
+            projected.append((cx + x3 * size * perspective, cy - y3 * size * perspective))
+
+        face_depths = []
+        for indices, color in faces:
+            depth = sum(rotated[index][2] for index in indices) / len(indices)
+            face_depths.append((depth, indices, color))
+
+        for _, indices, color in sorted(face_depths):
+            points = []
+            for index in indices:
+                points.extend(projected[index])
+            canvas.create_polygon(points, fill=color, outline="", stipple="gray50")
+
+        for start, end in edges:
+            canvas.create_line(
+                projected[start][0], projected[start][1],
+                projected[end][0], projected[end][1],
+                fill="#e5e7eb", width=2,
+            )
+
+        canvas.create_text(
+            12, 14, anchor=tk.W, fill="#e5e7eb",
+            text=(
+                f"PITCH {self.attitude['PITCH']:.1f}  "
+                f"ROLL {self.attitude['ROLL']:.1f}  "
+                f"YAW {self.attitude['YAW']:.1f}"
+            ),
+        )
+
     def send_pid(self):
         self.send_line(f"PID {self.kp_var.get()} {self.ki_var.get()} {self.kd_var.get()}")
 
@@ -450,7 +587,17 @@ class SerialTunerApp:
         self.draw_pending = False
         for label in self.value_labels.values():
             label.config(text="-")
+        self.attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
+        self.raw_attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
+        self.attitude_zero = None
+        self.last_attitude_log_time = 0.0
         self._draw_plot()
+        self._draw_cube()
+
+    def zero_attitude(self):
+        self.attitude_zero = dict(self.raw_attitude)
+        self.attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
+        self._draw_cube()
 
 
 def main():

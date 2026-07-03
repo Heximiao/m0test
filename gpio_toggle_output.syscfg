@@ -15,6 +15,7 @@ const GPIO2  = GPIO.addInstance();
 const GPIO3  = GPIO.addInstance();
 const GPIO4  = GPIO.addInstance();
 const GPIO5  = GPIO.addInstance();
+const GPIO6  = GPIO.addInstance();
 const PWM    = scripting.addModule("/ti/driverlib/PWM", {}, false);
 const PWM1   = PWM.addInstance();
 const SYSCTL = scripting.addModule("/ti/driverlib/SYSCTL");
@@ -88,6 +89,20 @@ GPIO5.associatedPins[1].internalResistor = "PULL_UP";
 GPIO5.associatedPins[1].interruptEn = true;
 GPIO5.associatedPins[1].interruptPriority = "0";
 GPIO5.associatedPins[1].polarity = "RISE";
+
+GPIO6.$name                          = "GPIO_MPU6050_I2C";
+GPIO6.port                           = "PORTA";
+GPIO6.associatedPins.create(2);
+GPIO6.associatedPins[0].$name        = "SCL";
+GPIO6.associatedPins[0].pin.$assign  = "PA1";
+GPIO6.associatedPins[0].initialValue = "SET";
+GPIO6.associatedPins[0].ioStructure  = "OD";
+GPIO6.associatedPins[0].internalResistor = "PULL_UP";
+GPIO6.associatedPins[1].$name        = "SDA";
+GPIO6.associatedPins[1].pin.$assign  = "PA0";
+GPIO6.associatedPins[1].initialValue = "SET";
+GPIO6.associatedPins[1].ioStructure  = "OD";
+GPIO6.associatedPins[1].internalResistor = "PULL_UP";
 
 PWM1.$name                      = "PWM_MOTORS";
 PWM1.clockPrescale              = 1;
