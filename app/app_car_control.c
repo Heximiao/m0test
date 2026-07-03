@@ -35,9 +35,11 @@
 #define LINE_FOLLOW_MIN_FORWARD_COUNTS (0.0f) /* 巡线时单轮最小前进速度，单位：counts/20ms */
 #define LINE_FOLLOW_MAX_COUNTS (10.0f) /* 巡线自动前进速度上限，单位：counts/20ms */
 
-#define LTURN_TARGET_COUNTS_90 (260.0f) /* 90 degree in-place turn encoder target. */
-#define LTURN_SPEED_COUNTS (10.0f) /* In-place turn speed, counts/20ms. */
+#define LTURN_TARGET_COUNTS_90 (300.0f) /* 90 degree in-place turn encoder target. */
+#define LTURN_SPEED_COUNTS (15.0f) /* In-place turn speed, counts/20ms. */
+#define LTURN_DUTY_PERCENT (15.0f) /* Open-loop in-place turn duty. */
 #define LTURN_DONE_TOLERANCE_COUNTS (4.0f) /* Done tolerance, counts. */
+#define LTURN_LINE_REACQUIRE_DELAY_MS (1900U) /* Delay before line-follow resumes after LTURN. */
 
 static PID gLeftSpeedPid;
 static PID gRightSpeedPid;
@@ -67,6 +69,7 @@ static int32_t gLTurnDirection;
 static float gLTurnTargetCounts;
 static int32_t gLTurnStartLeftCount;
 static int32_t gLTurnStartRightCount;
+static uint32_t gLineFollowResumeMs;
 
 static void set_motor_duty(float leftDutyPercent, float rightDutyPercent);
 static bool parse_lturn_command(const char *command);
@@ -142,12 +145,33 @@ void app_car_control_update(uint32_t nowMs)
     float rightTargetSpeed = gSpeedTargetCounts;
     float lineTurnAdjust = line_follow_get_turn_adjust(nowMs);
     bool lineAutoDrive = false;
+    bool lineFollowAllowed = ((int32_t) (nowMs - gLineFollowResumeMs) >= 0);
+
+    if (gLTurnActive) {
+        if (update_lturn(counts, &leftTargetSpeed, &rightTargetSpeed)) {
+            gLastLeftTargetSpeed = 0.0f;
+            gLastRightTargetSpeed = 0.0f;
+            gLastLeftOutput = 0.0f;
+            gLastRightOutput = 0.0f;
+            set_motor_duty(0.0f, 0.0f);
+        } else {
+            gLastLeftTargetSpeed =
+                (float) -gLTurnDirection * LTURN_SPEED_COUNTS;
+            gLastRightTargetSpeed =
+                (float) gLTurnDirection * LTURN_SPEED_COUNTS;
+            gLastLeftOutput = (float) -gLTurnDirection * LTURN_DUTY_PERCENT;
+            gLastRightOutput = (float) gLTurnDirection * LTURN_DUTY_PERCENT;
+            set_motor_duty(gLastLeftOutput, gLastRightOutput);
+        }
+        return;
+    }
 
     if (!update_lturn(counts, &leftTargetSpeed, &rightTargetSpeed)) {
         motion_control_update(counts, &leftTargetSpeed, &rightTargetSpeed);
     }
 
-    if (line_follow_is_active(nowMs) && !motion_control_is_active() &&
+    if (lineFollowAllowed && line_follow_is_active(nowMs) &&
+        !motion_control_is_active() &&
         !gLTurnActive &&
         (leftTargetSpeed == 0.0f) && (rightTargetSpeed == 0.0f)) {
         leftTargetSpeed = LINE_FOLLOW_BASE_COUNTS;
@@ -156,7 +180,7 @@ void app_car_control_update(uint32_t nowMs)
     }
 
     /* 显式运动命令执行期间不叠加巡线修正，保证 ANGLE/TURN 能独立转完。 */
-    if (line_follow_is_valid(nowMs) && !gLTurnActive &&
+    if (lineFollowAllowed && line_follow_is_valid(nowMs) && !gLTurnActive &&
         !motion_control_is_active()) {
         /*
          * Positive correction should speed up the left wheel and slow down
@@ -172,7 +196,8 @@ void app_car_control_update(uint32_t nowMs)
                 rightTargetSpeed = LINE_FOLLOW_MIN_FORWARD_COUNTS;
             }
         }
-    } else if (line_follow_is_active(nowMs) && !motion_control_is_active()) {
+    } else if (lineFollowAllowed && line_follow_is_active(nowMs) &&
+        !motion_control_is_active()) {
         leftTargetSpeed *= LINE_LOST_SPEED_SCALE;
         rightTargetSpeed *= LINE_LOST_SPEED_SCALE;
     }
@@ -434,12 +459,18 @@ static bool parse_lturn_command(const char *command)
         return true;
     }
 
+    if (gLTurnActive ||
+        ((int32_t) (gLastUpdateMs - gLineFollowResumeMs) < 0)) {
+        return true;
+    }
+
     EncoderCounts counts = encoder_get_counts();
     gManualMotorMode = false;
     motion_control_init();
     gTargetSpeedCounts = 0.0f;
     gSpeedTargetCounts = 0.0f;
     gLTurnActive = true;
+    gLineFollowResumeMs = gLastUpdateMs + LTURN_LINE_REACQUIRE_DELAY_MS;
     gLTurnDirection = (angleDeg >= 0.0f) ? 1 : -1;
     gLTurnTargetCounts = (abs_float(angleDeg) / 90.0f) *
         LTURN_TARGET_COUNTS_90;
@@ -466,6 +497,7 @@ static bool update_lturn(EncoderCounts counts, float *leftTargetSpeed,
 
     if (travel >= (gLTurnTargetCounts - LTURN_DONE_TOLERANCE_COUNTS)) {
         gLTurnActive = false;
+        gLineFollowResumeMs = gLastUpdateMs + LTURN_LINE_REACQUIRE_DELAY_MS;
         *leftTargetSpeed = 0.0f;
         *rightTargetSpeed = 0.0f;
         pid_reset(&gLeftSpeedPid);
@@ -475,7 +507,7 @@ static bool update_lturn(EncoderCounts counts, float *leftTargetSpeed,
 
     *leftTargetSpeed = (float) -gLTurnDirection * LTURN_SPEED_COUNTS;
     *rightTargetSpeed = (float) gLTurnDirection * LTURN_SPEED_COUNTS;
-    return true;
+    return false;
 }
 
 static void update_speed_target_ramp(void)

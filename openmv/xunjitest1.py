@@ -2,36 +2,38 @@ import sensor
 import time
 from pyb import UART
 
+BLACK_THRESHOLD = (0, 40, -20, 20, -20, 20)
+FRAME_WIDTH = 320
+FRAME_HEIGHT = 240
+UART_BAUDRATE = 115200
+CAMERA_ROTATED_180 = True
 
-BLACK_THRESHOLD = (0, 42, -20, 20, -20, 20)  # 黑线LAB阈值：(L最小,L最大,A最小,A最大,B最小,B最大)，主要调第2个数
-FRAME_WIDTH = 320        # 图像宽度，QVGA固定为320
-FRAME_HEIGHT = 240       # 图像高度，QVGA固定为240
-UART_BAUDRATE = 115200   # 串口波特率，必须和开发板一致
-CAMERA_ROTATED_180 = True  # 摄像头是否倒装；True会水平+垂直翻转
+ROI = (20, 35, 280, 195)
+ROW_STEP = 6
+COL_STEP = 6
+MIN_TRACK_WIDTH = 12
+MAX_TRACK_WIDTH = 150
+MIN_STRAIGHT_POINTS = 5
+MIN_STRAIGHT_SPAN = 55
+STRAIGHT_MAX_X_SPAN = 70
+TARGET_Y = 190
 
-ROI = (20, 35, 280, 195)  # 识别区域：(左上x,左上y,宽,高)，减少边缘干扰并提高速度
-ROW_STEP = 6              # 横向扫描的行间隔，越小越精细但越慢
-COL_STEP = 6              # 纵向扫描的列间隔，越小越精细但越慢
-MIN_TRACK_WIDTH = 12      # 黑线最小宽度，小于这个认为是噪声
-MAX_TRACK_WIDTH = 150     # 黑线最大宽度，大于这个可能是阴影/大片黑块
-MIN_STRAIGHT_POINTS = 5   # 判断直线至少需要的有效扫描点数量
-MIN_STRAIGHT_SPAN = 55    # 直线点在y方向至少覆盖的高度，防止短噪声误判
-STRAIGHT_MAX_X_SPAN = 70  # 取控制点时允许的横向摆动范围，太大说明可能不是直线
-TARGET_Y = 190            # 直线控制点参考高度，越大越靠近车头/画面底部
+TURN_MIN_HORIZONTAL_WIDTH = 70
+TURN_MIN_VERTICAL_HEIGHT = 55
+TURN_JOIN_MARGIN = 14
+TURN_EDGE_SEARCH = 46
+TURN_READY_Y = 194
+TURN_ERROR = 150
+TURN_REPEAT_FRAMES = 8
+TURN_COOLDOWN_FRAMES = 32
+TURN_READY_HOLD_FRAMES = 2
+TURN_READY_DELAY_FRAMES = 10
+TURN_PENDING_LOST_FRAMES = 10
+TURN_SETTLE_FRAMES = 12
 
-TURN_MIN_HORIZONTAL_WIDTH = 70  # 转角横向黑带最小长度，调大可减少误判
-TURN_MIN_VERTICAL_HEIGHT = 55   # 转角纵向黑带最小高度，调大可减少误判
-TURN_JOIN_MARGIN = 14           # 横线和竖线连接允许的像素误差
-TURN_EDGE_SEARCH = 46           # 在横线端点附近搜索竖线的范围
-TURN_READY_Y = 194              # 竖线底端超过该y值时，认为转角已经接近车头
-TURN_ERROR = 150                # 识别到转角但未触发LTURN时，发送给开发板的偏差量
-TURN_REPEAT_FRAMES = 8          # 触发转弯后，连续重复发送LTURN的帧数
-TURN_COOLDOWN_FRAMES = 32       # 一次转弯后冷却多少帧，避免同一转角重复触发
-TURN_CONFIRM_FRAMES = 4         # 连续识别到多少帧转角后，即使未到TURN_READY_Y也触发
-
-NOISE_ERODE = 1   # 二值化后腐蚀次数，用来去小噪点；过大会让黑线变细/断开
-DRAW_STEP = 1     # 调试画线的点间隔
-PRINT_EVERY = 6   # 每隔多少帧打印一次调试信息
+NOISE_ERODE = 1
+DRAW_STEP = 1
+PRINT_EVERY = 6
 
 
 def _is_track_pixel(pixel):
@@ -214,10 +216,15 @@ clock = time.clock()
 
 frame_count = 0
 last_x = FRAME_WIDTH // 2
-turn_confirm_count = 0
+turn_ready_count = 0
+turn_delay_count = 0
 turn_cooldown = 0
 turn_repeat_count = 0
 turn_repeat_angle = 0
+turn_settle_count = 0
+turn_pending = False
+turn_pending_angle = 0
+turn_pending_lost_count = 0
 
 while True:
     clock.tick()
@@ -230,8 +237,23 @@ while True:
         turn_repeat_count -= 1
         tx_message = "LTURN %d" % turn_repeat_angle
         uart.write(tx_message + "\n")
+        if turn_repeat_count == 0:
+            turn_settle_count = TURN_SETTLE_FRAMES
         if (frame_count % PRINT_EVERY) == 0:
             print("TX:", tx_message, "M=REPEAT FPS:", clock.fps())
+        continue
+
+    if turn_settle_count > 0:
+        turn_settle_count -= 1
+        last_x = FRAME_WIDTH // 2
+        turn_ready_count = 0
+        turn_delay_count = 0
+        turn_pending = False
+        turn_pending_lost_count = 0
+        tx_message = "LINE 0 0"
+        uart.write(tx_message + "\n")
+        if (frame_count % PRINT_EVERY) == 0:
+            print("TX:", tx_message, "M=SETTLE FPS:", clock.fps())
         continue
 
     img = sensor.snapshot()
@@ -245,13 +267,29 @@ while True:
     target = _straight_target(points)
 
     if turn is not None:
-        turn_confirm_count += 1
-        if ((turn["ready"] or turn_confirm_count >= TURN_CONFIRM_FRAMES) and
-                turn_cooldown == 0):
-            turn_repeat_angle = turn["angle"]
+        if turn["ready"]:
+            turn_ready_count += 1
+            turn_pending_lost_count = 0
+            if turn_ready_count >= TURN_READY_HOLD_FRAMES:
+                turn_pending = True
+                turn_pending_angle = turn["angle"]
+        elif not turn_pending:
+            turn_ready_count = 0
+            turn_delay_count = 0
+
+        if turn_pending and turn_cooldown == 0:
+            turn_delay_count += 1
+        else:
+            turn_delay_count = 0
+
+        if turn_pending and turn_delay_count >= TURN_READY_DELAY_FRAMES:
+            turn_repeat_angle = turn_pending_angle
             turn_repeat_count = TURN_REPEAT_FRAMES
             turn_cooldown = TURN_COOLDOWN_FRAMES
-            turn_confirm_count = 0
+            turn_ready_count = 0
+            turn_delay_count = 0
+            turn_pending = False
+            turn_pending_lost_count = 0
             tx_message = "LTURN %d" % turn_repeat_angle
         else:
             tx_message = "LINE 1 %d" % turn["err"]
@@ -263,8 +301,40 @@ while True:
         img.draw_cross(turn["target"][0], turn["target"][1],
                        color=(255, 0, 0), size=8)
         mode = "L"
+    elif turn_pending:
+        turn_pending_lost_count += 1
+        if (turn_pending_lost_count <= TURN_PENDING_LOST_FRAMES and
+                turn_cooldown == 0):
+            turn_delay_count += 1
+        else:
+            turn_pending = False
+            turn_ready_count = 0
+            turn_delay_count = 0
+            turn_pending_lost_count = 0
+
+        if turn_pending and turn_delay_count >= TURN_READY_DELAY_FRAMES:
+            turn_repeat_angle = turn_pending_angle
+            turn_repeat_count = TURN_REPEAT_FRAMES
+            turn_cooldown = TURN_COOLDOWN_FRAMES
+            turn_pending = False
+            turn_ready_count = 0
+            turn_delay_count = 0
+            turn_pending_lost_count = 0
+            tx_message = "LTURN %d" % turn_repeat_angle
+        elif target is not None:
+            last_x = target[0]
+            err = target[0] - (FRAME_WIDTH // 2)
+            tx_message = "LINE 1 %d" % err
+        else:
+            last_x = FRAME_WIDTH // 2
+            tx_message = "LINE 0 0"
+
+        uart.write(tx_message + "\n")
+        mode = "P"
     elif target is not None:
-        turn_confirm_count = 0
+        turn_ready_count = 0
+        turn_delay_count = 0
+        turn_pending_lost_count = 0
         last_x = target[0]
         err = target[0] - (FRAME_WIDTH // 2)
         tx_message = "LINE 1 %d" % err
@@ -278,7 +348,9 @@ while True:
         img.draw_cross(target[0], target[1], color=(255, 0, 0), size=8)
         mode = "S"
     else:
-        turn_confirm_count = 0
+        turn_ready_count = 0
+        turn_delay_count = 0
+        turn_pending_lost_count = 0
         last_x = FRAME_WIDTH // 2
         tx_message = "LINE 0 0"
         uart.write(tx_message + "\n")
@@ -287,4 +359,3 @@ while True:
     if (frame_count % PRINT_EVERY) == 0:
         print("TX:", tx_message, "M=%s P=%d FPS:" % (mode, len(points)),
               clock.fps())
-
