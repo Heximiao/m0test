@@ -10,6 +10,5 @@
 void uart_openmv_init(void);
 bool uart_openmv_read_line(char *line, size_t lineSize);
 void uart_openmv_handle_irq(void);
-uint32_t uart_openmv_get_rx_dropped_bytes(void);
 
 #endif

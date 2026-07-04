@@ -16,7 +16,7 @@
 #include <stdbool.h>
 
 #define CONTROL_PERIOD_MS (20U)
-#define ATTITUDE_PERIOD_MS (100U)
+#define ATTITUDE_PERIOD_MS (20U)
 #define TELEMETRY_PERIOD_MS (100U)
 #define HEARTBEAT_PERIOD_MS (30000U)
 #define STATUS_LED_PERIOD_MS (500U)
@@ -111,7 +111,7 @@ int main(void)
 
         if (gAttitudeUpdatePending) {
             gAttitudeUpdatePending = false;
-            app_mpu6050_attitude_send();
+            app_mpu6050_attitude_send(gSysTickMs);
         }
 
         if (gTelemetryUpdatePending) {

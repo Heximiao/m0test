@@ -1,4 +1,5 @@
 #include "app_motion_control.h"
+#include "app_util.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -30,8 +31,6 @@ static int32_t gStartLeftCount;
 static int32_t gStartRightCount;
 static bool gBusy;
 
-static float clamp_float(float value, float minValue, float maxValue);
-static float abs_float(float value);
 static int32_t abs_i32_local(int32_t value);
 static float counts_per_mm(void);
 static float mm_s_to_counts_per_period(float speedMmS);
@@ -103,7 +102,7 @@ void motion_control_update(EncoderCounts counts, float *leftTargetCounts,
     if (gMode == MOTION_MODE_DISTANCE) {
         float leftTravel = (float) (counts.left_count - gStartLeftCount);
         float rightTravel = (float) (counts.right_count - gStartRightCount);
-        float travel = abs_float((leftTravel + rightTravel) * 0.5f);
+        float travel = app_abs_float((leftTravel + rightTravel) * 0.5f);
         if (travel >= (gTargetCounts - DIST_DONE_TOLERANCE_COUNTS)) {
             stop_motion();
             *leftTargetCounts = 0.0f;
@@ -156,9 +155,9 @@ int32_t motion_control_get_target_deg_s(void)
 static void start_drive(float linearMmS, float angularDegS)
 {
     gMode = MOTION_MODE_DRIVE;
-    gLinearSpeedMmS = clamp_float(linearMmS, -MAX_LINEAR_SPEED_MM_S,
+    gLinearSpeedMmS = app_clamp_float(linearMmS, -MAX_LINEAR_SPEED_MM_S,
         MAX_LINEAR_SPEED_MM_S);
-    gAngularSpeedDegS = clamp_float(angularDegS, -MAX_ANGULAR_SPEED_DEG_S,
+    gAngularSpeedDegS = app_clamp_float(angularDegS, -MAX_ANGULAR_SPEED_DEG_S,
         MAX_ANGULAR_SPEED_DEG_S);
     gTargetCounts = 0.0f;
     gBusy = false;
@@ -168,13 +167,13 @@ static void start_distance(float distanceMm, float speedMmS,
     EncoderCounts counts)
 {
     float direction = (distanceMm >= 0.0f) ? 1.0f : -1.0f;
-    float speed = abs_float(speedMmS);
+    float speed = app_abs_float(speedMmS);
 
     gMode = MOTION_MODE_DISTANCE;
-    gLinearSpeedMmS = direction * clamp_float(speed, 1.0f,
+    gLinearSpeedMmS = direction * app_clamp_float(speed, 1.0f,
         MAX_LINEAR_SPEED_MM_S);
     gAngularSpeedDegS = 0.0f;
-    gTargetCounts = (abs_float(distanceMm) * counts_per_mm()) +
+    gTargetCounts = (app_abs_float(distanceMm) * counts_per_mm()) +
         DIST_DONE_TOLERANCE_COUNTS;
     gStartLeftCount = counts.left_count;
     gStartRightCount = counts.right_count;
@@ -186,13 +185,13 @@ static void start_turn(float angleDeg, float angularSpeedDegS,
 {
     /* 角度正负号用于区分方向：正数左转，负数右转。 */
     float direction = (angleDeg >= 0.0f) ? 1.0f : -1.0f;
-    float speed = abs_float(angularSpeedDegS);
-    float wheelTravelMm = abs_float(angleDeg) * PI_F / 180.0f *
+    float speed = app_abs_float(angularSpeedDegS);
+    float wheelTravelMm = app_abs_float(angleDeg) * PI_F / 180.0f *
         (WHEEL_BASE_MM * 0.5f);
 
     gMode = MOTION_MODE_TURN;
     gLinearSpeedMmS = 0.0f;
-    gAngularSpeedDegS = direction * clamp_float(speed, 1.0f,
+    gAngularSpeedDegS = direction * app_clamp_float(speed, 1.0f,
         MAX_ANGULAR_SPEED_DEG_S);
     gTargetCounts = (wheelTravelMm * counts_per_mm()) +
         TURN_DONE_TOLERANCE_COUNTS;
@@ -236,23 +235,6 @@ static float counts_per_mm(void)
     float wheelCircumferenceMm = WHEEL_DIAMETER_MM * PI_F;
 
     return countsPerRev / wheelCircumferenceMm;
-}
-
-static float clamp_float(float value, float minValue, float maxValue)
-{
-    if (value < minValue) {
-        return minValue;
-    }
-    if (value > maxValue) {
-        return maxValue;
-    }
-
-    return value;
-}
-
-static float abs_float(float value)
-{
-    return (value < 0.0f) ? -value : value;
 }
 
 static int32_t abs_i32_local(int32_t value)

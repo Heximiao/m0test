@@ -1,6 +1,7 @@
 #include "app_car_control.h"
 #include "app_line_follow.h"
 #include "app_motion_control.h"
+#include "app_util.h"
 #include "bsp/bsp_tb6612.h"
 #include "hw/hw_encoder.h"
 #include "hw/hw_uart.h"
@@ -93,8 +94,6 @@ static void send_motor_ack(const char *command, float firstValue,
     float secondValue, unsigned long durationMs);
 static char *normalize_command(char *command);
 static void send_unknown_command(const char *command);
-static int32_t scale_float_100(float value);
-static int32_t scale_float_1000(float value);
 static float abs_float(float value);
 
 void app_car_control_init(void)
@@ -138,8 +137,8 @@ void app_car_control_update(uint32_t nowMs)
     gFilteredLeftSpeed = lowpass_filter(gFilteredLeftSpeed, (float) leftSpeed);
     gFilteredRightSpeed = lowpass_filter(gFilteredRightSpeed, (float) rightSpeed);
 
-    gLastLeftDelta = scale_float_100(gFilteredLeftSpeed);
-    gLastRightDelta = scale_float_100(gFilteredRightSpeed);
+    gLastLeftDelta = app_scale_float_100(gFilteredLeftSpeed);
+    gLastRightDelta = app_scale_float_100(gFilteredRightSpeed);
     gLastPidError = gLastLeftDelta - gLastRightDelta;
     float leftTargetSpeed = gSpeedTargetCounts;
     float rightTargetSpeed = gSpeedTargetCounts;
@@ -385,15 +384,15 @@ void app_car_control_send_telemetry(void)
         "L=%ld R=%ld LD=%ld RD=%ld ERR=%ld OUT=%ld LO=%ld RO=%ld LT=%ld RT=%ld KP=%ld KI=%ld KD=%ld BASE=%ld LINE=%ld LV=%d MM=%ld DG=%ld MO=%ld MB=%d\r\n",
         (long) counts.left_count, (long) counts.right_count,
         (long) gLastLeftDelta, (long) gLastRightDelta, (long) gLastPidError,
-        (long) scale_float_100(gLastRightOutput - gLastLeftOutput),
-        (long) scale_float_100(gLastLeftOutput),
-        (long) scale_float_100(gLastRightOutput),
-        (long) scale_float_100(gLastLeftTargetSpeed),
-        (long) scale_float_100(gLastRightTargetSpeed),
-        (long) scale_float_1000(gLeftSpeedPid.kp),
-        (long) scale_float_1000(gLeftSpeedPid.ki),
-        (long) scale_float_1000(gLeftSpeedPid.kd),
-        (long) scale_float_100(gSpeedTargetCounts),
+        (long) app_scale_float_100(gLastRightOutput - gLastLeftOutput),
+        (long) app_scale_float_100(gLastLeftOutput),
+        (long) app_scale_float_100(gLastRightOutput),
+        (long) app_scale_float_100(gLastLeftTargetSpeed),
+        (long) app_scale_float_100(gLastRightTargetSpeed),
+        (long) app_scale_float_1000(gLeftSpeedPid.kp),
+        (long) app_scale_float_1000(gLeftSpeedPid.ki),
+        (long) app_scale_float_1000(gLeftSpeedPid.kd),
+        (long) app_scale_float_100(gSpeedTargetCounts),
         (long) line_follow_get_error(),
         line_follow_is_valid(gLastUpdateMs) ? 1 : 0,
         (long) motion_control_get_target_mm_s(),
@@ -644,18 +643,18 @@ static void send_status(void)
         GPIO_MOTOR_A_STBY_PIN);
     int length = snprintf(message, sizeof(message),
         "STATUS FW=%s SPEED=%ld TARGET=%ld ML=%ld MR=%ld MANUAL=%d TELE=%d STBY=%d RXDROP=%lu TXDROP=%lu KP=%ld KI=%ld KD=%ld\r\n",
-        FIRMWARE_VERSION, (long) scale_float_100(gSpeedTargetCounts),
-        (long) scale_float_100(gTargetSpeedCounts),
-        (long) scale_float_100(gManualLeftDutyPercent),
-        (long) scale_float_100(gManualRightDutyPercent),
+        FIRMWARE_VERSION, (long) app_scale_float_100(gSpeedTargetCounts),
+        (long) app_scale_float_100(gTargetSpeedCounts),
+        (long) app_scale_float_100(gManualLeftDutyPercent),
+        (long) app_scale_float_100(gManualRightDutyPercent),
         gManualMotorMode ? 1 : 0,
         gTelemetryEnabled ? 1 : 0,
         ((standbyPins & GPIO_MOTOR_A_STBY_PIN) != 0U) ? 1 : 0,
         (unsigned long) uart_debug_get_rx_dropped_bytes(),
         (unsigned long) uart_debug_get_tx_dropped_bytes(),
-        (long) scale_float_1000(gLeftSpeedPid.kp),
-        (long) scale_float_1000(gLeftSpeedPid.ki),
-        (long) scale_float_1000(gLeftSpeedPid.kd));
+        (long) app_scale_float_1000(gLeftSpeedPid.kp),
+        (long) app_scale_float_1000(gLeftSpeedPid.ki),
+        (long) app_scale_float_1000(gLeftSpeedPid.kd));
 
     if ((length > 0) && (length < (int) sizeof(message))) {
         uart_debug_write_string(message);
@@ -667,8 +666,8 @@ static void send_command_ack(const char *command, float firstValue,
 {
     char message[TELEMETRY_BUFFER_SIZE];
     int length = snprintf(message, sizeof(message), "OK %s L=%ld R=%ld\r\n",
-        command, (long) scale_float_100(firstValue),
-        (long) scale_float_100(secondValue));
+        command, (long) app_scale_float_100(firstValue),
+        (long) app_scale_float_100(secondValue));
 
     if ((length > 0) && (length < (int) sizeof(message))) {
         uart_debug_write_string(message);
@@ -679,7 +678,7 @@ static void send_pulse_ack(float dutyPercent, unsigned long durationMs)
 {
     char message[TELEMETRY_BUFFER_SIZE];
     int length = snprintf(message, sizeof(message), "OK PULSE DUTY=%ld MS=%lu\r\n",
-        (long) scale_float_100(dutyPercent), durationMs);
+        (long) app_scale_float_100(dutyPercent), durationMs);
 
     if ((length > 0) && (length < (int) sizeof(message))) {
         uart_debug_write_string(message);
@@ -692,8 +691,8 @@ static void send_motor_ack(const char *command, float firstValue,
     char message[TELEMETRY_BUFFER_SIZE];
     int length = snprintf(message, sizeof(message),
         "OK %s L=%ld R=%ld MS=%lu\r\n", command,
-        (long) scale_float_100(firstValue), (long) scale_float_100(secondValue),
-        durationMs);
+        (long) app_scale_float_100(firstValue),
+        (long) app_scale_float_100(secondValue), durationMs);
 
     if ((length > 0) && (length < (int) sizeof(message))) {
         uart_debug_write_string(message);
@@ -736,24 +735,6 @@ static void send_unknown_command(const char *command)
     } else {
         uart_debug_write_string("ERR CMD RX_TOO_LONG\r\n");
     }
-}
-
-static int32_t scale_float_100(float value)
-{
-    if (value >= 0.0f) {
-        return (int32_t) ((value * 100.0f) + 0.5f);
-    }
-
-    return (int32_t) ((value * 100.0f) - 0.5f);
-}
-
-static int32_t scale_float_1000(float value)
-{
-    if (value >= 0.0f) {
-        return (int32_t) ((value * 1000.0f) + 0.5f);
-    }
-
-    return (int32_t) ((value * 1000.0f) - 0.5f);
 }
 
 static float abs_float(float value)

@@ -67,11 +67,6 @@ void uart_openmv_handle_irq(void)
     }
 }
 
-uint32_t uart_openmv_get_rx_dropped_bytes(void)
-{
-    return gOpenmvRxDroppedBytes;
-}
-
 static bool read_rx_byte(uint8_t *byte)
 {
     if (gOpenmvRxTail == gOpenmvRxHead) {

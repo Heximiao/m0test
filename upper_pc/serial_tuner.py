@@ -74,6 +74,7 @@ class SerialTunerApp:
         self.kd_var = tk.StringVar(value="0.4")
         self.status_var = tk.StringVar(value="Disconnected")
         self.debug_var = tk.StringVar(value="RX 0/s  UI 0/s  Q 0  Draw 0/s  Last -")
+        self.debug_log_enabled_var = tk.BooleanVar(value=False)
 
         self._build_ui()
         self.refresh_ports()
@@ -97,6 +98,9 @@ class SerialTunerApp:
         self.connect_button = ttk.Button(top, text="Connect", command=self.toggle_connection)
         self.connect_button.pack(side=tk.LEFT)
         ttk.Label(top, textvariable=self.status_var).pack(side=tk.LEFT, padx=14)
+        ttk.Checkbutton(
+            top, text="Debug log", variable=self.debug_log_enabled_var
+        ).pack(side=tk.LEFT, padx=(0, 8))
         ttk.Label(top, textvariable=self.debug_var).pack(side=tk.LEFT, padx=14)
 
         controls = ttk.LabelFrame(self.root, text="PID Commands", padding=8)
@@ -284,8 +288,9 @@ class SerialTunerApp:
             f"Q {queue_size}  Draw {draw_rate:.0f}/s  Last {last_text}"
         )
         self.debug_var.set(debug_text)
-        self._queue_log(f"[DBG] {debug_text}")
-        self._flush_log()
+        if self.debug_log_enabled_var.get():
+            self._queue_log(f"[DBG] {debug_text}")
+            self._flush_log()
 
         self.last_debug_time = now
         self.last_debug_rx_count = self.rx_line_count
@@ -598,6 +603,8 @@ class SerialTunerApp:
         self.attitude_zero = dict(self.raw_attitude)
         self.attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
         self._draw_cube()
+        if self.serial_port and self.serial_port.is_open:
+            self.send_line("MPUZERO")
 
 
 def main():
