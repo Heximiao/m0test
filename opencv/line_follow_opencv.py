@@ -6,48 +6,49 @@ import cv2
 import numpy as np
 
 
-# 摄像头处理分辨率，和 OpenMV 原脚本保持 QVGA 320x240。
-FRAME_WIDTH = 320
-FRAME_HEIGHT = 240
+# 摄像头处理分辨率；树莓派算力更高，使用 VGA 提高识别精度。
+FRAME_WIDTH = 640
+FRAME_HEIGHT = 480
+ERROR_OUTPUT_WIDTH = 320
 
 # 摄像头是否旋转 180 度；如果调试画面上下左右反了，运行时加 --no-rotate。
 CAMERA_ROTATED_180 = True
 
 # 巡线识别区域：(左上角 x, 左上角 y, 宽, 高)，只在这块区域里找黑线。
-ROI = (20, 35, 280, 195)
+ROI = (40, 70, 560, 390)
 
 # 扫描步长；数值越小越细，但 CPU 占用越高。
-ROW_STEP = 6
-COL_STEP = 6
+ROW_STEP = 8
+COL_STEP = 8
 
 # 单行里被认为是“赛道黑线”的最小/最大宽度，过滤小噪声和大片阴影。
-MIN_TRACK_WIDTH = 12
-MAX_TRACK_WIDTH = 150
+MIN_TRACK_WIDTH = 24
+MAX_TRACK_WIDTH = 300
 
 # 直线判断需要的有效点数量，以及这些点在 y 方向至少跨过多少像素。
 MIN_STRAIGHT_POINTS = 5
-MIN_STRAIGHT_SPAN = 55
+MIN_STRAIGHT_SPAN = 110
 
 # 取目标点时，如果附近点的 x 跨度太大，说明可能在弯道，就少取一点底部点。
-STRAIGHT_MAX_X_SPAN = 70
+STRAIGHT_MAX_X_SPAN = 140
 
 # 希望小车对准的目标行，越靠下越看近处，越靠上越提前看远处。
-TARGET_Y = 190
+TARGET_Y = 380
 
 # 横向黑线最小宽度；用于判断是否出现 T 字、直角弯等横向特征。
-TURN_MIN_HORIZONTAL_WIDTH = 70
+TURN_MIN_HORIZONTAL_WIDTH = 140
 
 # 竖向黑线最小高度；用于确认横线旁边确实连着竖线，不是孤立黑块。
-TURN_MIN_VERTICAL_HEIGHT = 55
+TURN_MIN_VERTICAL_HEIGHT = 110
 
 # 横线和竖线允许错开的像素范围，越大越宽松。
-TURN_JOIN_MARGIN = 14
+TURN_JOIN_MARGIN = 28
 
 # 在横线边缘附近左右搜索竖线的范围。
-TURN_EDGE_SEARCH = 46
+TURN_EDGE_SEARCH = 92
 
 # 竖线底部达到这个 y 值后，才认为拐弯已经足够近，可以准备发 LTURN。
-TURN_READY_Y = 194
+TURN_READY_Y = 388
 
 # 检测到拐弯但还没真正触发 LTURN 前，临时发送的偏差值。
 TURN_ERROR = 150
@@ -61,11 +62,12 @@ TURN_COOLDOWN_FRAMES = 32
 # 拐弯 ready 状态需要连续保持多少帧，防止误触发。
 TURN_READY_HOLD_FRAMES = 2
 
-# ready 后再等待多少帧才真正发送 LTURN，用来让车再往前走一点。
-TURN_READY_DELAY_FRAMES = 13
+# ready 后再等待多少秒才真正发送 LTURN，用来让车再往前走一点。
+# 原来 OpenMV 约 4 FPS 时 13 帧 ~= 3.25 秒；树莓派帧率更高，改用时间更稳定。
+TURN_READY_DELAY_SECONDS = 3.25
 
-# ready 后短暂丢失拐弯特征时，允许继续等待多少帧。
-TURN_PENDING_LOST_FRAMES = 13
+# ready 后短暂丢失拐弯特征时，允许继续等待多少秒。
+TURN_PENDING_LOST_SECONDS = 3.25
 
 # LTURN 后稳定等待多少帧，这段时间发送 LINE 0 0。
 TURN_SETTLE_FRAMES = 12
@@ -82,6 +84,10 @@ PRINT_EVERY = 6
 
 def clamp(value, low, high):
     return max(low, min(high, value))
+
+
+def output_error_from_x(x):
+    return int(round((x - (FRAME_WIDTH // 2)) * ERROR_OUTPUT_WIDTH / FRAME_WIDTH))
 
 
 def row_runs(mask, y, x0, w, min_width):
@@ -173,7 +179,7 @@ def straight_target(points):
     if bottom_y - top_y < MIN_STRAIGHT_SPAN:
         return None
 
-    near = [p for p in points if abs(p[1] - TARGET_Y) <= 18]
+    near = [p for p in points if abs(p[1] - TARGET_Y) <= 36]
     if len(near) < 2:
         near = points[-min(5, len(points)):]
 
@@ -229,7 +235,7 @@ def find_turn_feature(mask, x0, y0, w, h):
         return None
 
     direction, line_x, join_y, h_left, h_right, v_top, v_bottom = best
-    target_x = clamp(line_x + direction * 85, 0, FRAME_WIDTH - 1)
+    target_x = clamp(line_x + direction * 170, 0, FRAME_WIDTH - 1)
     turn_angle = -direction * 90
     turn_ready = v_bottom >= TURN_READY_Y
 
@@ -323,10 +329,11 @@ def draw_debug(frame, mask, points, target, turn, message, mode, fps):
 def parse_args():
     parser = argparse.ArgumentParser(description="OpenCV line follower for Raspberry Pi")
     parser.add_argument("--device", default="/dev/video0", help="camera device")
-    parser.add_argument("--serial", default="/dev/serial0", help="serial port")
+    parser.add_argument("--serial", default="/dev/ttyAMA0", help="serial port")
     parser.add_argument("--baudrate", type=int, default=115200)
     parser.add_argument("--threshold", type=int, default=60, help="black line threshold")
-    parser.add_argument("--show", action="store_true", help="show debug windows")
+    parser.add_argument("--show", dest="show", action="store_true", default=True, help="show debug windows")
+    parser.add_argument("--no-show", dest="show", action="store_false", help="disable debug windows")
     parser.add_argument("--dry-run", action="store_true", help="print only, do not use serial")
     parser.add_argument("--no-rotate", action="store_true", help="disable 180 degree rotation")
     return parser.parse_args()
@@ -342,14 +349,14 @@ def main():
     frame_count = 0
     last_x = FRAME_WIDTH // 2
     turn_ready_count = 0
-    turn_delay_count = 0
+    turn_ready_at = None
     turn_cooldown = 0
     turn_repeat_count = 0
     turn_repeat_angle = 0
     turn_settle_count = 0
     turn_pending = False
     turn_pending_angle = 0
-    turn_pending_lost_count = 0
+    turn_pending_lost_at = None
     last_time = time.monotonic()
     fps = 0.0
 
@@ -389,9 +396,9 @@ def main():
                 turn_settle_count -= 1
                 last_x = FRAME_WIDTH // 2
                 turn_ready_count = 0
-                turn_delay_count = 0
+                turn_ready_at = None
                 turn_pending = False
-                turn_pending_lost_count = 0
+                turn_pending_lost_at = None
                 tx_message = "LINE 0 0"
                 sender.write(tx_message)
                 if (frame_count % PRINT_EVERY) == 0:
@@ -407,27 +414,31 @@ def main():
             if turn is not None:
                 if turn["ready"]:
                     turn_ready_count += 1
-                    turn_pending_lost_count = 0
+                    turn_pending_lost_at = None
                     if turn_ready_count >= TURN_READY_HOLD_FRAMES:
+                        if not turn_pending:
+                            turn_ready_at = now
                         turn_pending = True
                         turn_pending_angle = turn["angle"]
                 elif not turn_pending:
                     turn_ready_count = 0
-                    turn_delay_count = 0
+                    turn_ready_at = None
 
-                if turn_pending and turn_cooldown == 0:
-                    turn_delay_count += 1
-                else:
-                    turn_delay_count = 0
+                turn_delay_elapsed = (
+                    turn_pending
+                    and turn_cooldown == 0
+                    and turn_ready_at is not None
+                    and (now - turn_ready_at) >= TURN_READY_DELAY_SECONDS
+                )
 
-                if turn_pending and turn_delay_count >= TURN_READY_DELAY_FRAMES:
+                if turn_delay_elapsed:
                     turn_repeat_angle = turn_pending_angle
                     turn_repeat_count = TURN_REPEAT_FRAMES
                     turn_cooldown = TURN_COOLDOWN_FRAMES
                     turn_ready_count = 0
-                    turn_delay_count = 0
+                    turn_ready_at = None
                     turn_pending = False
-                    turn_pending_lost_count = 0
+                    turn_pending_lost_at = None
                     tx_message = f"LTURN {turn_repeat_angle}"
                 else:
                     tx_message = f"LINE 1 {turn['err']}"
@@ -436,27 +447,34 @@ def main():
                 sender.write(tx_message)
                 mode = "L"
             elif turn_pending:
-                turn_pending_lost_count += 1
-                if turn_pending_lost_count <= TURN_PENDING_LOST_FRAMES and turn_cooldown == 0:
-                    turn_delay_count += 1
-                else:
+                if turn_pending_lost_at is None:
+                    turn_pending_lost_at = now
+
+                lost_elapsed = now - turn_pending_lost_at
+                if lost_elapsed > TURN_PENDING_LOST_SECONDS or turn_cooldown != 0:
                     turn_pending = False
                     turn_ready_count = 0
-                    turn_delay_count = 0
-                    turn_pending_lost_count = 0
+                    turn_ready_at = None
+                    turn_pending_lost_at = None
 
-                if turn_pending and turn_delay_count >= TURN_READY_DELAY_FRAMES:
+                turn_delay_elapsed = (
+                    turn_pending
+                    and turn_ready_at is not None
+                    and (now - turn_ready_at) >= TURN_READY_DELAY_SECONDS
+                )
+
+                if turn_delay_elapsed:
                     turn_repeat_angle = turn_pending_angle
                     turn_repeat_count = TURN_REPEAT_FRAMES
                     turn_cooldown = TURN_COOLDOWN_FRAMES
                     turn_pending = False
                     turn_ready_count = 0
-                    turn_delay_count = 0
-                    turn_pending_lost_count = 0
+                    turn_ready_at = None
+                    turn_pending_lost_at = None
                     tx_message = f"LTURN {turn_repeat_angle}"
                 elif target is not None:
                     last_x = target[0]
-                    err = target[0] - (FRAME_WIDTH // 2)
+                    err = output_error_from_x(target[0])
                     tx_message = f"LINE 1 {err}"
                 else:
                     last_x = FRAME_WIDTH // 2
@@ -466,17 +484,17 @@ def main():
                 mode = "P"
             elif target is not None:
                 turn_ready_count = 0
-                turn_delay_count = 0
-                turn_pending_lost_count = 0
+                turn_ready_at = None
+                turn_pending_lost_at = None
                 last_x = target[0]
-                err = target[0] - (FRAME_WIDTH // 2)
+                err = output_error_from_x(target[0])
                 tx_message = f"LINE 1 {err}"
                 sender.write(tx_message)
                 mode = "S"
             else:
                 turn_ready_count = 0
-                turn_delay_count = 0
-                turn_pending_lost_count = 0
+                turn_ready_at = None
+                turn_pending_lost_at = None
                 last_x = FRAME_WIDTH // 2
                 tx_message = "LINE 0 0"
                 sender.write(tx_message)
