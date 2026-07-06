@@ -70,6 +70,8 @@ int main(void)
      *   Baud rate: 115200, 8N1
      *   OpenMV P4 TX -> PA24 RX
      *   OpenMV P5 RX <- PA23 TX
+     *   树莓派 GPIO 14 TX >PA24 RX
+     *   树莓派 GPIO 15 RX >PA23 TX 
      *
      * LaunchPad status LED:
      *   PB22/PB26/PB27 -> LED2 blue/red/green
