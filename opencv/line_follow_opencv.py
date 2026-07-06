@@ -48,7 +48,7 @@ TURN_JOIN_MARGIN = 28
 TURN_EDGE_SEARCH = 92
 
 # 竖线底部达到这个 y 值后，才认为拐弯已经足够近，可以准备发 LTURN。
-TURN_READY_Y = 388
+TURN_READY_Y = 288
 
 # 检测到拐弯但还没真正触发 LTURN 前，临时发送的偏差值。
 TURN_ERROR = 150
@@ -64,10 +64,10 @@ TURN_READY_HOLD_FRAMES = 2
 
 # ready 后再等待多少秒才真正发送 LTURN，用来让车再往前走一点。
 # 原来 OpenMV 约 4 FPS 时 13 帧 ~= 3.25 秒；树莓派帧率更高，改用时间更稳定。
-TURN_READY_DELAY_SECONDS = 2.25
+TURN_READY_DELAY_SECONDS = 4
 
 # ready 后短暂丢失拐弯特征时，允许继续等待多少秒。
-TURN_PENDING_LOST_SECONDS = 2.25
+TURN_PENDING_LOST_SECONDS = 4
 
 # LTURN 后稳定等待多少帧，这段时间发送 LINE 0 0。
 TURN_SETTLE_FRAMES = 12

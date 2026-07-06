@@ -105,9 +105,7 @@ void app_car_control_init(void)
     line_follow_init();
     motion_control_init();
 
-    DL_GPIO_setPins(GPIO_STATUS_LED_PORT,
-        GPIO_STATUS_LED_PB22_LED_PIN | GPIO_STATUS_LED_PB26_LED_PIN |
-            GPIO_STATUS_LED_PB27_LED_PIN);
+    DL_GPIO_setPins(GPIO_STATUS_LED_PORT, GPIO_STATUS_LED_PB22_LED_PIN);
 
     uart_debug_write_string("MSPM0 car PID " FIRMWARE_VERSION
         " ready, UART0 PA10 TX PA11 RX 115200 8N1\r\n");
@@ -410,7 +408,7 @@ void app_car_control_send_heartbeat(uint32_t nowMs)
     char message[TELEMETRY_BUFFER_SIZE];
     EncoderCounts counts = encoder_get_counts();
     int length = snprintf(message, sizeof(message),
-        "RUN ms=%lu L=%ld R=%ld RXDROP=%lu TXDROP=%lu LED=PB22/PB26/PB27\r\n",
+        "RUN ms=%lu L=%ld R=%ld RXDROP=%lu TXDROP=%lu LED=PB22\r\n",
         (unsigned long) nowMs, (long) counts.left_count,
         (long) counts.right_count,
         (unsigned long) uart_debug_get_rx_dropped_bytes(),
@@ -423,9 +421,7 @@ void app_car_control_send_heartbeat(uint32_t nowMs)
 
 void app_car_control_toggle_status_led(void)
 {
-    DL_GPIO_togglePins(GPIO_STATUS_LED_PORT,
-        GPIO_STATUS_LED_PB22_LED_PIN | GPIO_STATUS_LED_PB26_LED_PIN |
-            GPIO_STATUS_LED_PB27_LED_PIN);
+    DL_GPIO_togglePins(GPIO_STATUS_LED_PORT, GPIO_STATUS_LED_PB22_LED_PIN);
 }
 
 static void set_motor_duty(float leftDutyPercent, float rightDutyPercent)

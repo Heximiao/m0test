@@ -1,6 +1,6 @@
 # MSPM0 双轮小车控制工程
 
-这是一个基于 TI MSPM0G3507 LaunchPad 的 CCS 工程，用 TB6612 驱动左右两个直流减速电机，通过霍尔编码器做双轮速度闭环，并支持 OpenMV/树莓派视觉巡线、基础里程运动命令、MPU6050 姿态遥测和 PC 上位机在线调参。
+这是一个基于 TI MSPM0G3507 LaunchPad 的 CCS 工程，用 TB6612 驱动左右两个直流减速电机，通过霍尔编码器做双轮速度闭环，并支持 OpenMV/树莓派视觉巡线、基础里程运动命令、MPU6050 姿态遥测、SPI LCD 状态显示和 PC 上位机在线调参。
 
 当前固件默认速度环参数：
 
@@ -22,6 +22,7 @@ Kd = 0.4
 - OpenMV UART2 接收 `LINE`/`LTURN` 视觉命令，实现自动巡线和路口原地转弯。
 - 里程运动命令：速度、距离、角速度、转角。
 - MPU6050 软件 I2C 姿态读取，优先 DMP，失败时回退到加速度计姿态。
+- SPI LCD 初始化显示，屏幕上电后显示项目状态和右轮 PWM 引脚提示。
 - Python 上位机曲线显示、PID/BASE 下发和 CSV 保存。
 - 树莓派/OpenCV 版本巡线脚本，可通过串口向 MCU 发送同样的视觉命令。
 
@@ -134,7 +135,7 @@ LTURN <angle_deg>
 
 `LINE 1 error` 表示视觉识别有效，`error` 为黑线目标点相对画面中心的横向偏差；`LINE 0 0` 表示暂时丢线。固件收到有效巡线数据后，会在没有显式运动命令时自动以前进基础速度巡线。
 
-`LTURN` 用于路口原地转弯，当前按 90 度约 `300` 个编码器 count 换算，默认转弯速度 `15 counts/20ms`，转弯后会延迟约 `1900 ms` 再恢复巡线。
+`LTURN` 用于路口原地转弯，当前按 90 度约 `275` 个编码器 count 换算，默认转弯速度 `15 counts/20ms`，开环转弯占空比 `15%`，转弯后会延迟约 `1900 ms` 再恢复巡线。
 
 ### MPU6050
 
@@ -163,28 +164,32 @@ ATT SRC=DMP PITCH=12 ROLL=-34 YAW=9000
 其中 `PITCH/ROLL/YAW` 按 `*100` 输出，单位为度。心跳行格式如下：
 
 ```text
-RUN ms=30000 L=1234 R=1230 RXDROP=0 TXDROP=0 LED=PB22/PB26/PB27
+RUN ms=30000 L=1234 R=1230 RXDROP=0 TXDROP=0 LED=PB22
 ```
 
 ## 引脚连接
 
-| 功能 | 引脚 |
-| --- | --- |
-| 左轮 PWM / TB6612 PWMD | PA8 |
-| 左轮方向 / DIN1, DIN2 | PA25, PA31 |
-| 右轮 PWM / TB6612 PWMA | PB9 |
-| 右轮方向 / AIN1, AIN2 | PB16, PB13 |
-| TB6612 STBY | PA27 |
-| 左轮编码器 E4A, E4B | PB2, PB3 |
-| 右轮编码器 E1A, E1B | PB0, PB1 |
-| UART0 TX, RX | PA10, PA11 |
-| OpenMV UART2 TX, RX | PA23, PA24 |
-| OpenMV P4 TX -> MCU RX | PA24 |
-| OpenMV P5 RX <- MCU TX | PA23 |
-| MPU6050 SCL, SDA | PA1, PA0 |
-| 状态 LED | PB22, PB26, PB27 |
+| 功能 | 引脚 | 代码/SysConfig 名称 |
+| --- | --- | --- |
+| 左轮 PWM / TB6612 PWMD | PA8 | `PWM_LEFT` / TIMA0 CCP0 |
+| 左轮方向 / DIN1, DIN2 | PA25, PA31 | `GPIO_MOTOR_A_AIN1`, `GPIO_MOTOR_A_AIN2` |
+| 右轮 PWM / TB6612 PWMA | PB4 | `PWM_RIGHT` / TIMA1 CCP0 |
+| 右轮方向 / AIN1, AIN2 | PB16, PB13 | `GPIO_MOTOR_B_BIN1`, `GPIO_MOTOR_B_BIN2` |
+| TB6612 STBY | PA27 | `GPIO_MOTOR_A_STBY` |
+| 左轮编码器 E4A, E4B | PB2, PB3 | `LEFT_C0`, `LEFT_C1` |
+| 右轮编码器 E1A, E1B | PB0, PB1 | `RIGHT_C0`, `RIGHT_C1` |
+| UART0 调试 TX, RX | PA10, PA11 | `UART_DEBUG` |
+| OpenMV UART2 TX, RX | PA23, PA24 | `UART_OPENMV` |
+| OpenMV P4 TX -> MCU RX | PA24 | 接 MCU `UART2 RX` |
+| OpenMV P5 RX <- MCU TX | PA23 | 接 MCU `UART2 TX` |
+| 树莓派 GPIO14 TX -> MCU RX | PA24 | 可替代 OpenMV TX |
+| 树莓派 GPIO15 RX <- MCU TX | PA23 | 可替代 OpenMV RX |
+| MPU6050 SCL, SDA | PA1, PA0 | 软件 I2C，开漏上拉 |
+| LCD SPI MOSI, SCLK | PB8, PB9 | `SPI_LCD`，16 MHz |
+| LCD RES, DC, CS, BLK | PB10, PB11, PB14, PB26 | `GPIO_LCD` |
+| 状态 LED | PB22 | `GPIO_STATUS_LED_PB22_LED` |
 
-左右轮命名以车尾看向车头为准。编码器极性在 `hw/hw_encoder.c` 中处理，前进方向计数为正。
+左右轮命名以车尾看向车头为准。代码中 TB6612 通道 A 驱动左轮、通道 B 驱动右轮；编码器极性在 `hw/hw_encoder.c` 中处理，前进方向计数为正。`PB9` 当前用于 LCD SCLK，不再是右轮 PWM。
 
 ## 上位机工具
 
@@ -236,8 +241,12 @@ gpio_toggle_output/
 │   └── mpu6050/                 MPU6050、DMP 和软件 I2C 驱动
 ├── hw/                          MCU 外设封装
 │   ├── hw_encoder.c/.h          编码器 GPIO 中断计数
+│   ├── hw_lcd.c/.h              SPI LCD 初始化、绘图和字符串显示
+│   ├── hw_spi.c/.h              LCD SPI 写总线封装
 │   ├── hw_uart.c/.h             UART0 调试串口
-│   └── hw_openmv_uart.c/.h      UART2 OpenMV/视觉串口
+│   ├── hw_openmv_uart.c/.h      UART2 OpenMV/视觉串口
+│   ├── lcdfont.h                LCD 中文字库
+│   └── lcdfont_ascii.h          LCD ASCII 字库
 ├── mid/
 │   └── mid_pid.c/.h             通用 PID 算法
 ├── openmv/

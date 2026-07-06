@@ -16,8 +16,12 @@ const GPIO3  = GPIO.addInstance();
 const GPIO4  = GPIO.addInstance();
 const GPIO5  = GPIO.addInstance();
 const GPIO6  = GPIO.addInstance();
+const GPIO7  = GPIO.addInstance();
 const PWM    = scripting.addModule("/ti/driverlib/PWM", {}, false);
 const PWM1   = PWM.addInstance();
+const PWM2   = PWM.addInstance();
+const SPI    = scripting.addModule("/ti/driverlib/SPI", {}, false);
+const SPI1   = SPI.addInstance();
 const SYSCTL = scripting.addModule("/ti/driverlib/SYSCTL");
 const UART   = scripting.addModule("/ti/driverlib/UART", {}, false);
 const UART1  = UART.addInstance();
@@ -46,13 +50,9 @@ GPIO2.associatedPins[1].pin.$assign = "PB13";
 
 GPIO3.$name                         = "GPIO_STATUS_LED";
 GPIO3.port                          = "PORTB";
-GPIO3.associatedPins.create(3);
+GPIO3.associatedPins.create(1);
 GPIO3.associatedPins[0].$name       = "PB22_LED";
 GPIO3.associatedPins[0].assignedPin = "22";
-GPIO3.associatedPins[1].$name       = "PB26_LED";
-GPIO3.associatedPins[1].assignedPin = "26";
-GPIO3.associatedPins[2].$name       = "PB27_LED";
-GPIO3.associatedPins[2].assignedPin = "27";
 
 GPIO4.$name                         = "GPIO_ENCODER_LEFT";
 GPIO4.port                          = "PORTB";
@@ -104,16 +104,23 @@ GPIO6.associatedPins[1].initialValue = "SET";
 GPIO6.associatedPins[1].ioStructure  = "OD";
 GPIO6.associatedPins[1].internalResistor = "PULL_UP";
 
-PWM1.$name                      = "PWM_MOTORS";
+PWM1.$name                      = "PWM_LEFT";
 PWM1.clockPrescale              = 1;
 PWM1.timerCount                 = 1600;
+PWM1.ccIndex                    = [0];
 PWM1.peripheral.$assign         = "TIMA0";
 PWM1.peripheral.ccp0Pin.$assign = "PA8";
-PWM1.peripheral.ccp1Pin.$assign = "PB9";
 PWM1.PWM_CHANNEL_0.$name        = "PWMA";
 PWM1.PWM_CHANNEL_0.dutyCycle    = 60;
-PWM1.PWM_CHANNEL_1.$name        = "PWMB";
-PWM1.PWM_CHANNEL_1.dutyCycle    = 60;
+
+PWM2.$name                      = "PWM_RIGHT";
+PWM2.clockPrescale              = 1;
+PWM2.timerCount                 = 1600;
+PWM2.ccIndex                    = [0];
+PWM2.peripheral.$assign         = "TIMA1";
+PWM2.peripheral.ccp0Pin.$assign = "PB4";
+PWM2.PWM_CHANNEL_0.$name        = "PWMB";
+PWM2.PWM_CHANNEL_0.dutyCycle    = 60;
 
 UART1.$name                    = "UART_DEBUG";
 UART1.targetBaudRate           = 115200;
@@ -132,6 +139,35 @@ UART2.txFifoThreshold          = "DL_UART_TX_FIFO_LEVEL_1_2_EMPTY";
 UART2.peripheral.$assign       = "UART2";
 UART2.peripheral.rxPin.$assign = "PA24";
 UART2.peripheral.txPin.$assign = "PA23";
+
+GPIO7.$name                          = "GPIO_LCD";
+GPIO7.port                           = "PORTB";
+GPIO7.associatedPins.create(4);
+GPIO7.associatedPins[0].$name        = "PIN_RES";
+GPIO7.associatedPins[0].pin.$assign  = "PB10";
+GPIO7.associatedPins[1].$name        = "PIN_DC";
+GPIO7.associatedPins[1].pin.$assign  = "PB11";
+GPIO7.associatedPins[2].$name        = "PIN_CS";
+GPIO7.associatedPins[2].initialValue = "SET";
+GPIO7.associatedPins[2].pin.$assign  = "PB14";
+GPIO7.associatedPins[3].$name        = "PIN_BLK";
+GPIO7.associatedPins[3].pin.$assign  = "PB26";
+
+SPI1.$name                              = "SPI_LCD";
+SPI1.frameFormat                        = "MOTO3";
+SPI1.direction                          = "PICO";
+SPI1.targetBitRate                      = 16000000;
+SPI1.sclkPinConfig.direction            = scripting.forceWrite("OUTPUT");
+SPI1.sclkPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+SPI1.sclkPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+SPI1.sclkPinConfig.$name                = "ti_driverlib_gpio_LCD_SCLK";
+SPI1.mosiPinConfig.direction            = scripting.forceWrite("OUTPUT");
+SPI1.mosiPinConfig.hideOutputInversion  = scripting.forceWrite(false);
+SPI1.mosiPinConfig.onlyInternalResistor = scripting.forceWrite(false);
+SPI1.mosiPinConfig.passedPeripheralType = scripting.forceWrite("Digital");
+SPI1.mosiPinConfig.$name                = "ti_driverlib_gpio_LCD_MOSI";
+SPI1.peripheral.sclkPin.$assign         = "PB9";
+SPI1.peripheral.mosiPin.$assign         = "PB8";
 
 const Board = scripting.addModule("/ti/driverlib/Board", {}, false);
 

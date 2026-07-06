@@ -21,15 +21,16 @@ static uint32_t speedToCompare(uint32_t speed)
 void TB6612_Init(void)
 {
     TB6612_Motor_Stop();
-    DL_TimerA_startCounter(PWM_MOTORS_INST);
+    DL_TimerA_startCounter(PWM_LEFT_INST);
+    DL_TimerA_startCounter(PWM_RIGHT_INST);
 }
 
 void TB6612_Motor_Stop(void)
 {
-    DL_TimerA_setCaptureCompareValue(PWM_MOTORS_INST, speedToCompare(0U),
-        GPIO_PWM_MOTORS_C0_IDX);
-    DL_TimerA_setCaptureCompareValue(PWM_MOTORS_INST, speedToCompare(0U),
-        GPIO_PWM_MOTORS_C1_IDX);
+    DL_TimerA_setCaptureCompareValue(PWM_LEFT_INST, speedToCompare(0U),
+        GPIO_PWM_LEFT_C0_IDX);
+    DL_TimerA_setCaptureCompareValue(PWM_RIGHT_INST, speedToCompare(0U),
+        GPIO_PWM_RIGHT_C0_IDX);
 
     AIN1_OUT(1);
     AIN2_OUT(1);
@@ -54,8 +55,8 @@ void AO_Control(uint8_t dir, uint32_t speed)
         AIN2_OUT(0);
     }
 
-    DL_TimerA_setCaptureCompareValue(PWM_MOTORS_INST, speedToCompare(speed),
-        GPIO_PWM_MOTORS_C0_IDX);
+    DL_TimerA_setCaptureCompareValue(PWM_LEFT_INST, speedToCompare(speed),
+        GPIO_PWM_LEFT_C0_IDX);
 }
 
 void BO_Control(uint8_t dir, uint32_t speed)
@@ -74,6 +75,6 @@ void BO_Control(uint8_t dir, uint32_t speed)
         BIN2_OUT(0);
     }
 
-    DL_TimerA_setCaptureCompareValue(PWM_MOTORS_INST, speedToCompare(speed),
-        GPIO_PWM_MOTORS_C1_IDX);
+    DL_TimerA_setCaptureCompareValue(PWM_RIGHT_INST, speedToCompare(speed),
+        GPIO_PWM_RIGHT_C0_IDX);
 }

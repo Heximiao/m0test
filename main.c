@@ -10,6 +10,7 @@
 #include "app/app_mpu6050_attitude.h"
 #include "bsp/bsp_tb6612.h"
 #include "hw/hw_encoder.h"
+#include "hw/hw_lcd.h"
 #include "hw/hw_openmv_uart.h"
 #include "hw/hw_uart.h"
 #include "ti_msp_dl_config.h"
@@ -42,7 +43,7 @@ int main(void)
      *   PA8  -> PWMD, left wheel PWM  (TIMA0_CCP0)
      *   PA25 -> DIN1, left wheel direction
      *   PA31 -> DIN2, left wheel direction
-     *   PB9  -> PWMA, right wheel PWM (TIMA0_CCP1)
+     *   PB4  -> PWMA, right wheel PWM (TIMA1_CCP0)
      *   PB16 -> AIN1, right wheel direction
      *   PB13 -> AIN2, right wheel direction
      *   PA27 -> STBY, TB6612 standby enable
@@ -74,7 +75,15 @@ int main(void)
      *   树莓派 GPIO 15 RX >PA23 TX 
      *
      * LaunchPad status LED:
-     *   PB22/PB26/PB27 -> LED2 blue/red/green
+     *   PB22 -> status LED
+     *
+     * LCD:
+     *   PB8  -> LCD MOSI
+     *   PB9  -> LCD SCLK
+     *   PB10 -> LCD RES
+     *   PB11 -> LCD DC
+     *   PB14 -> LCD CS
+     *   PB26 -> LCD BLK/backlight
      *
      * MPU6050 software I2C:
      *   PA1 -> SCL
@@ -85,6 +94,15 @@ int main(void)
     uart_debug_init();
     uart_openmv_init();
     TB6612_Init();
+    lcd_init();
+    LCD_Fill(0, 0, LCD_W, LCD_H, BLACK);
+    LCD_ShowString(20, 24, (const unsigned char *) "MSPM0 CAR", WHITE, BLACK,
+        24, 0);
+    LCD_ShowString(20, 58, (const unsigned char *) "LCD OK", GREEN, BLACK, 24,
+        0);
+    LCD_ShowString(20, 92, (const unsigned char *) "PWM R: PB4", YELLOW,
+        BLACK, 16, 0);
+    LCD_BLK_Set();
     app_car_control_init();
 
     app_mpu6050_attitude_init();
