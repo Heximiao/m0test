@@ -1,6 +1,8 @@
-# MSPM0 双轮小车 PID 控制工程
+# MSPM0 双轮小车控制工程
 
-这是一个基于 TI MSPM0G3507 LaunchPad 的 CCS 工程，用 TB6612 驱动左右两个直流减速电机，并用霍尔编码器做左右轮速度闭环。当前速度环已经按实车调到一组比较稳定的参数：
+这是一个基于 TI MSPM0G3507 LaunchPad 的 CCS 工程，用 TB6612 驱动左右两个直流减速电机，通过霍尔编码器做双轮速度闭环，并支持 OpenMV/树莓派视觉巡线、基础里程运动命令、MPU6050 姿态遥测和 PC 上位机在线调参。
+
+当前固件默认速度环参数：
 
 ```text
 Base = 20
@@ -9,49 +11,68 @@ Ki = 0.2
 Kd = 0.4
 ```
 
-`BASE` 的单位不是 PWM 百分比，而是每 20 ms 控制周期的编码器增量，所以上位机里 `Base=20` 表示目标速度约为 `20 counts / 20 ms`。
+`BASE` 的单位不是 PWM 百分比，而是每个 20 ms 控制周期内的编码器增量。例如 `BASE 20` 表示目标速度约为 `20 counts / 20 ms`。
 
 ## 当前功能
 
-- 左右轮编码器计数和测速。
-- 20 ms 周期速度闭环控制。
-- 左右轮独立 PID 速度控制。
-- 前馈补偿和左右轮前馈比例校准。
-- UART0 串口遥测和在线调参，默认 `115200 8N1`，遥测周期 `100 ms`。
-- Python 上位机曲线显示、PID 下发、CSV 保存。
-- 基础巡线和运动命令接口。
+- 左右轮编码器计数、测速和一阶低通滤波。
+- 20 ms 双轮速度闭环，左右轮使用同一组 PID 参数。
+- 速度目标斜坡、PWM 手动测试斜坡、前馈起步占空比和左右轮前馈比例校准。
+- UART0 调试/调参，默认 `115200 8N1`，100 ms 遥测。
+- OpenMV UART2 接收 `LINE`/`LTURN` 视觉命令，实现自动巡线和路口原地转弯。
+- 里程运动命令：速度、距离、角速度、转角。
+- MPU6050 软件 I2C 姿态读取，优先 DMP，失败时回退到加速度计姿态。
+- Python 上位机曲线显示、PID/BASE 下发和 CSV 保存。
+- 树莓派/OpenCV 版本巡线脚本，可通过串口向 MCU 发送同样的视觉命令。
 
-## 关键控制量说明
+## 运行节拍
 
-| 名称 | 位置 | 作用 |
+| 周期 | 任务 |
+| --- | --- |
+| 1 ms | SysTick 系统时基 |
+| 20 ms | 速度控制更新 |
+| 20 ms | MPU6050 姿态输出尝试 |
+| 100 ms | 小车状态遥测 |
+| 500 ms | LaunchPad 状态 LED 翻转 |
+| 30 s | 心跳 `RUN` 输出 |
+
+## 控制量说明
+
+| 名称 | 来源 | 说明 |
 | --- | --- | --- |
-| `BASE` | 上位机/串口命令 | 设置左右轮共同目标速度，单位 `counts/20ms` |
-| `LD` | 遥测 | 左轮滤波后的实际速度，单位 `counts/20ms` |
-| `RD` | 遥测 | 右轮滤波后的实际速度，单位 `counts/20ms` |
-| `ERR` | 遥测 | `LD - RD`，显示左右轮速度差，不是目标速度误差 |
-| `LO` | 遥测 | 左轮最终 PWM 输出，单位百分比 |
-| `RO` | 遥测 | 右轮最终 PWM 输出，单位百分比 |
+| `BASE` | 命令/遥测 | 共享基础目标速度，遥测中按 `*100` 输出，单位为 `counts/20ms` |
+| `LD` / `RD` | 遥测 | 左/右轮滤波后的实际速度，按 `*100` 输出 |
+| `ERR` | 遥测 | `LD - RD`，表示左右轮速度差，不是目标速度误差 |
+| `LO` / `RO` | 遥测 | 左/右轮最终 PWM 输出，按 `*100` 输出，单位为百分比 |
 | `OUT` | 遥测 | `RO - LO`，左右轮输出差 |
-| `Kp/Ki/Kd` | PID 参数 | 左右轮速度 PID 共用同一组参数 |
+| `LT` / `RT` | 遥测 | 左/右轮当前目标速度，按 `*100` 输出 |
+| `LINE` / `LV` | 遥测 | 巡线偏差和视觉数据是否有效 |
+| `MO` / `MB` | 遥测 | 运动控制模式和是否忙碌 |
+| `KP/KI/KD` | PID 参数 | 速度环 PID 参数，遥测中按 `*1000` 输出 |
 
-速度输出的核心公式在 `app/app_car_control.c`：
+速度输出核心逻辑在 `app/app_car_control.c`：
 
 ```text
 PWM = 前馈输出 + PID(目标速度 - 实际速度)
 ```
 
-前馈输出由这些宏控制：
+主要前馈和限幅宏：
 
 ```c
 SPEED_LOOP_START_DUTY_PERCENT
 SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT
 LEFT_SPEED_FEED_FORWARD_SCALE
 RIGHT_SPEED_FEED_FORWARD_SCALE
+MAX_DUTY_PERCENT
 ```
 
-如果平均速度追不上目标，优先调 `SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT`；如果只有某一边轮子长期偏快/偏慢，优先调对应的 `LEFT/RIGHT_SPEED_FEED_FORWARD_SCALE`。
+如果平均速度追不上目标，优先调 `SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT`；如果某一侧轮子长期偏快或偏慢，优先微调 `LEFT_SPEED_FEED_FORWARD_SCALE` 或 `RIGHT_SPEED_FEED_FORWARD_SCALE`。
 
 ## 串口命令
+
+所有命令都是 ASCII 文本，以换行结束；固件会自动忽略行首空格、制表符和 `>`，并把小写转成大写。
+
+### 速度环和调试
 
 ```text
 PID <kp> <ki> <kd>
@@ -60,15 +81,7 @@ STOP
 GET
 ENCZERO
 TELE 0|1
-PWM <left_duty_percent> <right_duty_percent> [duration_ms]
-MOTOR <duty_percent> [duration_ms]
-PULSE <duty_percent> <duration_ms>
-DRIVE <linear_mm_s> <angular_deg_s>
-SPEED <linear_mm_s>
-DIST <distance_mm> <linear_mm_s>
-TURN <angle_deg> <angular_deg_s>
-ANGLE <angle_deg> <angular_deg_s>
-MSTOP
+QUIET 0|1
 ```
 
 常用调试流程：
@@ -81,6 +94,98 @@ GET
 STOP
 ```
 
+### 手动电机测试
+
+```text
+PWM <left_duty_percent> <right_duty_percent> [duration_ms]
+MOTOR <duty_percent> [duration_ms]
+PULSE <duty_percent> <duration_ms>
+```
+
+`MOTOR` 和 `PWM` 默认运行 2000 ms，最长 10000 ms；`PULSE` 最长 2000 ms。占空比会被限制在 `0%` 到 `85%`。
+
+### 运动命令
+
+```text
+DRIVE <linear_mm_s> <angular_deg_s>
+SPEED <linear_mm_s>
+DIST <distance_mm> <linear_mm_s>
+TURN <angle_deg> [angular_deg_s]
+ANGLE <angle_deg> [angular_deg_s]
+MSTOP
+```
+
+运动换算参数在 `app/app_motion_control.c`：
+
+- 车轮直径：`48.0 mm`
+- 轮距：`129.0 mm`
+- 电机编码器：`11 PPR`
+- 减速比：`20:1`
+- A/B 相计数倍率：`2`
+- 最大线速度：`100 mm/s`
+- 最大角速度：`120 deg/s`
+
+### 视觉巡线
+
+```text
+LINE <valid> <error_pixels>
+LTURN <angle_deg>
+```
+
+`LINE 1 error` 表示视觉识别有效，`error` 为黑线目标点相对画面中心的横向偏差；`LINE 0 0` 表示暂时丢线。固件收到有效巡线数据后，会在没有显式运动命令时自动以前进基础速度巡线。
+
+`LTURN` 用于路口原地转弯，当前按 90 度约 `300` 个编码器 count 换算，默认转弯速度 `15 counts/20ms`，转弯后会延迟约 `1900 ms` 再恢复巡线。
+
+### MPU6050
+
+```text
+MPU
+MPUINIT
+MPUZERO
+```
+
+`MPU` 输出初始化状态、I2C 引脚状态、DMP/FIFO 调试信息和失败计数。`MPUINIT` 重新初始化 MPU6050 和 DMP。`MPUZERO` 清零回退姿态算法的参考角。
+
+## 遥测格式
+
+开启 `TELE 1` 后，固件每 100 ms 输出一行键值对，例如：
+
+```text
+L=1234 R=1230 LD=1987 RD=1975 ERR=12 OUT=-35 LO=2100 RO=2065 LT=2000 RT=2000 KP=4000 KI=200 KD=400 BASE=2000 LINE=0 LV=0 MM=0 DG=0 MO=0 MB=0
+```
+
+姿态模块会单独输出：
+
+```text
+ATT SRC=DMP PITCH=12 ROLL=-34 YAW=9000
+```
+
+其中 `PITCH/ROLL/YAW` 按 `*100` 输出，单位为度。心跳行格式如下：
+
+```text
+RUN ms=30000 L=1234 R=1230 RXDROP=0 TXDROP=0 LED=PB22/PB26/PB27
+```
+
+## 引脚连接
+
+| 功能 | 引脚 |
+| --- | --- |
+| 左轮 PWM / TB6612 PWMD | PA8 |
+| 左轮方向 / DIN1, DIN2 | PA25, PA31 |
+| 右轮 PWM / TB6612 PWMA | PB9 |
+| 右轮方向 / AIN1, AIN2 | PB16, PB13 |
+| TB6612 STBY | PA27 |
+| 左轮编码器 E4A, E4B | PB2, PB3 |
+| 右轮编码器 E1A, E1B | PB0, PB1 |
+| UART0 TX, RX | PA10, PA11 |
+| OpenMV UART2 TX, RX | PA23, PA24 |
+| OpenMV P4 TX -> MCU RX | PA24 |
+| OpenMV P5 RX <- MCU TX | PA23 |
+| MPU6050 SCL, SDA | PA1, PA0 |
+| 状态 LED | PB22, PB26, PB27 |
+
+左右轮命名以车尾看向车头为准。编码器极性在 `hw/hw_encoder.c` 中处理，前进方向计数为正。
+
 ## 上位机工具
 
 ```powershell
@@ -89,101 +194,78 @@ python -m pip install -r requirements.txt
 python serial_tuner.py
 ```
 
-曲线默认关注 `TARGET`、`LD`、`RD`、`ERR`。其中 `TARGET` 来自固件遥测里的 `BASE` 字段，上位机会自动除以 100 显示成人能读的数值。
+上位机主要用于连接 COM 口、下发 `PID`/`BASE`/`GET`、绘制 `TARGET`、`LD`、`RD`、`ERR` 曲线并保存 CSV。更详细说明见 `upper_pc/README.md`。
 
-## 引脚连接
+## 视觉脚本
 
-| 功能 | 引脚 |
-| --- | --- |
-| 左轮 PWM / PWMA | PA8 |
-| 左轮方向 / AIN1, AIN2 | PA25, PA31 |
-| 右轮 PWM / PWMB | PB9 |
-| 右轮方向 / BIN1, BIN2 | PB16, PB13 |
-| TB6612 STBY | PA27 |
-| 左轮编码器 A, B | PB2, PB3 |
-| 右轮编码器 A, B | PB0, PB1 |
-| UART0 TX, RX | PA10, PA11 |
-| OpenMV UART2 TX, RX | PA23, PA24 |
-| 状态 LED | PB22, PB26, PB27 |
+OpenMV 脚本：
 
-## 文件架构
+```text
+openmv/xunjitest1.py
+```
+
+该脚本在 QVGA 画面中做黑线二值化，输出 `LINE <valid> <error>`；检测到直角/T 字路口并满足触发条件后，会连续发送 `LTURN <angle>`。
+
+树莓派/OpenCV 脚本：
+
+```powershell
+python opencv/line_follow_opencv.py --serial COMx --baudrate 115200
+```
+
+Linux/树莓派上默认摄像头为 `/dev/video0`，串口为 `/dev/ttyAMA0`。调试时可加 `--dry-run` 只看识别结果，不打开串口；加 `--no-show` 关闭窗口显示。
+
+## 文件结构
 
 ```text
 gpio_toggle_output/
-├─ .ccsproject                  CCS 工程描述文件，给 Code Composer Studio 识别工程用
-├─ .cproject                    Eclipse/CDT C 工程配置，保存编译器、包含路径等设置
-├─ .project                     Eclipse 工程元数据，保存工程名称和构建器信息
-├─ .clangd                      clangd 配置，给代码补全/跳转工具使用
-├─ gpio_toggle_output.syscfg    TI SysConfig 外设配置源文件，生成 ti_msp_dl_config.*
-├─ main.c                       程序入口，初始化外设，调度控制周期、遥测周期和中断入口
-├─ README.md                    当前工程说明文档
-│
-├─ app/                         应用层逻辑，决定小车“做什么”
-│  ├─ app_car_control.c         小车主控制：速度 PID、前馈、串口命令、遥测、手动 PWM/MOTOR
-│  ├─ app_car_control.h         小车主控制模块接口
-│  ├─ app_line_follow.c         巡线控制：解析 OpenMV 的 LINE 数据，生成左右轮转向修正
-│  ├─ app_line_follow.h         巡线模块接口
-│  ├─ app_motion_control.c      运动命令：把速度/距离/角度命令换算成左右轮目标速度
-│  └─ app_motion_control.h      运动控制模块接口
-│
-├─ bsp/                         板级支持层，封装具体外设芯片
-│  ├─ bsp_tb6612.c              TB6612 电机驱动，控制方向脚和 PWM 输出
-│  └─ bsp_tb6612.h              TB6612 驱动接口、PWM 最大值等宏定义
-│
-├─ hw/                          硬件驱动层，封装 MCU 外设
-│  ├─ hw_encoder.c              左右轮编码器 GPIO 中断计数，处理正反方向极性
-│  ├─ hw_encoder.h              编码器计数结构体和读取/清零接口
-│  ├─ hw_uart.c                 UART0 调试串口，负责 PC 上位机命令接收和遥测发送
-│  ├─ hw_uart.h                 UART0 调试串口接口
-│  ├─ hw_openmv_uart.c          UART2 OpenMV 串口，只接收视觉端 LINE 数据
-│  └─ hw_openmv_uart.h          OpenMV 串口接口
-│
-├─ mid/                         中间层算法，和具体硬件无关
-│  ├─ mid_pid.c                 通用 PID 算法，包含积分限幅和输出限幅
-│  └─ mid_pid.h                 PID 结构体和函数声明
-│
-├─ openmv/                      OpenMV 摄像头端脚本
-│  └─ xunjitest1.py             图像二值化、线段/弯道识别，并通过 UART 发送 LINE 命令
-│
-├─ upper_pc/                    PC 上位机工具
-│  ├─ serial_tuner.py           串口调参工具：连接 COM、发送 PID/BASE、绘图、保存 CSV、诊断串口速率
-│  ├─ requirements.txt          上位机 Python 依赖，主要是 pyserial
-│  ├─ README.md                 上位机单独使用说明
-│  └─ __pycache__/              Python 运行生成的缓存目录，可以忽略
-│
-├─ targetConfigs/               CCS 调试/烧录目标配置
-│  ├─ MSPM0G3507.ccxml          MSPM0G3507 LaunchPad 调试连接配置
-│  └─ readme.txt                CCS 自动生成的 targetConfigs 说明
-│
-└─ Debug/                       CCS Debug 构建输出目录，可以重新生成
-   ├─ gpio_toggle_output.out    CCS 调试/烧录常用固件文件
-   ├─ gpio_toggle_output.hex    Intel HEX 固件文件
-   ├─ gpio_toggle_output.map    链接 map 文件，用于查看内存占用和符号分布
-   ├─ ti_msp_dl_config.c/.h     SysConfig 生成的外设初始化代码
-   ├─ *.o / *.d                 编译中间文件和依赖文件
-   └─ makefile / *.mk / *.opt   CCS 自动生成的构建脚本和编译选项
+├── .ccsproject                  CCS 工程描述文件
+├── .cproject                    Eclipse/CDT C 工程配置
+├── .project                     Eclipse 工程元数据
+├── .clangd                      clangd 配置
+├── gpio_toggle_output.syscfg    TI SysConfig 外设配置源文件
+├── main.c                       程序入口、任务调度和中断入口
+├── README.md                    当前工程说明
+├── app/                         应用层逻辑
+│   ├── app_car_control.c/.h     小车主控制、速度环、串口命令、遥测、巡线融合
+│   ├── app_line_follow.c/.h     解析 LINE 数据并生成巡线转向修正
+│   ├── app_motion_control.c/.h  距离、速度、转角等运动命令换算
+│   ├── app_mpu6050_attitude.c/.h MPU6050 姿态初始化、读取和命令处理
+│   └── app_util.h               常用缩放、限幅和绝对值工具
+├── bsp/                         板级支持层
+│   ├── bsp_tb6612.c/.h          TB6612 电机驱动
+│   └── mpu6050/                 MPU6050、DMP 和软件 I2C 驱动
+├── hw/                          MCU 外设封装
+│   ├── hw_encoder.c/.h          编码器 GPIO 中断计数
+│   ├── hw_uart.c/.h             UART0 调试串口
+│   └── hw_openmv_uart.c/.h      UART2 OpenMV/视觉串口
+├── mid/
+│   └── mid_pid.c/.h             通用 PID 算法
+├── openmv/
+│   └── xunjitest1.py            OpenMV 巡线和路口识别脚本
+├── opencv/
+│   └── line_follow_opencv.py    树莓派/OpenCV 巡线脚本
+├── upper_pc/
+│   ├── serial_tuner.py          PC 串口调参和曲线工具
+│   ├── requirements.txt         Python 依赖
+│   └── README.md                上位机说明
+├── targetConfigs/               CCS 调试/烧录目标配置
+└── Debug/                       CCS Debug 构建输出，可重新生成
 ```
 
-可以忽略的目录：
-
-- `.git/`：Git 版本库内部数据。
-- `.agents/`：Codex/自动化工具的工作数据。
-- `.settings/`：Eclipse/CCS 本地设置。
-- `.ti_appdata/`：TI 工具运行时缓存。
-- `Debug/.clangd/`：clangd 索引缓存。
+可以忽略或重新生成的目录包括 `.git/`、`.agents/`、`.settings/`、`.ti_appdata/`、`Debug/` 和 Python 的 `__pycache__/`。
 
 ## 编译和烧录
 
-在 CCS 中打开工程后，直接 Build Project，然后 Debug/Load 到 MSPM0G3507 LaunchPad。
+推荐在 Code Composer Studio 中导入本工程，直接执行 Build Project，然后 Debug/Load 到 MSPM0G3507 LaunchPad。
 
-构建产物路径：
+主要构建产物：
 
 ```text
 Debug/gpio_toggle_output.out
 Debug/gpio_toggle_output.hex
 ```
 
-如果使用当前仓库里的自动生成 makefile，也可以在 `Debug` 目录执行：
+如果使用仓库当前的 CCS 自动生成 makefile，也可以在 `Debug` 目录执行：
 
 ```powershell
 gmake all
@@ -191,8 +273,10 @@ gmake all
 
 ## 调参建议
 
-- 平均速度低于目标：优先增大 `SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT`，不要只加 `Kp`。
-- 速度到目标但震荡：适当降低 `Kp` 或增加一点 `Kd`。
-- 长时间有静态误差：小幅增加 `Ki`。
-- 左右轮一边长期偏快：微调 `LEFT_SPEED_FEED_FORWARD_SCALE` 或 `RIGHT_SPEED_FEED_FORWARD_SCALE`。
-- `ERR` 是左右轮差速，越接近 0 说明左右轮越一致。
+- 平均速度低于目标：优先增大 `SPEED_LOOP_FEED_FORWARD_PERCENT_PER_COUNT`。
+- 起步吃力：适当增大 `SPEED_LOOP_START_DUTY_PERCENT`。
+- 速度到目标但抖动：适当降低 `Kp`，或小幅增加 `Kd`。
+- 长时间存在静态误差：小幅增加 `Ki`。
+- 左右轮某一侧长期偏快：微调 `LEFT_SPEED_FEED_FORWARD_SCALE` 或 `RIGHT_SPEED_FEED_FORWARD_SCALE`。
+- 巡线过猛：降低 `LINE_TURN_KP` 或 `LINE_TURN_LIMIT_COUNTS`。
+- 巡线速度太快或太慢：调整 `LINE_FOLLOW_BASE_COUNTS` 和 `LINE_FOLLOW_MAX_COUNTS`。

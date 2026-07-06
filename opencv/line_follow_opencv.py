@@ -64,10 +64,10 @@ TURN_READY_HOLD_FRAMES = 2
 
 # ready 后再等待多少秒才真正发送 LTURN，用来让车再往前走一点。
 # 原来 OpenMV 约 4 FPS 时 13 帧 ~= 3.25 秒；树莓派帧率更高，改用时间更稳定。
-TURN_READY_DELAY_SECONDS = 3.25
+TURN_READY_DELAY_SECONDS = 2.25
 
 # ready 后短暂丢失拐弯特征时，允许继续等待多少秒。
-TURN_PENDING_LOST_SECONDS = 3.25
+TURN_PENDING_LOST_SECONDS = 2.25
 
 # LTURN 后稳定等待多少帧，这段时间发送 LINE 0 0。
 TURN_SETTLE_FRAMES = 12
