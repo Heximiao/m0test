@@ -74,6 +74,7 @@ TURN_SETTLE_FRAMES = 12
 
 # 二值图腐蚀次数，用来去掉小噪点；太大会把细线腐蚀没。
 NOISE_ERODE = 1
+MORPH_CLOSE_ITER = 1
 
 # 调试窗口里画中心线时的点间隔。
 DRAW_STEP = 1
@@ -271,8 +272,13 @@ class Sender:
 def make_mask(frame, threshold):
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     _, mask = cv2.threshold(gray, threshold, 255, cv2.THRESH_BINARY_INV)
-    if NOISE_ERODE > 0:
+    if MORPH_CLOSE_ITER > 0 or NOISE_ERODE > 0:
         kernel = np.ones((3, 3), np.uint8)
+    if MORPH_CLOSE_ITER > 0:
+        mask = cv2.morphologyEx(
+            mask, cv2.MORPH_CLOSE, kernel, iterations=MORPH_CLOSE_ITER
+        )
+    if NOISE_ERODE > 0:
         mask = cv2.erode(mask, kernel, iterations=NOISE_ERODE)
     return mask
 
@@ -441,7 +447,7 @@ def main():
                     turn_pending_lost_at = None
                     tx_message = f"LTURN {turn_repeat_angle}"
                 else:
-                    tx_message = f"LINE 1 {turn['err']}"
+                    tx_message = "LINE 0 0"
 
                 last_x = turn["target"][0]
                 sender.write(tx_message)
@@ -473,9 +479,8 @@ def main():
                     turn_pending_lost_at = None
                     tx_message = f"LTURN {turn_repeat_angle}"
                 elif target is not None:
-                    last_x = target[0]
-                    err = output_error_from_x(target[0])
-                    tx_message = f"LINE 1 {err}"
+                    last_x = FRAME_WIDTH // 2
+                    tx_message = "LINE 0 0"
                 else:
                     last_x = FRAME_WIDTH // 2
                     tx_message = "LINE 0 0"

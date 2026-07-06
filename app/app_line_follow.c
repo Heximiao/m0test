@@ -4,8 +4,8 @@
 
 #define LINE_LOST_TIMEOUT_MS (500U) /* LINE timeout in ms. */
 #define LINE_ERROR_LIMIT_PIXELS (160) /* OpenMV horizontal error clamp. */
-#define LINE_TURN_KP (0.012f) /* Pixel error to wheel target speed delta. */
-#define LINE_TURN_LIMIT_COUNTS (2.0f) /* Turn correction clamp, counts/20ms. */
+#define LINE_TURN_KP (0.033f) /* Pixel error to wheel target speed delta. */
+#define LINE_TURN_LIMIT_COUNTS (14.0f) /* Turn correction clamp, counts/20ms. */
 
 static bool gLineEnabled;
 static bool gLineValid;

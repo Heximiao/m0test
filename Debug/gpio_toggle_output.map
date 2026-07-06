@@ -1,7 +1,7 @@
 ******************************************************************************
             TI ARM Clang Linker PC v5.1.1                      
 ******************************************************************************
->> Linked Mon Jul  6 09:25:56 2026
+>> Linked Mon Jul  6 12:08:23 2026
 
 OUTPUT FILE NAME:   <gpio_toggle_output.out>
 ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000a0b1
@@ -131,12 +131,12 @@ section   page    origin      length       input sections
                   00008998    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_OPENMV_init)
                   00008a14    0000007c     libc.a : fclose.c.obj (.text.__TI_closefile)
                   00008a90    0000007c            : copy_decompress_lzss.c.obj (.text:decompress:lzss)
-                  00008b0c    00000078     bsp_mpu6050.o (.text.mpu6050_read_debug)
-                  00008b84    00000074     libclang_rt.builtins.a : comparedf2.c.obj (.text.__gedf2)
-                  00008bf8    00000074     libc.a : sscanf.c.obj (.text._chkmbc)
-                  00008c6c    00000074     app_line_follow.o (.text.line_follow_get_turn_adjust)
-                  00008ce0    00000074     inv_mpu.o (.text.mpu_set_lpf)
-                  00008d54    0000000c     app_line_follow.o (.text.line_follow_get_error)
+                  00008b0c    00000078     app_line_follow.o (.text.line_follow_get_turn_adjust)
+                  00008b84    00000078     bsp_mpu6050.o (.text.mpu6050_read_debug)
+                  00008bfc    00000074     libclang_rt.builtins.a : comparedf2.c.obj (.text.__gedf2)
+                  00008c70    00000074     libc.a : sscanf.c.obj (.text._chkmbc)
+                  00008ce4    00000074     inv_mpu.o (.text.mpu_set_lpf)
+                  00008d58    00000008     libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_0)
                   00008d60    00000074     libclang_rt.builtins.a : truncdfsf2.S.obj (.text)
                   00008dd4    00000070     hw_uart.o (.text.uart_debug_handle_irq)
                   00008e44    00000070     hw_openmv_uart.o (.text.uart_openmv_handle_irq)
@@ -257,58 +257,58 @@ section   page    origin      length       input sections
                   0000a46a    0000000e     libsysbm.a : hostopen.c.obj (.text.strlen)
                   0000a478    0000000e                : hostrename.c.obj (.text.strlen)
                   0000a486    0000000e                : hostunlink.c.obj (.text.strlen)
-                  0000a494    0000000c     libc.a : memory.c.obj (.text.malloc)
-                  0000a4a0    0000000c     app_motion_control.o (.text.motion_control_get_mode)
-                  0000a4ac    0000000c     app_motion_control.o (.text.motion_control_is_busy)
-                  0000a4b8    0000000c     mid_pid.o (.text.pid_reset)
-                  0000a4c4    0000000c     hw_uart.o (.text.uart_debug_get_rx_dropped_bytes)
-                  0000a4d0    0000000c     hw_uart.o (.text.uart_debug_get_tx_dropped_bytes)
-                  0000a4dc    0000000a     driverlib.a : dl_common.o (.text.DL_Common_delayCycles)
-                  0000a4e6    0000000a     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000a4f0    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000a4fa    00000002     --HOLE-- [fill = 0]
-                  0000a4fc    00000008            : aeabi_portable.c.obj (.text.__aeabi_errno_addr)
-                  0000a504    00000008            : printf.c.obj (.text._outc)
-                  0000a50c    0000000a            : s_atan.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000a516    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000a520    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_3)
-                  0000a52a    00000008     libclang_rt.builtins.a : aeabi_dmul.c.obj (.text.__aeabi_dmul_fast)
-                  0000a532    00000008     libc.a : printf.c.obj (.text._outs)
-                  0000a53a    00000002     --HOLE-- [fill = 0]
-                  0000a53c    0000000a     bsp_mpu6050.o (.text.mpu6050_delay_us)
-                  0000a546    00000008     libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000a54e    00000008            : strtof.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000a556    00000008            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000a55e    00000008            : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000a566    00000002     --HOLE-- [fill = 0]
-                  0000a568    00000010     libclang_rt.builtins.a : aeabi_dcmp.S.obj (.tramp.__aeabi_dcmpeq.1)
-                  0000a578    00000008     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_2)
-                  0000a580    00000008            : s_atan.c.obj (.text.OUTLINED_FUNCTION_2)
-                  0000a588    00000008     main.o (.text.UART0_IRQHandler)
-                  0000a590    00000008     main.o (.text.UART2_IRQHandler)
-                  0000a598    00000008     libclang_rt.builtins.a : aeabi_ddiv.c.obj (.text.__aeabi_ddiv_fast)
-                  0000a5a0    00000008     libc.a : sscanf.c.obj (.text._uninpchar)
-                  0000a5a8    00000008     app_mpu6050_attitude.o (.text.app_mpu6050_attitude_init)
-                  0000a5b0    00000008     libc.a : fseek.c.obj (.text.fseek)
-                  0000a5b8    00000008     libsysbm.a : remove.c.obj (.text.remove)
-                  0000a5c0    00000008     libclang_rt.builtins.a : aeabi_memcpy.S.obj (.text)
-                  0000a5c8    00000006     libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000a5ce    00000002     --HOLE-- [fill = 0]
-                  0000a5d0    00000010     libclang_rt.builtins.a : divsf3.S.obj (.tramp.__aeabi_fdiv.1)
-                  0000a5e0    00000006     libc.a : s_atan.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000a5e6    00000002     --HOLE-- [fill = 0]
-                  0000a5e8    00000010     libclang_rt.builtins.a : adddf3.S.obj (.tramp.__aeabi_dadd.1)
-                  0000a5f8    00000006     libc.a : e_asin.c.obj (.text.OUTLINED_FUNCTION_2)
-                  0000a5fe    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_3)
-                  0000a604    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_4)
-                  0000a60a    00000006            : exit.c.obj (.text:abort)
-                  0000a610    00000004     libsysbm.a : hostexit.c.obj (.text.HOSTexit)
-                  0000a614    00000004     libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000a618    00000010     libclang_rt.builtins.a : addsf3.S.obj (.tramp.__aeabi_fadd.1)
-                  0000a628    00000004     libc.a : e_asin.c.obj (.text.OUTLINED_FUNCTION_4)
-                  0000a62c    00000004     startup_mspm0g350x_ticlang.o (.text.Reset_Handler)
-                  0000a630    00000004     libc.a : pre_init.c.obj (.text._system_pre_init)
-                  0000a634    0000000c     --HOLE-- [fill = 0]
+                  0000a494    0000000c     app_line_follow.o (.text.line_follow_get_error)
+                  0000a4a0    0000000c     libc.a : memory.c.obj (.text.malloc)
+                  0000a4ac    0000000c     app_motion_control.o (.text.motion_control_get_mode)
+                  0000a4b8    0000000c     app_motion_control.o (.text.motion_control_is_busy)
+                  0000a4c4    0000000c     mid_pid.o (.text.pid_reset)
+                  0000a4d0    0000000c     hw_uart.o (.text.uart_debug_get_rx_dropped_bytes)
+                  0000a4dc    0000000c     hw_uart.o (.text.uart_debug_get_tx_dropped_bytes)
+                  0000a4e8    0000000a     driverlib.a : dl_common.o (.text.DL_Common_delayCycles)
+                  0000a4f2    0000000a     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000a4fc    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000a506    00000002     --HOLE-- [fill = 0]
+                  0000a508    00000008            : aeabi_portable.c.obj (.text.__aeabi_errno_addr)
+                  0000a510    00000008            : printf.c.obj (.text._outc)
+                  0000a518    0000000a            : s_atan.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000a522    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000a52c    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_3)
+                  0000a536    00000008     libclang_rt.builtins.a : aeabi_dmul.c.obj (.text.__aeabi_dmul_fast)
+                  0000a53e    00000008     libc.a : printf.c.obj (.text._outs)
+                  0000a546    00000002     --HOLE-- [fill = 0]
+                  0000a548    0000000a     bsp_mpu6050.o (.text.mpu6050_delay_us)
+                  0000a552    00000008     libc.a : strtof.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000a55a    00000008            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000a562    00000008            : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000a56a    00000002     --HOLE-- [fill = 0]
+                  0000a56c    00000010     libclang_rt.builtins.a : aeabi_dcmp.S.obj (.tramp.__aeabi_dcmpeq.1)
+                  0000a57c    00000008     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_2)
+                  0000a584    00000008            : s_atan.c.obj (.text.OUTLINED_FUNCTION_2)
+                  0000a58c    00000008     main.o (.text.UART0_IRQHandler)
+                  0000a594    00000008     main.o (.text.UART2_IRQHandler)
+                  0000a59c    00000008     libclang_rt.builtins.a : aeabi_ddiv.c.obj (.text.__aeabi_ddiv_fast)
+                  0000a5a4    00000008     libc.a : sscanf.c.obj (.text._uninpchar)
+                  0000a5ac    00000008     app_mpu6050_attitude.o (.text.app_mpu6050_attitude_init)
+                  0000a5b4    00000008     libc.a : fseek.c.obj (.text.fseek)
+                  0000a5bc    00000008     libsysbm.a : remove.c.obj (.text.remove)
+                  0000a5c4    00000008     libclang_rt.builtins.a : aeabi_memcpy.S.obj (.text)
+                  0000a5cc    00000006     libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000a5d2    00000002     --HOLE-- [fill = 0]
+                  0000a5d4    00000010     libclang_rt.builtins.a : divsf3.S.obj (.tramp.__aeabi_fdiv.1)
+                  0000a5e4    00000006     libc.a : s_atan.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000a5ea    00000002     --HOLE-- [fill = 0]
+                  0000a5ec    00000010     libclang_rt.builtins.a : adddf3.S.obj (.tramp.__aeabi_dadd.1)
+                  0000a5fc    00000006     libc.a : e_asin.c.obj (.text.OUTLINED_FUNCTION_2)
+                  0000a602    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_3)
+                  0000a608    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_4)
+                  0000a60e    00000006            : exit.c.obj (.text:abort)
+                  0000a614    00000004     libsysbm.a : hostexit.c.obj (.text.HOSTexit)
+                  0000a618    00000004     libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000a61c    00000010     libclang_rt.builtins.a : addsf3.S.obj (.tramp.__aeabi_fadd.1)
+                  0000a62c    00000004     libc.a : e_asin.c.obj (.text.OUTLINED_FUNCTION_4)
+                  0000a630    00000004     startup_mspm0g350x_ticlang.o (.text.Reset_Handler)
+                  0000a634    00000004     libc.a : pre_init.c.obj (.text._system_pre_init)
+                  0000a638    00000008     --HOLE-- [fill = 0]
 
 .cinit     0    0000ba20    000000a0     
                   0000ba20    00000078     (.cinit..data.load) [load image, compression = lzss]
@@ -539,9 +539,9 @@ MODULE SUMMARY
        app_car_control.o              5410    767       171    
        app_motion_control.o           1396    15        22     
        app_mpu6050_attitude.o         796     343       13     
-       app_line_follow.o              408     6         10     
+       app_line_follow.o              412     6         10     
     +--+------------------------------+-------+---------+---------+
-       Total:                         8010    1131      216    
+       Total:                         8014    1131      216    
                                                                
     .\bsp\
        bsp_tb6612.o                   340     0         0      
@@ -679,7 +679,7 @@ MODULE SUMMARY
        Stack:                         0       0         512    
        Linker Generated:              0       156       0      
     +--+------------------------------+-------+---------+---------+
-       Grand Total:                   42330   5421      6423   
+       Grand Total:                   42334   5421      6423   
 
 
 LINKER GENERATED COPY TABLES
@@ -703,14 +703,14 @@ callee name               trampoline name
    callee addr  tramp addr   call addr  call info
 --------------  -----------  ---------  ----------------
 __aeabi_dcmpeq            $Tramp$TT$L$PI$$__aeabi_dcmpeq
-   000094ad     0000a568     0000a564   libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
+   000094ad     0000a56c     0000a568   libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
 __aeabi_fdiv              $Tramp$TT$L$PI$$__aeabi_fdiv
-   00008899     0000a5d0     0000a5cc   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
+   00008899     0000a5d4     0000a5d0   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
 __aeabi_dadd              $Tramp$TT$L$PI$$__aeabi_dadd
-   00005473     0000a5e8     0000a5e4   libc.a : s_atan.c.obj (.text.OUTLINED_FUNCTION_1)
-                             0000a62a          : e_asin.c.obj (.text.OUTLINED_FUNCTION_4)
+   00005473     0000a5ec     0000a5e8   libc.a : s_atan.c.obj (.text.OUTLINED_FUNCTION_1)
+                             0000a62e          : e_asin.c.obj (.text.OUTLINED_FUNCTION_4)
 __aeabi_fadd              $Tramp$TT$L$PI$$__aeabi_fadd
-   000076cb     0000a618     0000a616   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
+   000076cb     0000a61c     0000a61a   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
 
 [4 trampolines]
 [5 trampoline calls]
@@ -725,11 +725,11 @@ address   name
 000055fb  AES_IRQHandler                      
 00009565  AO_Control                          
 00009339  BO_Control                          
-0000a610  C$$EXIT                             
+0000a614  C$$EXIT                             
 00009d4d  C$$IO$$                             
 000055fb  CANFD0_IRQHandler                   
 000055fb  DAC0_IRQHandler                     
-0000a4dd  DL_Common_delayCycles               
+0000a4e9  DL_Common_delayCycles               
 00006da1  DL_Timer_initFourCCPWMMode          
 0000a1f1  DL_Timer_setCaptCompUpdateMethod    
 0000a2d1  DL_Timer_setCaptureCompareOutCtl    
@@ -744,7 +744,7 @@ address   name
 000055fb  GROUP0_IRQHandler                   
 00008809  GROUP1_IRQHandler                   
 00009899  HOSTclose                           
-0000a611  HOSTexit                            
+0000a615  HOSTexit                            
 00008eb5  HOSTlseek                           
 00009399  HOSTopen                            
 000095bd  HOSTread                            
@@ -759,7 +759,7 @@ address   name
 000055fb  NMI_Handler                         
 000055fb  PendSV_Handler                      
 000055fb  RTC_IRQHandler                      
-0000a62d  Reset_Handler                       
+0000a631  Reset_Handler                       
 000055fb  SPI0_IRQHandler                     
 000055fb  SPI1_IRQHandler                     
 000055fb  SVC_Handler                         
@@ -780,9 +780,9 @@ address   name
 000055fb  TIMG6_IRQHandler                    
 000055fb  TIMG7_IRQHandler                    
 000055fb  TIMG8_IRQHandler                    
-0000a589  UART0_IRQHandler                    
+0000a58d  UART0_IRQHandler                    
 000055fb  UART1_IRQHandler                    
-0000a591  UART2_IRQHandler                    
+0000a595  UART2_IRQHandler                    
 000055fb  UART3_IRQHandler                    
 20200800  _CIOBUF_                            
 20200800  __CIOBUF_                           
@@ -834,11 +834,11 @@ ffffffff  __TI_prof_data_start
 000094f5  __aeabi_dcmpgt                      
 000094d1  __aeabi_dcmple                      
 000094bf  __aeabi_dcmplt                      
-0000a599  __aeabi_ddiv_fast                   
-0000a52b  __aeabi_dmul_fast                   
+0000a59d  __aeabi_ddiv_fast                   
+0000a537  __aeabi_dmul_fast                   
 00005469  __aeabi_dsub                        
 20201704  __aeabi_errno                       
-0000a4fd  __aeabi_errno_addr                  
+0000a509  __aeabi_errno_addr                  
 00009b51  __aeabi_f2d                         
 00009c81  __aeabi_f2iz                        
 00009e55  __aeabi_f2uiz                       
@@ -860,9 +860,9 @@ ffffffff  __TI_prof_data_start
 0000a2c3  __aeabi_memclr                      
 0000a2c3  __aeabi_memclr4                     
 0000a2c3  __aeabi_memclr8                     
-0000a5c1  __aeabi_memcpy                      
-0000a5c1  __aeabi_memcpy4                     
-0000a5c1  __aeabi_memcpy8                     
+0000a5c5  __aeabi_memcpy                      
+0000a5c5  __aeabi_memcpy4                     
+0000a5c5  __aeabi_memcpy8                     
 0000a2b5  __aeabi_memset                      
 0000a2b5  __aeabi_memset4                     
 0000a2b5  __aeabi_memset8                     
@@ -883,9 +883,9 @@ ffffffff  __binit__
 00009e55  __fixunssfsi                        
 00009c09  __floatsisf                         
 0000a0d9  __floatunsisf                       
-00008b85  __gedf2                             
+00008bfd  __gedf2                             
 000086a3  __gesf2                             
-00008b85  __gtdf2                             
+00008bfd  __gtdf2                             
 000086a3  __gtsf2                             
 0000913d  __ledf2                             
 00008669  __lesf2                             
@@ -916,9 +916,9 @@ UNDEFED   __mpu_init
 20201670  _stream                             
 20200d08  _sys_memory                         
 UNDEFED   _system_post_cinit                  
-0000a631  _system_pre_init                    
+0000a635  _system_pre_init                    
 2020170c  _unlock                             
-0000a60b  abort                               
+0000a60f  abort                               
 00006a85  aligned_alloc                       
 00008f8d  app_car_control_init                
 00001625  app_car_control_process_command     
@@ -926,7 +926,7 @@ UNDEFED   _system_post_cinit
 0000475d  app_car_control_send_telemetry      
 0000a3a5  app_car_control_toggle_status_led   
 00002369  app_car_control_update              
-0000a5a9  app_mpu6050_attitude_init           
+0000a5ad  app_mpu6050_attitude_init           
 000093f5  app_mpu6050_attitude_process_command
 00006b91  app_mpu6050_attitude_send           
 0000358d  asin                                
@@ -955,7 +955,7 @@ ffffffff  binit
 00008245  fputc                               
 00006f99  fputs                               
 0000725d  free                                
-0000a5b1  fseek                               
+0000a5b5  fseek                               
 00008ff9  fseeko                              
 20200920  gPWM_MOTORSBackup                   
 00009065  getdevice                           
@@ -965,34 +965,34 @@ ffffffff  binit
 000075e5  ldexp                               
 00007c51  ldexpf                              
 000075e5  ldexpl                              
-00008d55  line_follow_get_error               
-00008c6d  line_follow_get_turn_adjust         
+0000a495  line_follow_get_error               
+00008b0d  line_follow_get_turn_adjust         
 0000a101  line_follow_init                    
 00009fc1  line_follow_is_active               
 00009e89  line_follow_is_valid                
 000082e1  line_follow_parse_command           
 00009fe9  lseek                               
 00005bd9  main                                
-0000a495  malloc                              
+0000a4a1  malloc                              
 00006a85  memalign                            
 0000a16d  memccpy                             
 0000837d  memcpy                              
 000092d5  memset                              
 00009337  mget_ms                             
-0000a4a1  motion_control_get_mode             
+0000a4ad  motion_control_get_mode             
 0000a3b5  motion_control_get_target_deg_s     
 0000a3c5  motion_control_get_target_mm_s      
 00009b91  motion_control_init                 
 0000a3d5  motion_control_is_active            
-0000a4ad  motion_control_is_busy              
+0000a4b9  motion_control_is_busy              
 00002e2d  motion_control_parse_command        
 00006255  motion_control_update               
 0000a433  mpu6050_delay_ms                    
-0000a53d  mpu6050_delay_us                    
+0000a549  mpu6050_delay_us                    
 00008105  mpu6050_dmp_init                    
 00006395  mpu6050_init                        
 0000a125  mpu6050_read_angles                 
-00008b0d  mpu6050_read_debug                  
+00008b85  mpu6050_read_debug                  
 000044f1  mpu6050_read_fallback_angles        
 0000a1b1  mpu6050_read_id                     
 0000a011  mpu6050_release_bus                 
@@ -1012,17 +1012,17 @@ ffffffff  binit
 00007799  mpu_set_bypass                      
 00007869  mpu_set_dmp_state                   
 00008781  mpu_set_gyro_fsr                    
-00008ce1  mpu_set_lpf                         
+00008ce5  mpu_set_lpf                         
 000064d1  mpu_set_sample_rate                 
 00007425  mpu_set_sensors                     
 000090d1  mpu_write_mem                       
 20200c24  parmbuf                             
 00007f19  pid_calc                            
 0000a331  pid_init                            
-0000a4b9  pid_reset                           
+0000a4c5  pid_reset                           
 00009451  printf                              
 0000b77c  reg                                 
-0000a5b9  remove                              
+0000a5bd  remove                              
 000075e5  scalbn                              
 00007c51  scalbnf                             
 000075e5  scalbnl                             
@@ -1041,8 +1041,8 @@ ffffffff  binit
 00006609  strtoul                             
 00005a71  strtoull                            
 0000b6e8  test                                
-0000a4c5  uart_debug_get_rx_dropped_bytes     
-0000a4d1  uart_debug_get_tx_dropped_bytes     
+0000a4d1  uart_debug_get_rx_dropped_bytes     
+0000a4dd  uart_debug_get_tx_dropped_bytes     
 00008dd5  uart_debug_handle_irq               
 0000a039  uart_debug_init                     
 00006971  uart_debug_read_line                
@@ -1205,12 +1205,11 @@ address   name
 00008999  SYSCFG_DL_UART_OPENMV_init          
 00008a15  __TI_closefile                      
 00008a91  __TI_decompress_lzss                
-00008b0d  mpu6050_read_debug                  
-00008b85  __gedf2                             
-00008b85  __gtdf2                             
-00008c6d  line_follow_get_turn_adjust         
-00008ce1  mpu_set_lpf                         
-00008d55  line_follow_get_error               
+00008b0d  line_follow_get_turn_adjust         
+00008b85  mpu6050_read_debug                  
+00008bfd  __gedf2                             
+00008bfd  __gtdf2                             
+00008ce5  mpu_set_lpf                         
 00008d61  __aeabi_d2f                         
 00008d61  __truncdfsf2                        
 00008dd5  uart_debug_handle_irq               
@@ -1332,30 +1331,31 @@ address   name
 0000a405  wcslen                              
 0000a415  __TI_zero_init                      
 0000a433  mpu6050_delay_ms                    
-0000a495  malloc                              
-0000a4a1  motion_control_get_mode             
-0000a4ad  motion_control_is_busy              
-0000a4b9  pid_reset                           
-0000a4c5  uart_debug_get_rx_dropped_bytes     
-0000a4d1  uart_debug_get_tx_dropped_bytes     
-0000a4dd  DL_Common_delayCycles               
-0000a4fd  __aeabi_errno_addr                  
-0000a52b  __aeabi_dmul_fast                   
-0000a53d  mpu6050_delay_us                    
-0000a589  UART0_IRQHandler                    
-0000a591  UART2_IRQHandler                    
-0000a599  __aeabi_ddiv_fast                   
-0000a5a9  app_mpu6050_attitude_init           
-0000a5b1  fseek                               
-0000a5b9  remove                              
-0000a5c1  __aeabi_memcpy                      
-0000a5c1  __aeabi_memcpy4                     
-0000a5c1  __aeabi_memcpy8                     
-0000a60b  abort                               
-0000a610  C$$EXIT                             
-0000a611  HOSTexit                            
-0000a62d  Reset_Handler                       
-0000a631  _system_pre_init                    
+0000a495  line_follow_get_error               
+0000a4a1  malloc                              
+0000a4ad  motion_control_get_mode             
+0000a4b9  motion_control_is_busy              
+0000a4c5  pid_reset                           
+0000a4d1  uart_debug_get_rx_dropped_bytes     
+0000a4dd  uart_debug_get_tx_dropped_bytes     
+0000a4e9  DL_Common_delayCycles               
+0000a509  __aeabi_errno_addr                  
+0000a537  __aeabi_dmul_fast                   
+0000a549  mpu6050_delay_us                    
+0000a58d  UART0_IRQHandler                    
+0000a595  UART2_IRQHandler                    
+0000a59d  __aeabi_ddiv_fast                   
+0000a5ad  app_mpu6050_attitude_init           
+0000a5b5  fseek                               
+0000a5bd  remove                              
+0000a5c5  __aeabi_memcpy                      
+0000a5c5  __aeabi_memcpy4                     
+0000a5c5  __aeabi_memcpy8                     
+0000a60f  abort                               
+0000a614  C$$EXIT                             
+0000a615  HOSTexit                            
+0000a631  Reset_Handler                       
+0000a635  _system_pre_init                    
 0000b240  __aeabi_ctype_table_                
 0000b240  __aeabi_ctype_table_C               
 0000b6e8  test                                
