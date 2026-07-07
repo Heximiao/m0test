@@ -8,6 +8,7 @@
 
 #include "app/app_car_control.h"
 #include "app/app_image_store.h"
+#include "app/app_menu.h"
 #include "app/app_mpu6050_attitude.h"
 #include "bsp/bsp_tb6612.h"
 #include "hw/hw_encoder.h"
@@ -22,12 +23,14 @@
 #define TELEMETRY_PERIOD_MS (100U)
 #define HEARTBEAT_PERIOD_MS (30000U)
 #define STATUS_LED_PERIOD_MS (500U)
+#define MENU_PERIOD_MS (50U)
 
 static volatile bool gControlUpdatePending;
 static volatile bool gAttitudeUpdatePending;
 static volatile bool gTelemetryUpdatePending;
 static volatile bool gHeartbeatUpdatePending;
 static volatile bool gStatusLedUpdatePending;
+static volatile bool gMenuUpdatePending;
 static volatile uint32_t gSysTickMs;
 
 int main(void)
@@ -96,6 +99,11 @@ int main(void)
      *   PA13 -> SCLK
      *   PA14 -> MOSI   DI
      *   PA15 -> MISO   DO
+     *
+     * LCD menu keys, active low with internal pull-up:
+     *   PA16 -> menu up, key connects PA16 to GND when pressed
+     *   PA17 -> menu down, key connects PA17 to GND when pressed
+     *   PA21 -> short press back, long press confirm
      */
     encoder_init();
     uart_debug_init();
@@ -112,6 +120,7 @@ int main(void)
         BLACK, 16, 0);
     LCD_BLK_Set();
     app_car_control_init();
+    app_menu_init(gSysTickMs);
 
     app_mpu6050_attitude_init();
 
@@ -164,6 +173,11 @@ int main(void)
             app_car_control_toggle_status_led();
         }
 
+        if (gMenuUpdatePending) {
+            gMenuUpdatePending = false;
+            app_menu_update(gSysTickMs);
+        }
+
         uart_debug_service_tx();
         __WFI();
     }
@@ -186,6 +200,9 @@ void SysTick_Handler(void)
     }
     if ((gSysTickMs % STATUS_LED_PERIOD_MS) == 0U) {
         gStatusLedUpdatePending = true;
+    }
+    if ((gSysTickMs % MENU_PERIOD_MS) == 0U) {
+        gMenuUpdatePending = true;
     }
 }
 

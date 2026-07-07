@@ -238,6 +238,70 @@ void app_image_store_service(void)
     }
 }
 
+uint8_t app_image_store_get_file_count(void)
+{
+    ImageIndexEntry entry;
+    uint8_t count = 0U;
+
+    if (!check_flash_ready() || !ensure_index()) {
+        return 0U;
+    }
+
+    for (uint8_t i = 0U; i < IMAGE_MAX_FILES; i++) {
+        if (!read_index_entry(i, &entry)) {
+            return count;
+        }
+        if (is_valid_entry(&entry)) {
+            count++;
+        }
+    }
+
+    return count;
+}
+
+bool app_image_store_get_file_by_index(uint8_t listIndex,
+    AppImageFileInfo *info)
+{
+    ImageIndexEntry entry;
+    uint8_t count = 0U;
+
+    if ((info == NULL) || !check_flash_ready() || !ensure_index()) {
+        return false;
+    }
+
+    for (uint8_t i = 0U; i < IMAGE_MAX_FILES; i++) {
+        if (!read_index_entry(i, &entry)) {
+            return false;
+        }
+        if (!is_valid_entry(&entry)) {
+            continue;
+        }
+        if (count == listIndex) {
+            info->id = entry.id;
+            info->width = entry.width;
+            info->height = entry.height;
+            info->size = entry.data_size;
+            memcpy(info->name, entry.name, sizeof(info->name));
+            info->name[APP_IMAGE_STORE_NAME_LENGTH] = '\0';
+            return true;
+        }
+        count++;
+    }
+
+    return false;
+}
+
+bool app_image_store_show_image(uint8_t id)
+{
+    ImageIndexEntry entry;
+
+    if (!find_entry_by_id(id, &entry, NULL)) {
+        return false;
+    }
+
+    return display_image(entry.address);
+}
+
 static bool start_image_write(uint8_t requestedId, const char *name,
     uint16_t width, uint16_t height, uint32_t size, uint32_t crc32)
 {

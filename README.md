@@ -23,6 +23,7 @@ Kd = 0.4
 - 里程运动命令：速度、距离、角速度、转角。
 - MPU6050 软件 I2C 姿态读取，优先 DMP，失败时回退到加速度计姿态。
 - SPI LCD 初始化显示，屏幕上电后显示项目状态和右轮 PWM 引脚提示。
+- LCD 二级菜单，支持文件列表、车辆状态和车辆控制。
 - Python 上位机曲线显示、PID/BASE 下发和 CSV 保存。
 - 树莓派/OpenCV 版本巡线脚本，可通过串口向 MCU 发送同样的视觉命令。
 
@@ -207,9 +208,22 @@ RUN ms=30000 L=1234 R=1230 RXDROP=0 TXDROP=0 LED=PB22
 | LCD SPI MOSI, SCLK | PB8, PB9 | `SPI_LCD`，16 MHz |
 | LCD RES, DC, CS, BLK | PB10, PB11, PB14, PB26 | `GPIO_LCD` |
 | W25Q64 CS, SCLK, MOSI, MISO | PA12, PA13, PA14, PA15 | 软件 SPI，`GPIO_W25Q64` |
+| 菜单按键 上翻, 下翻, 返回/确认 | PA16, PA17, PA21 | `GPIO_MENU_KEYS`，内部上拉，按下接地 |
 | 状态 LED | PB22 | `GPIO_STATUS_LED_PB22_LED` |
 
 左右轮命名以车尾看向车头为准，并与 `main.c` 的当前接线注释一致：左轮接 TB6612 的 `PWMD/DIN1/DIN2`，右轮接 TB6612 的 `PWMA/AIN1/AIN2`。代码里 `AO_Control()` 输出左轮 PWM（`PWM_LEFT`/PA8）并控制 PA25、PA31 两个方向脚，`BO_Control()` 输出右轮 PWM（`PWM_RIGHT`/PB4）并控制 PB16、PB13 两个方向脚；这里的 `GPIO_MOTOR_A/B` 是工程里的 GPIO 分组名，不等同于物理左右轮命名。编码器极性在 `hw/hw_encoder.c` 中处理，前进方向计数为正。`PB9` 当前用于 LCD SCLK，不再是右轮 PWM。
+
+## LCD 菜单
+
+三个按键均为一端接 GPIO、一端接 GND，GPIO 使用内部上拉，按下为低电平：
+
+```text
+PA16: 上翻
+PA17: 下翻
+PA21: 返回/确认，短按返回，长按确认
+```
+
+一级菜单包括 `File List`、`Vehicle Status` 和 `Vehicle Control`。`File List` 会读取 W25Q64 图片索引，显示图片 ID、名称和尺寸，长按确认可显示选中图片；`Vehicle Status` 显示左右编码器、运动模式、忙碌状态和当前运动目标；`Vehicle Control` 提供停止电机、编码器清零、`BASE 0`、`BASE 7`、遥测开关等快捷操作。
 
 ## 上位机工具
 
@@ -262,6 +276,7 @@ gpio_toggle_output/
 │   ├── app_car_control.c/.h     小车主控制、速度环、串口命令、遥测、巡线融合
 │   ├── app_image_store.c/.h     W25Q64 图片索引、写入、列表、显示和删除
 │   ├── app_line_follow.c/.h     解析 LINE 数据并生成巡线转向修正
+│   ├── app_menu.c/.h            LCD 二级菜单、按键扫描和快捷控制
 │   ├── app_motion_control.c/.h  距离、速度、转角等运动命令换算
 │   ├── app_mpu6050_attitude.c/.h MPU6050 姿态初始化、读取和命令处理
 │   └── app_util.h               常用缩放、限幅和绝对值工具

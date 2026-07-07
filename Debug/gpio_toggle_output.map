@@ -1,18 +1,18 @@
 ******************************************************************************
             TI ARM Clang Linker PC v5.1.1                      
 ******************************************************************************
->> Linked Tue Jul  7 15:07:49 2026
+>> Linked Tue Jul  7 17:30:04 2026
 
 OUTPUT FILE NAME:   <gpio_toggle_output.out>
-ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000da6d
+ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000ea39
 
 
 MEMORY CONFIGURATION
 
          name            origin    length      used     unused   attr    fill
 ----------------------  --------  ---------  --------  --------  ----  --------
-  FLASH                 00000000   00020000  00013080  0000cf80  R  X
-  SRAM                  20200000   00008000  00003631  000049cf  RW X
+  FLASH                 00000000   00020000  000141f0  0000be10  R  X
+  SRAM                  20200000   00008000  00003661  0000499f  RW X
   BCR_CONFIG            41c00000   000000ff  00000000  000000ff  R   
   BSL_CONFIG            41c00100   00000080  00000000  00000080  R   
 
@@ -21,15 +21,15 @@ SEGMENT ALLOCATION MAP
 
 run origin  load origin   length   init length attrs members
 ----------  ----------- ---------- ----------- ----- -------
-00000000    00000000    00013080   00013080    r-x
+00000000    00000000    000141f0   000141f0    r-x
   00000000    00000000    000000c0   000000c0    r-- .intvecs
-  000000c0    000000c0    0000dfe0   0000dfe0    r-x .text
-  0000e0a0    0000e0a0    00004f40   00004f40    r-- .rodata
-  00012fe0    00012fe0    000000a0   000000a0    r-- .cinit
-20200000    20200000    00003431   00000000    rw-
-  20200000    20200000    00002a18   00000000    rw- .bss
-  20202a18    20202a18    00000800   00000000    rw- .sysmem
-  20203218    20203218    00000219   00000000    rw- .data
+  000000c0    000000c0    0000efb0   0000efb0    r-x .text
+  0000f070    0000f070    000050e0   000050e0    r-- .rodata
+  00014150    00014150    000000a0   000000a0    r-- .cinit
+20200000    20200000    00003461   00000000    rw-
+  20200000    20200000    00002a48   00000000    rw- .bss
+  20202a48    20202a48    00000800   00000000    rw- .sysmem
+  20203248    20203248    00000219   00000000    rw- .data
 20207e00    20207e00    00000200   00000000    rw-
   20207e00    20207e00    00000200   00000000    rw- .stack
 
@@ -42,460 +42,498 @@ section   page    origin      length       input sections
 .intvecs   0    00000000    000000c0     
                   00000000    000000c0     startup_mspm0g350x_ticlang.o (.intvecs)
 
-.text      0    000000c0    0000dfe0     
+.text      0    000000c0    0000efb0     
                   000000c0    00000c88     libc.a : _scanfi.c.obj (.text.__TI_scanfi)
                   00000d48    000008dc            : _printfi.c.obj (.text:__TI_printfi_nofloat)
-                  00001624    00000760     app_image_store.o (.text.app_image_store_process_command)
-                  00001d84    00000724     app_image_store.o (.text.app_image_store_service)
-                  000024a8    00000708     app_car_control.o (.text.app_car_control_process_command)
-                  00002bb0    0000063c     bsp_mpu6050.o (.text.MPU6050_ReadData)
-                  000031ec    0000061c     app_image_store.o (.text.start_image_write)
-                  00003808    000005f8     app_car_control.o (.text.app_car_control_update)
-                  00003e00    000004e0     hw_lcd.o (.text.LCD_ShowChar)
-                  000042e0    000004cc     bsp_mpu6050.o (.text.MPU6050_WriteReg)
-                  000047ac    00000494     hw_lcd.o (.text.LCD_Fill)
-                  00004c40    00000438     hw_w25q64.o (.text.w25q64_read_jedec_id)
-                  00005078    000003b0     app_motion_control.o (.text.motion_control_parse_command)
-                  00005428    000003b0     libc.a : strtod.c.obj (.text.strtod)
-                  000057d8    00000364            : e_asin.c.obj (.text.asin)
-                  00005b3c    0000035c     hw_w25q64.o (.text.w25q64_write)
-                  00005e98    00000354     hw_w25q64.o (.text.w25q64_send_address)
-                  000061ec    00000350     libc.a : strtof.c.obj (.text.strtof)
-                  0000653c    0000030c     hw_lcd.o (.text.lcd_init)
-                  00006848    000002f8     libc.a : s_atan.c.obj (.text.atan)
-                  00006b40    000002dc            : divdf3_fast.c.obj (.text.__divdf3_fast)
-                  00006e1c    000002dc     inv_mpu_dmp_motion_driver.o (.text.dmp_enable_feature)
-                  000070f8    0000026c     bsp_mpu6050.o (.text.mpu6050_read_fallback_angles)
-                  00007364    00000268     app_car_control.o (.text.app_car_control_send_telemetry)
-                  000075cc    00000240     hw_w25q64.o (.text.w25q64_read)
-                  0000780c    00000208     hw_w25q64.o (.text.w25q64_wait_ready)
-                  00007a14    000001dc     libc.a : strtoll.c.obj (.text.strtoll)
-                  00007bf0    000001d8            : muldf3_fast.c.obj (.text.__muldf3_fast)
-                  00007dc8    000001d0     hw_w25q64.o (.text.w25q64_erase_sector)
-                  00007f98    000001c8     libc.a : s_atanf.c.obj (.text.atanf)
-                  00008160    000001c8     inv_mpu.o (.text.mpu_dmp_get_data)
-                  00008328    000001c8     app_car_control.o (.text.send_status)
-                  000084f0    000001b8     main.o (.text.main)
-                  000086a8    00000198     inv_mpu_dmp_motion_driver.o (.text.dmp_read_fifo)
-                  00008840    00000192     libclang_rt.builtins.a : adddf3.S.obj (.text)
-                  000089d2    00000002     startup_mspm0g350x_ticlang.o (.text.Default_Handler)
-                  000089d4    00000188     libc.a : e_atan2.c.obj (.text.atan2)
-                  00008b5c    0000017c     app_image_store.o (.text.ensure_index)
-                  00008cd8    00000178     inv_mpu_dmp_motion_driver.o (.text.dmp_set_tap_thresh)
-                  00008e50    00000174     libc.a : e_sqrt.c.obj (.text.sqrt)
-                  00008fc4    00000168            : strtoull.c.obj (.text.strtoull)
-                  0000912c    00000164     app_image_store.o (.text.delete_image_id)
-                  00009290    00000150     inv_mpu.o (.text.mpu_reset_fifo)
-                  000093e0    00000144     inv_mpu.o (.text.mpu_load_firmware)
-                  00009524    00000144     inv_mpu.o (.text.mpu_lp_accel_mode)
-                  00009668    00000144     libc.a : strtol.c.obj (.text.strtol)
-                  000097ac    00000140     app_motion_control.o (.text.motion_control_update)
-                  000098ec    0000013c     bsp_mpu6050.o (.text.mpu6050_init)
-                  00009a28    00000138     inv_mpu.o (.text.mpu_set_sample_rate)
-                  00009b60    00000134     hw_uart.o (.text.uart_debug_read_line)
-                  00009c94    0000012c     libc.a : strtoul.c.obj (.text.strtoul)
-                  00009dc0    00000124     inv_mpu.o (.text.mpu_init)
-                  00009ee4    00000120     app_image_store.o (.text.display_image)
-                  0000a004    00000118     libc.a : e_atan2f.c.obj (.text.atan2f)
-                  0000a11c    0000010c            : memory.c.obj (.text.aligned_alloc)
-                  0000a228    00000108     ti_msp_dl_config.o (.text.SYSCFG_DL_GPIO_init)
-                  0000a330    00000108     app_mpu6050_attitude.o (.text.app_mpu6050_attitude_send)
-                  0000a438    00000108     app_car_control.o (.text.set_motor_duty)
-                  0000a540    00000104     driverlib.a : dl_timer.o (.text.DL_Timer_initFourCCPWMMode)
-                  0000a644    000000f4     app_car_control.o (.text.update_lturn)
-                  0000a738    000000f0     libc.a : fputs.c.obj (.text.fputs)
-                  0000a828    000000ec     inv_mpu_dmp_motion_driver.o (.text.dmp_set_orientation)
-                  0000a914    000000e8     inv_mpu.o (.text.mpu_dmp_init)
-                  0000a9fc    000000e4     libc.a : memory.c.obj (.text.free)
-                  0000aae0    000000e4     app_mpu6050_attitude.o (.text.retry_mpu6050_init)
-                  0000abc4    000000e0     inv_mpu.o (.text.mpu_set_sensors)
-                  0000aca4    000000e0     libc.a : setvbuf.c.obj (.text.setvbuf)
-                  0000ad84    000000dc            : s_scalbn.c.obj (.text.scalbn)
-                  0000ae60    000000d8     libclang_rt.builtins.a : addsf3.S.obj (.text)
-                  0000af38    000000d0     inv_mpu.o (.text.mpu_set_bypass)
-                  0000b008    000000d0     inv_mpu.o (.text.mpu_set_dmp_state)
-                  0000b0d8    000000cc     app_mpu6050_attitude.o (.text.send_mpu_status)
-                  0000b1a4    000000c4     bsp_mpu6050.o (.text.iic_wait_ack)
-                  0000b268    000000bc     inv_mpu.o (.text.inv_orientation_matrix_to_scalar)
-                  0000b324    000000bc     libc.a : s_scalbnf.c.obj (.text.scalbnf)
-                  0000b3e0    000000b4            : e_sqrtf.c.obj (.text.sqrtf)
-                  0000b494    000000ac     hw_lcd.o (.text.LCD_Address_Set)
-                  0000b540    000000ac     main.o (.text.SysTick_Handler)
-                  0000b5ec    000000ac     inv_mpu.o (.text.mpu_configure_fifo)
-                  0000b698    000000a4     mid_pid.o (.text.pid_calc)
-                  0000b73c    000000a4     hw_openmv_uart.o (.text.uart_openmv_read_line)
-                  0000b7e0    000000a2     libclang_rt.builtins.a : udivmoddi4.S.obj (.text)
-                  0000b882    00000002                            : aeabi_div0.c.obj (.text.__aeabi_idiv0)
-                  0000b884    000000a0     bsp_mpu6050.o (.text.mpu6050_dmp_init)
-                  0000b924    000000a0     inv_mpu.o (.text.mpu_read_fifo_stream)
-                  0000b9c4    0000009c     libc.a : fputc.c.obj (.text.fputc)
-                  0000ba60    0000009c     app_line_follow.o (.text.line_follow_parse_command)
-                  0000bafc    0000009a     libc.a : memcpy16.S.obj (.text:memcpy)
-                  0000bb96    00000002     libclang_rt.builtins.a : aeabi_div0.c.obj (.text.__aeabi_ldiv0)
-                  0000bb98    00000098     inv_mpu.o (.text.mpu_set_accel_fsr)
-                  0000bc30    00000094     hw_encoder.o (.text.encoder_handle_gpio_irq)
-                  0000bcc4    00000090     app_car_control.o (.text.send_motor_ack)
-                  0000bd54    0000008c     libclang_rt.builtins.a : comparesf2.S.obj (.text)
-                  0000bde0    0000008c                            : mulsf3.S.obj (.text)
-                  0000be6c    00000088     inv_mpu.o (.text.mpu_set_gyro_fsr)
-                  0000bef4    0000000c     app_image_store.o (.text.app_image_store_is_receiving)
-                  0000bf00    00000088     libc.a : strcmp-armv6m.S.obj (.text:strcmp)
-                  0000bf88    00000082     libclang_rt.builtins.a : divsf3.S.obj (.text)
-                  0000c00a    00000002     libc.a : _lock.c.obj (.text._nop)
-                  0000c00c    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_DEBUG_init)
-                  0000c088    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_OPENMV_init)
-                  0000c104    0000007c     libc.a : fclose.c.obj (.text.__TI_closefile)
-                  0000c180    0000007c            : copy_decompress_lzss.c.obj (.text:decompress:lzss)
-                  0000c1fc    00000078     app_line_follow.o (.text.line_follow_get_turn_adjust)
-                  0000c274    00000078     bsp_mpu6050.o (.text.mpu6050_read_debug)
-                  0000c2ec    00000078     app_image_store.o (.text.sanitize_name)
-                  0000c364    00000074     libclang_rt.builtins.a : comparedf2.c.obj (.text.__gedf2)
-                  0000c3d8    00000074     libc.a : sscanf.c.obj (.text._chkmbc)
-                  0000c44c    00000074     inv_mpu.o (.text.mpu_set_lpf)
-                  0000c4c0    00000074     libclang_rt.builtins.a : truncdfsf2.S.obj (.text)
-                  0000c534    00000070     hw_uart.o (.text.uart_debug_handle_irq)
-                  0000c5a4    00000070     hw_openmv_uart.o (.text.uart_openmv_handle_irq)
-                  0000c614    0000006c     libsysbm.a : hostlseek.c.obj (.text.HOSTlseek)
-                  0000c680    0000006c                : hostrename.c.obj (.text.HOSTrename)
-                  0000c6ec    0000006c     ti_msp_dl_config.o (.text.SYSCFG_DL_PWM_LEFT_init)
-                  0000c758    0000006c     ti_msp_dl_config.o (.text.SYSCFG_DL_PWM_RIGHT_init)
-                  0000c7c4    0000006c     app_car_control.o (.text.app_car_control_init)
-                  0000c830    0000006c     libc.a : fseek.c.obj (.text.fseeko)
-                  0000c89c    0000006c            : getdevice.c.obj (.text.getdevice)
-                  0000c908    0000006c     inv_mpu.o (.text.mpu_write_mem)
-                  0000c974    00000068     libclang_rt.builtins.a : comparedf2.c.obj (.text.__ledf2)
-                  0000c9dc    00000068     inv_mpu_dmp_motion_driver.o (.text.dmp_set_fifo_rate)
-                  0000ca44    00000064     bsp_tb6612.o (.text.TB6612_Init)
-                  0000caa8    00000064     libc.a : _io_perm.c.obj (.text.__TI_wrt_ok)
-                  0000cb0c    00000064            : memory.c.obj (.text.split)
-                  0000cb70    00000062            : memset16.S.obj (.text:memset)
-                  0000cbd2    00000002     inv_mpu.o (.text.mget_ms)
-                  0000cbd4    00000060     bsp_tb6612.o (.text.BO_Control)
-                  0000cc34    00000060     ti_msp_dl_config.o (.text.SYSCFG_DL_initPower)
-                  0000cc94    0000005c     libsysbm.a : hostopen.c.obj (.text.HOSTopen)
-                  0000ccf0    0000005c     app_mpu6050_attitude.o (.text.app_mpu6050_attitude_process_command)
-                  0000cd4c    0000005c     libc.a : printf.c.obj (.text.printf)
-                  0000cda8    0000005a     libclang_rt.builtins.a : aeabi_dcmp.S.obj (.text)
-                  0000ce02    00000002     --HOLE-- [fill = 0]
-                  0000ce04    0000005a                            : aeabi_fcmp.S.obj (.text)
-                  0000ce5e    00000002     --HOLE-- [fill = 0]
-                  0000ce60    00000058     bsp_tb6612.o (.text.AO_Control)
-                  0000ceb8    00000058     libsysbm.a : hostread.c.obj (.text.HOSTread)
-                  0000cf10    00000058                : hostwrite.c.obj (.text.HOSTwrite)
-                  0000cf68    00000054     app_car_control.o (.text.send_pulse_ack)
-                  0000cfbc    00000052     libc.a : fflush.c.obj (.text.__TI_doflush)
-                  0000d00e    00000002     --HOLE-- [fill = 0]
-                  0000d010    00000050     libsysbm.a : close.c.obj (.text.close)
-                  0000d060    0000004c     bsp_tb6612.o (.text.TB6612_Motor_Stop)
-                  0000d0ac    0000004c     hw_uart.o (.text.uart_debug_service_tx)
-                  0000d0f8    0000004c     hw_uart.o (.text.uart_debug_write_string)
-                  0000d144    0000004a     hw_lcd.o (.text.LCD_ShowString)
-                  0000d18e    00000002     --HOLE-- [fill = 0]
-                  0000d190    00000048     driverlib.a : dl_uart.o (.text.DL_UART_init)
-                  0000d1d8    00000048     libsysbm.a : hostclose.c.obj (.text.HOSTclose)
-                  0000d220    00000048                : hostunlink.c.obj (.text.HOSTunlink)
-                  0000d268    00000048     ti_msp_dl_config.o (.text.SYSCFG_DL_SPI_LCD_init)
-                  0000d2b0    00000048     hw_encoder.o (.text.encoder_init)
-                  0000d2f8    00000048     libc.a : snprintf.c.obj (.text.snprintf)
-                  0000d340    00000044     driverlib.a : dl_spi.o (.text.DL_SPI_init)
-                  0000d384    00000044     ti_msp_dl_config.o (.text.SYSCFG_DL_init)
-                  0000d3c8    00000044     app_car_control.o (.text.app_car_control_send_heartbeat)
-                  0000d40c    00000044     libc.a : atoi.c.obj (.text.atoi)
-                  0000d450    00000040     ti_msp_dl_config.o (.text.SYSCFG_DL_SYSCTL_init)
-                  0000d490    00000040     libclang_rt.builtins.a : aeabi_uidivmod.S.obj (.text)
-                  0000d4d0    00000040                            : extendsfdf2.S.obj (.text)
-                  0000d510    0000003c     app_motion_control.o (.text.motion_control_init)
-                  0000d54c    0000003c     libc.a : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit)
-                  0000d588    0000003c     libclang_rt.builtins.a : floatsisf.S.obj (.text)
-                  0000d5c4    0000003a                            : muldsi3.S.obj (.text)
-                  0000d5fe    00000002     --HOLE-- [fill = 0]
-                  0000d600    00000038     hw_uart.o (.text.uart_debug_read_byte)
-                  0000d638    00000038     libclang_rt.builtins.a : fixsfsi.S.obj (.text)
-                  0000d670    00000034     libc.a : fopen.c.obj (.text.__TI_cleanup)
-                  0000d6a4    00000034     libsysbm.a : trgmsg.c.obj (.text.__TI_readmsg)
-                  0000d6d8    00000034                : trgmsg.c.obj (.text.__TI_writemsg)
-                  0000d70c    00000034     libc.a : exit.c.obj (.text.exit)
-                  0000d740    00000034            : getdevice.c.obj (.text.finddevice)
-                  0000d774    00000034     inv_mpu.o (.text.mpu_get_accel_fsr)
-                  0000d7a8    00000032     libc.a : snprintf.c.obj (.text._outs)
-                  0000d7da    00000032     bsp_mpu6050.o (.text.set_sample_rate)
-                  0000d80c    00000032     libclang_rt.builtins.a : fixunssfsi.S.obj (.text)
-                  0000d83e    00000002     --HOLE-- [fill = 0]
-                  0000d840    00000030     app_line_follow.o (.text.line_follow_is_valid)
-                  0000d870    00000030     app_car_control.o (.text.send_unknown_command)
-                  0000d8a0    00000030     libc.a : sscanf.c.obj (.text.sscanf)
-                  0000d8d0    0000002c     bsp_mpu6050.o (.text.mpu6050_reset_fallback_angles)
-                  0000d8fc    0000002c     app_image_store.o (.text.show_legacy_slot)
-                  0000d928    0000002c     libsysbm.a : unlink.c.obj (.text.unlink)
-                  0000d954    00000028     libc.a : memory.c.obj (.text.free_list_insert)
-                  0000d97c    00000028     app_line_follow.o (.text.line_follow_is_active)
-                  0000d9a4    00000028     libsysbm.a : lseek.c.obj (.text.lseek)
-                  0000d9cc    00000028     bsp_mpu6050.o (.text.mpu6050_release_bus)
-                  0000d9f4    00000028     hw_uart.o (.text.uart_debug_init)
-                  0000da1c    00000028     hw_openmv_uart.o (.text.uart_openmv_init)
-                  0000da44    00000028     libsysbm.a : write.c.obj (.text.write)
-                  0000da6c    00000028     libc.a : boot_cortex_m.c.obj (.text:_c_int00_noargs)
-                  0000da94    00000028     libclang_rt.builtins.a : floatunsisf.S.obj (.text)
-                  0000dabc    00000024     app_line_follow.o (.text.line_follow_init)
-                  0000dae0    00000024     bsp_mpu6050.o (.text.mpu6050_read_angles)
-                  0000db04    00000024     hw_w25q64.o (.text.w25q64_is_valid_jedec_id)
-                  0000db28    00000024     libclang_rt.builtins.a : muldi3.S.obj (.text)
-                  0000db4c    00000022     libc.a : memccpy.c.obj (.text.memccpy)
-                  0000db6e    00000022     app_car_control.o (.text.strlen)
-                  0000db90    00000020     bsp_mpu6050.o (.text.mpu6050_read_id)
-                  0000dbb0    0000001e     libclang_rt.builtins.a : ashldi3.S.obj (.text)
-                  0000dbce    00000002     --HOLE-- [fill = 0]
-                  0000dbd0    0000001c     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptCompUpdateMethod)
-                  0000dbec    0000001c                 : dl_timer.o (.text.DL_Timer_setClockConfig)
-                  0000dc08    0000001c                 : dl_uart.o (.text.DL_UART_receiveDataCheck)
-                  0000dc24    0000001c                 : dl_uart.o (.text.DL_UART_transmitDataCheck)
-                  0000dc40    0000001c     inv_mpu_dmp_motion_driver.o (.text.dmp_load_motion_driver_firmware)
-                  0000dc5c    0000001c     libc.a : memory.c.obj (.text.free_list_remove)
-                  0000dc78    0000001c     hw_spi.o (.text.spi_write_bus)
-                  0000dc94    0000001c     hw_w25q64.o (.text.w25q64_init)
-                  0000dcb0    0000001a     libc.a : fputs.c.obj (.text.memchr)
-                  0000dcca    00000002     --HOLE-- [fill = 0]
-                  0000dccc    0000001a     libclang_rt.builtins.a : aeabi_memset.S.obj (.text)
-                  0000dce6    00000002     --HOLE-- [fill = 0]
-                  0000dce8    00000018     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptureCompareOutCtl)
-                  0000dd00    00000018     hw_lcd.o (.text.LCD_WR_DATA8)
-                  0000dd18    00000018     libc.a : snprintf.c.obj (.text._outc)
-                  0000dd30    00000018     hw_encoder.o (.text.encoder_get_counts)
-                  0000dd48    00000018     hw_encoder.o (.text.encoder_reset)
-                  0000dd60    00000018     mid_pid.o (.text.pid_init)
-                  0000dd78    00000014     libc.a : sscanf.c.obj (.text._inpchar)
-                  0000dd8c    00000014     libclang_rt.builtins.a : aeabi_uldivmod.S.obj (.text)
-                  0000dda0    00000012     driverlib.a : dl_spi.o (.text.DL_SPI_setClockConfig)
-                  0000ddb2    00000012                 : dl_uart.o (.text.DL_UART_setClockConfig)
-                  0000ddc4    00000012     libc.a : copy_decompress_none.c.obj (.text:decompress:none)
-                  0000ddd6    00000002     --HOLE-- [fill = 0]
-                  0000ddd8    00000010     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptureCompareValue)
-                  0000dde8    00000010     app_car_control.o (.text.app_car_control_toggle_status_led)
-                  0000ddf8    00000010     app_motion_control.o (.text.motion_control_get_target_deg_s)
-                  0000de08    00000010     app_motion_control.o (.text.motion_control_get_target_mm_s)
-                  0000de18    00000010     app_motion_control.o (.text.motion_control_is_active)
-                  0000de28    00000010     bsp_mpu6050.o (.text.mpu6050_scl_is_high)
-                  0000de38    00000010     bsp_mpu6050.o (.text.mpu6050_sda_is_high)
-                  0000de48    00000010     libc.a : wcslen.c.obj (.text.wcslen)
-                  0000de58    00000010            : copy_zero_init.c.obj (.text:decompress:ZI)
-                  0000de68    0000000e            : memory.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000de76    0000000e     bsp_mpu6050.o (.text.mpu6050_delay_ms)
-                  0000de84    0000000e     libsysbm.a : hostrename.c.obj (.text.strcpy)
-                  0000de92    0000000e     libc.a : _printfi.c.obj (.text.strlen)
-                  0000dea0    0000000e            : fputs.c.obj (.text.strlen)
-                  0000deae    0000000e     libsysbm.a : hostopen.c.obj (.text.strlen)
-                  0000debc    0000000e                : hostrename.c.obj (.text.strlen)
-                  0000deca    0000000e                : hostunlink.c.obj (.text.strlen)
-                  0000ded8    0000000c     app_line_follow.o (.text.line_follow_get_error)
-                  0000dee4    0000000c     libc.a : memory.c.obj (.text.malloc)
-                  0000def0    0000000c     app_motion_control.o (.text.motion_control_get_mode)
-                  0000defc    0000000c     app_motion_control.o (.text.motion_control_is_busy)
-                  0000df08    0000000c     mid_pid.o (.text.pid_reset)
-                  0000df14    0000000c     hw_uart.o (.text.uart_debug_get_rx_dropped_bytes)
-                  0000df20    0000000c     hw_uart.o (.text.uart_debug_get_tx_dropped_bytes)
-                  0000df2c    0000000a     driverlib.a : dl_common.o (.text.DL_Common_delayCycles)
-                  0000df36    0000000a     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000df40    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000df4a    00000002     --HOLE-- [fill = 0]
-                  0000df4c    00000008            : aeabi_portable.c.obj (.text.__aeabi_errno_addr)
-                  0000df54    00000008            : printf.c.obj (.text._outc)
-                  0000df5c    0000000a            : s_atan.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000df66    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000df70    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_3)
-                  0000df7a    00000008     libclang_rt.builtins.a : aeabi_dmul.c.obj (.text.__aeabi_dmul_fast)
-                  0000df82    00000008     libc.a : printf.c.obj (.text._outs)
-                  0000df8a    00000002     --HOLE-- [fill = 0]
-                  0000df8c    0000000a     bsp_mpu6050.o (.text.mpu6050_delay_us)
-                  0000df96    00000008     main.o (.text.GROUP1_IRQHandler)
-                  0000df9e    00000008     libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000dfa6    00000008            : strtof.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000dfae    00000008            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000dfb6    00000008            : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000dfbe    00000002     --HOLE-- [fill = 0]
-                  0000dfc0    00000010     libclang_rt.builtins.a : aeabi_dcmp.S.obj (.tramp.__aeabi_dcmpeq.1)
-                  0000dfd0    00000008     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_2)
-                  0000dfd8    00000008            : s_atan.c.obj (.text.OUTLINED_FUNCTION_2)
-                  0000dfe0    00000008     main.o (.text.UART0_IRQHandler)
-                  0000dfe8    00000008     main.o (.text.UART2_IRQHandler)
-                  0000dff0    00000008     libclang_rt.builtins.a : aeabi_ddiv.c.obj (.text.__aeabi_ddiv_fast)
-                  0000dff8    00000008     libc.a : sscanf.c.obj (.text._uninpchar)
-                  0000e000    00000008     app_image_store.o (.text.app_image_store_init)
-                  0000e008    00000008     app_mpu6050_attitude.o (.text.app_mpu6050_attitude_init)
-                  0000e010    00000008     libc.a : fseek.c.obj (.text.fseek)
-                  0000e018    00000008     libsysbm.a : remove.c.obj (.text.remove)
-                  0000e020    00000008     libclang_rt.builtins.a : aeabi_memcpy.S.obj (.text)
-                  0000e028    00000006     libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000e02e    00000002     --HOLE-- [fill = 0]
-                  0000e030    00000010     libclang_rt.builtins.a : divsf3.S.obj (.tramp.__aeabi_fdiv.1)
-                  0000e040    00000006     libc.a : s_atan.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000e046    00000002     --HOLE-- [fill = 0]
-                  0000e048    00000010     libclang_rt.builtins.a : adddf3.S.obj (.tramp.__aeabi_dadd.1)
-                  0000e058    00000006     libc.a : e_asin.c.obj (.text.OUTLINED_FUNCTION_2)
-                  0000e05e    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_3)
-                  0000e064    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_4)
-                  0000e06a    00000006            : exit.c.obj (.text:abort)
-                  0000e070    00000004     libsysbm.a : hostexit.c.obj (.text.HOSTexit)
-                  0000e074    00000004     libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000e078    00000010     libclang_rt.builtins.a : addsf3.S.obj (.tramp.__aeabi_fadd.1)
-                  0000e088    00000004     libc.a : e_asin.c.obj (.text.OUTLINED_FUNCTION_4)
-                  0000e08c    00000004     startup_mspm0g350x_ticlang.o (.text.Reset_Handler)
-                  0000e090    00000004     libc.a : pre_init.c.obj (.text._system_pre_init)
-                  0000e094    0000000c     --HOLE-- [fill = 0]
+                  00001624    000007fc     app_menu.o (.text.render_menu)
+                  00001e20    00000760     app_image_store.o (.text.app_image_store_process_command)
+                  00002580    00000724     app_image_store.o (.text.app_image_store_service)
+                  00002ca4    00000708     app_car_control.o (.text.app_car_control_process_command)
+                  000033ac    0000063c     bsp_mpu6050.o (.text.MPU6050_ReadData)
+                  000039e8    0000061c     app_image_store.o (.text.start_image_write)
+                  00004004    000005f8     app_car_control.o (.text.app_car_control_update)
+                  000045fc    000004e0     hw_lcd.o (.text.LCD_ShowChar)
+                  00004adc    000004cc     bsp_mpu6050.o (.text.MPU6050_WriteReg)
+                  00004fa8    00000494     hw_lcd.o (.text.LCD_Fill)
+                  0000543c    00000438     hw_w25q64.o (.text.w25q64_read_jedec_id)
+                  00005874    00000408     app_menu.o (.text.app_menu_update)
+                  00005c7c    000003b0     app_motion_control.o (.text.motion_control_parse_command)
+                  0000602c    000003b0     libc.a : strtod.c.obj (.text.strtod)
+                  000063dc    00000364            : e_asin.c.obj (.text.asin)
+                  00006740    0000035c     hw_w25q64.o (.text.w25q64_write)
+                  00006a9c    00000354     hw_w25q64.o (.text.w25q64_send_address)
+                  00006df0    00000350     libc.a : strtof.c.obj (.text.strtof)
+                  00007140    0000030c     hw_lcd.o (.text.lcd_init)
+                  0000744c    000002f8     libc.a : s_atan.c.obj (.text.atan)
+                  00007744    000002dc            : divdf3_fast.c.obj (.text.__divdf3_fast)
+                  00007a20    000002dc     inv_mpu_dmp_motion_driver.o (.text.dmp_enable_feature)
+                  00007cfc    0000026c     bsp_mpu6050.o (.text.mpu6050_read_fallback_angles)
+                  00007f68    00000268     app_car_control.o (.text.app_car_control_send_telemetry)
+                  000081d0    00000240     hw_w25q64.o (.text.w25q64_read)
+                  00008410    00000208     hw_w25q64.o (.text.w25q64_wait_ready)
+                  00008618    000001dc     libc.a : strtoll.c.obj (.text.strtoll)
+                  000087f4    000001d8            : muldf3_fast.c.obj (.text.__muldf3_fast)
+                  000089cc    000001d4     main.o (.text.main)
+                  00008ba0    000001d0     hw_w25q64.o (.text.w25q64_erase_sector)
+                  00008d70    000001c8     libc.a : s_atanf.c.obj (.text.atanf)
+                  00008f38    000001c8     inv_mpu.o (.text.mpu_dmp_get_data)
+                  00009100    000001c8     app_car_control.o (.text.send_status)
+                  000092c8    000001b0     app_image_store.o (.text.app_image_store_get_file_count)
+                  00009478    00000198     inv_mpu_dmp_motion_driver.o (.text.dmp_read_fifo)
+                  00009610    00000192     libclang_rt.builtins.a : adddf3.S.obj (.text)
+                  000097a2    00000002     startup_mspm0g350x_ticlang.o (.text.Default_Handler)
+                  000097a4    00000188     libc.a : e_atan2.c.obj (.text.atan2)
+                  0000992c    0000017c     app_image_store.o (.text.ensure_index)
+                  00009aa8    00000178     inv_mpu_dmp_motion_driver.o (.text.dmp_set_tap_thresh)
+                  00009c20    00000174     libc.a : e_sqrt.c.obj (.text.sqrt)
+                  00009d94    00000168            : strtoull.c.obj (.text.strtoull)
+                  00009efc    00000164     app_image_store.o (.text.delete_image_id)
+                  0000a060    00000150     inv_mpu.o (.text.mpu_reset_fifo)
+                  0000a1b0    00000144     inv_mpu.o (.text.mpu_load_firmware)
+                  0000a2f4    00000144     inv_mpu.o (.text.mpu_lp_accel_mode)
+                  0000a438    00000144     libc.a : strtol.c.obj (.text.strtol)
+                  0000a57c    00000140     app_motion_control.o (.text.motion_control_update)
+                  0000a6bc    0000013c     bsp_mpu6050.o (.text.mpu6050_init)
+                  0000a7f8    00000138     inv_mpu.o (.text.mpu_set_sample_rate)
+                  0000a930    00000134     hw_uart.o (.text.uart_debug_read_line)
+                  0000aa64    0000012c     libc.a : strtoul.c.obj (.text.strtoul)
+                  0000ab90    00000124     inv_mpu.o (.text.mpu_init)
+                  0000acb4    00000120     app_image_store.o (.text.display_image)
+                  0000add4    0000011c     ti_msp_dl_config.o (.text.SYSCFG_DL_GPIO_init)
+                  0000aef0    00000118     libc.a : e_atan2f.c.obj (.text.atan2f)
+                  0000b008    0000010c            : memory.c.obj (.text.aligned_alloc)
+                  0000b114    00000108     app_mpu6050_attitude.o (.text.app_mpu6050_attitude_send)
+                  0000b21c    00000108     app_car_control.o (.text.set_motor_duty)
+                  0000b324    00000104     driverlib.a : dl_timer.o (.text.DL_Timer_initFourCCPWMMode)
+                  0000b428    000000f4     app_car_control.o (.text.update_lturn)
+                  0000b51c    000000f0     libc.a : fputs.c.obj (.text.fputs)
+                  0000b60c    000000ec     inv_mpu_dmp_motion_driver.o (.text.dmp_set_orientation)
+                  0000b6f8    000000e8     inv_mpu.o (.text.mpu_dmp_init)
+                  0000b7e0    000000e4     app_image_store.o (.text.app_image_store_get_file_by_index)
+                  0000b8c4    000000e4     libc.a : memory.c.obj (.text.free)
+                  0000b9a8    000000e4     app_mpu6050_attitude.o (.text.retry_mpu6050_init)
+                  0000ba8c    000000e0     inv_mpu.o (.text.mpu_set_sensors)
+                  0000bb6c    000000e0     libc.a : setvbuf.c.obj (.text.setvbuf)
+                  0000bc4c    000000dc            : s_scalbn.c.obj (.text.scalbn)
+                  0000bd28    000000d8     libclang_rt.builtins.a : addsf3.S.obj (.text)
+                  0000be00    000000d0     inv_mpu.o (.text.mpu_set_bypass)
+                  0000bed0    000000d0     inv_mpu.o (.text.mpu_set_dmp_state)
+                  0000bfa0    000000cc     app_mpu6050_attitude.o (.text.send_mpu_status)
+                  0000c06c    000000c4     main.o (.text.SysTick_Handler)
+                  0000c130    000000c4     bsp_mpu6050.o (.text.iic_wait_ack)
+                  0000c1f4    000000bc     inv_mpu.o (.text.inv_orientation_matrix_to_scalar)
+                  0000c2b0    000000bc     libc.a : s_scalbnf.c.obj (.text.scalbnf)
+                  0000c36c    000000b4            : e_sqrtf.c.obj (.text.sqrtf)
+                  0000c420    000000ac     hw_lcd.o (.text.LCD_Address_Set)
+                  0000c4cc    000000ac     inv_mpu.o (.text.mpu_configure_fifo)
+                  0000c578    000000a4     mid_pid.o (.text.pid_calc)
+                  0000c61c    000000a4     hw_openmv_uart.o (.text.uart_openmv_read_line)
+                  0000c6c0    000000a2     libclang_rt.builtins.a : udivmoddi4.S.obj (.text)
+                  0000c762    00000002                            : aeabi_div0.c.obj (.text.__aeabi_idiv0)
+                  0000c764    000000a0     bsp_mpu6050.o (.text.mpu6050_dmp_init)
+                  0000c804    000000a0     inv_mpu.o (.text.mpu_read_fifo_stream)
+                  0000c8a4    0000009c     libc.a : fputc.c.obj (.text.fputc)
+                  0000c940    0000009c     app_line_follow.o (.text.line_follow_parse_command)
+                  0000c9dc    0000009a     libc.a : memcpy16.S.obj (.text:memcpy)
+                  0000ca76    00000002     libclang_rt.builtins.a : aeabi_div0.c.obj (.text.__aeabi_ldiv0)
+                  0000ca78    00000098     inv_mpu.o (.text.mpu_set_accel_fsr)
+                  0000cb10    00000094     hw_encoder.o (.text.encoder_handle_gpio_irq)
+                  0000cba4    00000090     app_car_control.o (.text.send_motor_ack)
+                  0000cc34    0000008c     libclang_rt.builtins.a : comparesf2.S.obj (.text)
+                  0000ccc0    0000008c                            : mulsf3.S.obj (.text)
+                  0000cd4c    00000088     app_image_store.o (.text.app_image_store_show_image)
+                  0000cdd4    00000088     inv_mpu.o (.text.mpu_set_gyro_fsr)
+                  0000ce5c    00000004     libsysbm.a : hostexit.c.obj (.text.HOSTexit)
+                  0000ce60    00000088     libc.a : strcmp-armv6m.S.obj (.text:strcmp)
+                  0000cee8    00000082     libclang_rt.builtins.a : divsf3.S.obj (.text)
+                  0000cf6a    00000002     libc.a : _lock.c.obj (.text._nop)
+                  0000cf6c    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_DEBUG_init)
+                  0000cfe8    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_OPENMV_init)
+                  0000d064    0000007c     libc.a : fclose.c.obj (.text.__TI_closefile)
+                  0000d0e0    0000007c            : copy_decompress_lzss.c.obj (.text:decompress:lzss)
+                  0000d15c    00000078     app_line_follow.o (.text.line_follow_get_turn_adjust)
+                  0000d1d4    00000078     bsp_mpu6050.o (.text.mpu6050_read_debug)
+                  0000d24c    00000078     app_image_store.o (.text.sanitize_name)
+                  0000d2c4    00000074     libclang_rt.builtins.a : comparedf2.c.obj (.text.__gedf2)
+                  0000d338    00000074     libc.a : sscanf.c.obj (.text._chkmbc)
+                  0000d3ac    00000074     inv_mpu.o (.text.mpu_set_lpf)
+                  0000d420    00000074     libclang_rt.builtins.a : truncdfsf2.S.obj (.text)
+                  0000d494    00000070     hw_uart.o (.text.uart_debug_handle_irq)
+                  0000d504    00000070     hw_openmv_uart.o (.text.uart_openmv_handle_irq)
+                  0000d574    0000006c     libsysbm.a : hostlseek.c.obj (.text.HOSTlseek)
+                  0000d5e0    0000006c                : hostrename.c.obj (.text.HOSTrename)
+                  0000d64c    0000006c     ti_msp_dl_config.o (.text.SYSCFG_DL_PWM_LEFT_init)
+                  0000d6b8    0000006c     ti_msp_dl_config.o (.text.SYSCFG_DL_PWM_RIGHT_init)
+                  0000d724    0000006c     app_car_control.o (.text.app_car_control_init)
+                  0000d790    0000006c     app_menu.o (.text.app_menu_init)
+                  0000d7fc    0000006c     libc.a : fseek.c.obj (.text.fseeko)
+                  0000d868    0000006c            : getdevice.c.obj (.text.getdevice)
+                  0000d8d4    0000006c     inv_mpu.o (.text.mpu_write_mem)
+                  0000d940    00000068     libclang_rt.builtins.a : comparedf2.c.obj (.text.__ledf2)
+                  0000d9a8    00000068     inv_mpu_dmp_motion_driver.o (.text.dmp_set_fifo_rate)
+                  0000da10    00000064     bsp_tb6612.o (.text.TB6612_Init)
+                  0000da74    00000064     libc.a : _io_perm.c.obj (.text.__TI_wrt_ok)
+                  0000dad8    00000064            : memory.c.obj (.text.split)
+                  0000db3c    00000062            : memset16.S.obj (.text:memset)
+                  0000db9e    00000002     inv_mpu.o (.text.mget_ms)
+                  0000dba0    00000060     bsp_tb6612.o (.text.BO_Control)
+                  0000dc00    00000060     ti_msp_dl_config.o (.text.SYSCFG_DL_initPower)
+                  0000dc60    0000005c     libsysbm.a : hostopen.c.obj (.text.HOSTopen)
+                  0000dcbc    0000005c     app_mpu6050_attitude.o (.text.app_mpu6050_attitude_process_command)
+                  0000dd18    0000005c     libc.a : printf.c.obj (.text.printf)
+                  0000dd74    0000005a     libclang_rt.builtins.a : aeabi_dcmp.S.obj (.text)
+                  0000ddce    00000002     --HOLE-- [fill = 0]
+                  0000ddd0    0000005a                            : aeabi_fcmp.S.obj (.text)
+                  0000de2a    00000002     --HOLE-- [fill = 0]
+                  0000de2c    00000058     bsp_tb6612.o (.text.AO_Control)
+                  0000de84    00000058     libsysbm.a : hostread.c.obj (.text.HOSTread)
+                  0000dedc    00000058                : hostwrite.c.obj (.text.HOSTwrite)
+                  0000df34    00000054     app_car_control.o (.text.send_pulse_ack)
+                  0000df88    00000052     libc.a : fflush.c.obj (.text.__TI_doflush)
+                  0000dfda    00000002     --HOLE-- [fill = 0]
+                  0000dfdc    00000050     libsysbm.a : close.c.obj (.text.close)
+                  0000e02c    0000004c     bsp_tb6612.o (.text.TB6612_Motor_Stop)
+                  0000e078    0000004c     hw_uart.o (.text.uart_debug_service_tx)
+                  0000e0c4    0000004c     hw_uart.o (.text.uart_debug_write_string)
+                  0000e110    0000004a     hw_lcd.o (.text.LCD_ShowString)
+                  0000e15a    00000002     --HOLE-- [fill = 0]
+                  0000e15c    00000048     driverlib.a : dl_uart.o (.text.DL_UART_init)
+                  0000e1a4    00000048     libsysbm.a : hostclose.c.obj (.text.HOSTclose)
+                  0000e1ec    00000048                : hostunlink.c.obj (.text.HOSTunlink)
+                  0000e234    00000048     ti_msp_dl_config.o (.text.SYSCFG_DL_SPI_LCD_init)
+                  0000e27c    00000048     hw_encoder.o (.text.encoder_init)
+                  0000e2c4    00000048     libc.a : snprintf.c.obj (.text.snprintf)
+                  0000e30c    00000044     driverlib.a : dl_spi.o (.text.DL_SPI_init)
+                  0000e350    00000044     ti_msp_dl_config.o (.text.SYSCFG_DL_init)
+                  0000e394    00000044     app_car_control.o (.text.app_car_control_send_heartbeat)
+                  0000e3d8    00000044     libc.a : atoi.c.obj (.text.atoi)
+                  0000e41c    00000040     ti_msp_dl_config.o (.text.SYSCFG_DL_SYSCTL_init)
+                  0000e45c    00000040     libclang_rt.builtins.a : aeabi_uidivmod.S.obj (.text)
+                  0000e49c    00000040                            : extendsfdf2.S.obj (.text)
+                  0000e4dc    0000003c     app_motion_control.o (.text.motion_control_init)
+                  0000e518    0000003c     libc.a : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit)
+                  0000e554    0000003c     libclang_rt.builtins.a : floatsisf.S.obj (.text)
+                  0000e590    0000003a                            : muldsi3.S.obj (.text)
+                  0000e5ca    00000002     --HOLE-- [fill = 0]
+                  0000e5cc    00000038     hw_uart.o (.text.uart_debug_read_byte)
+                  0000e604    00000038     libclang_rt.builtins.a : fixsfsi.S.obj (.text)
+                  0000e63c    00000034     libc.a : fopen.c.obj (.text.__TI_cleanup)
+                  0000e670    00000034     libsysbm.a : trgmsg.c.obj (.text.__TI_readmsg)
+                  0000e6a4    00000034                : trgmsg.c.obj (.text.__TI_writemsg)
+                  0000e6d8    00000034     libc.a : exit.c.obj (.text.exit)
+                  0000e70c    00000034            : getdevice.c.obj (.text.finddevice)
+                  0000e740    00000034     inv_mpu.o (.text.mpu_get_accel_fsr)
+                  0000e774    00000032     libc.a : snprintf.c.obj (.text._outs)
+                  0000e7a6    00000032     bsp_mpu6050.o (.text.set_sample_rate)
+                  0000e7d8    00000032     libclang_rt.builtins.a : fixunssfsi.S.obj (.text)
+                  0000e80a    00000002     --HOLE-- [fill = 0]
+                  0000e80c    00000030     app_line_follow.o (.text.line_follow_is_valid)
+                  0000e83c    00000030     app_car_control.o (.text.send_unknown_command)
+                  0000e86c    00000030     libc.a : sscanf.c.obj (.text.sscanf)
+                  0000e89c    0000002c     bsp_mpu6050.o (.text.mpu6050_reset_fallback_angles)
+                  0000e8c8    0000002c     app_image_store.o (.text.show_legacy_slot)
+                  0000e8f4    0000002c     libsysbm.a : unlink.c.obj (.text.unlink)
+                  0000e920    00000028     libc.a : memory.c.obj (.text.free_list_insert)
+                  0000e948    00000028     app_line_follow.o (.text.line_follow_is_active)
+                  0000e970    00000028     libsysbm.a : lseek.c.obj (.text.lseek)
+                  0000e998    00000028     bsp_mpu6050.o (.text.mpu6050_release_bus)
+                  0000e9c0    00000028     hw_uart.o (.text.uart_debug_init)
+                  0000e9e8    00000028     hw_openmv_uart.o (.text.uart_openmv_init)
+                  0000ea10    00000028     libsysbm.a : write.c.obj (.text.write)
+                  0000ea38    00000028     libc.a : boot_cortex_m.c.obj (.text:_c_int00_noargs)
+                  0000ea60    00000028     libclang_rt.builtins.a : floatunsisf.S.obj (.text)
+                  0000ea88    00000024     app_line_follow.o (.text.line_follow_init)
+                  0000eaac    00000024     bsp_mpu6050.o (.text.mpu6050_read_angles)
+                  0000ead0    00000024     hw_w25q64.o (.text.w25q64_is_valid_jedec_id)
+                  0000eaf4    00000024     libclang_rt.builtins.a : muldi3.S.obj (.text)
+                  0000eb18    00000022     libc.a : memccpy.c.obj (.text.memccpy)
+                  0000eb3a    00000022     app_car_control.o (.text.strlen)
+                  0000eb5c    00000020     bsp_mpu6050.o (.text.mpu6050_read_id)
+                  0000eb7c    0000001e     libclang_rt.builtins.a : ashldi3.S.obj (.text)
+                  0000eb9a    00000002     --HOLE-- [fill = 0]
+                  0000eb9c    0000001c     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptCompUpdateMethod)
+                  0000ebb8    0000001c                 : dl_timer.o (.text.DL_Timer_setClockConfig)
+                  0000ebd4    0000001c                 : dl_uart.o (.text.DL_UART_receiveDataCheck)
+                  0000ebf0    0000001c                 : dl_uart.o (.text.DL_UART_transmitDataCheck)
+                  0000ec0c    0000001c     inv_mpu_dmp_motion_driver.o (.text.dmp_load_motion_driver_firmware)
+                  0000ec28    0000001c     libc.a : memory.c.obj (.text.free_list_remove)
+                  0000ec44    0000001c     hw_spi.o (.text.spi_write_bus)
+                  0000ec60    0000001c     hw_w25q64.o (.text.w25q64_init)
+                  0000ec7c    0000001a     libc.a : fputs.c.obj (.text.memchr)
+                  0000ec96    00000002     --HOLE-- [fill = 0]
+                  0000ec98    0000001a     libclang_rt.builtins.a : aeabi_memset.S.obj (.text)
+                  0000ecb2    00000002     --HOLE-- [fill = 0]
+                  0000ecb4    00000018     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptureCompareOutCtl)
+                  0000eccc    00000018     hw_lcd.o (.text.LCD_WR_DATA8)
+                  0000ece4    00000018     libc.a : snprintf.c.obj (.text._outc)
+                  0000ecfc    00000018     hw_encoder.o (.text.encoder_get_counts)
+                  0000ed14    00000018     hw_encoder.o (.text.encoder_reset)
+                  0000ed2c    00000018     mid_pid.o (.text.pid_init)
+                  0000ed44    00000014     libc.a : sscanf.c.obj (.text._inpchar)
+                  0000ed58    00000014     libclang_rt.builtins.a : aeabi_uldivmod.S.obj (.text)
+                  0000ed6c    00000012     driverlib.a : dl_spi.o (.text.DL_SPI_setClockConfig)
+                  0000ed7e    00000012                 : dl_uart.o (.text.DL_UART_setClockConfig)
+                  0000ed90    00000012     libc.a : copy_decompress_none.c.obj (.text:decompress:none)
+                  0000eda2    00000002     --HOLE-- [fill = 0]
+                  0000eda4    00000010     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptureCompareValue)
+                  0000edb4    00000010     app_car_control.o (.text.app_car_control_toggle_status_led)
+                  0000edc4    00000010     app_motion_control.o (.text.motion_control_get_target_deg_s)
+                  0000edd4    00000010     app_motion_control.o (.text.motion_control_get_target_mm_s)
+                  0000ede4    00000010     app_motion_control.o (.text.motion_control_is_active)
+                  0000edf4    00000010     bsp_mpu6050.o (.text.mpu6050_scl_is_high)
+                  0000ee04    00000010     bsp_mpu6050.o (.text.mpu6050_sda_is_high)
+                  0000ee14    00000010     libc.a : wcslen.c.obj (.text.wcslen)
+                  0000ee24    00000010            : copy_zero_init.c.obj (.text:decompress:ZI)
+                  0000ee34    0000000e            : memory.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000ee42    0000000e     bsp_mpu6050.o (.text.mpu6050_delay_ms)
+                  0000ee50    0000000e     libsysbm.a : hostrename.c.obj (.text.strcpy)
+                  0000ee5e    0000000e     libc.a : _printfi.c.obj (.text.strlen)
+                  0000ee6c    0000000e            : fputs.c.obj (.text.strlen)
+                  0000ee7a    0000000e     libsysbm.a : hostopen.c.obj (.text.strlen)
+                  0000ee88    0000000e                : hostrename.c.obj (.text.strlen)
+                  0000ee96    0000000e                : hostunlink.c.obj (.text.strlen)
+                  0000eea4    0000000c     app_image_store.o (.text.app_image_store_is_receiving)
+                  0000eeb0    0000000c     app_line_follow.o (.text.line_follow_get_error)
+                  0000eebc    0000000c     libc.a : memory.c.obj (.text.malloc)
+                  0000eec8    0000000c     app_motion_control.o (.text.motion_control_get_mode)
+                  0000eed4    0000000c     app_motion_control.o (.text.motion_control_is_busy)
+                  0000eee0    0000000c     mid_pid.o (.text.pid_reset)
+                  0000eeec    0000000c     hw_uart.o (.text.uart_debug_get_rx_dropped_bytes)
+                  0000eef8    0000000c     hw_uart.o (.text.uart_debug_get_tx_dropped_bytes)
+                  0000ef04    0000000a     driverlib.a : dl_common.o (.text.DL_Common_delayCycles)
+                  0000ef0e    0000000a     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000ef18    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000ef22    00000002     --HOLE-- [fill = 0]
+                  0000ef24    00000008            : aeabi_portable.c.obj (.text.__aeabi_errno_addr)
+                  0000ef2c    00000008            : printf.c.obj (.text._outc)
+                  0000ef34    0000000a            : s_atan.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000ef3e    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000ef48    0000000a            : e_asin.c.obj (.text.OUTLINED_FUNCTION_3)
+                  0000ef52    00000008     libclang_rt.builtins.a : aeabi_dmul.c.obj (.text.__aeabi_dmul_fast)
+                  0000ef5a    00000008     libc.a : printf.c.obj (.text._outs)
+                  0000ef62    00000002     --HOLE-- [fill = 0]
+                  0000ef64    0000000a     bsp_mpu6050.o (.text.mpu6050_delay_us)
+                  0000ef6e    00000008     main.o (.text.GROUP1_IRQHandler)
+                  0000ef76    00000008     libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000ef7e    00000008            : strtof.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000ef86    00000008            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000ef8e    00000008            : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000ef96    00000002     --HOLE-- [fill = 0]
+                  0000ef98    00000010     libclang_rt.builtins.a : aeabi_dcmp.S.obj (.tramp.__aeabi_dcmpeq.1)
+                  0000efa8    00000008     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_2)
+                  0000efb0    00000008            : s_atan.c.obj (.text.OUTLINED_FUNCTION_2)
+                  0000efb8    00000008     main.o (.text.UART0_IRQHandler)
+                  0000efc0    00000008     main.o (.text.UART2_IRQHandler)
+                  0000efc8    00000008     libclang_rt.builtins.a : aeabi_ddiv.c.obj (.text.__aeabi_ddiv_fast)
+                  0000efd0    00000008     libc.a : sscanf.c.obj (.text._uninpchar)
+                  0000efd8    00000008     app_image_store.o (.text.app_image_store_init)
+                  0000efe0    00000008     app_mpu6050_attitude.o (.text.app_mpu6050_attitude_init)
+                  0000efe8    00000008     libc.a : fseek.c.obj (.text.fseek)
+                  0000eff0    00000008     libsysbm.a : remove.c.obj (.text.remove)
+                  0000eff8    00000008     libclang_rt.builtins.a : aeabi_memcpy.S.obj (.text)
+                  0000f000    00000006     libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000f006    00000002     --HOLE-- [fill = 0]
+                  0000f008    00000010     libclang_rt.builtins.a : divsf3.S.obj (.tramp.__aeabi_fdiv.1)
+                  0000f018    00000006     libc.a : s_atan.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000f01e    00000002     --HOLE-- [fill = 0]
+                  0000f020    00000010     libclang_rt.builtins.a : adddf3.S.obj (.tramp.__aeabi_dadd.1)
+                  0000f030    00000006     libc.a : e_asin.c.obj (.text.OUTLINED_FUNCTION_2)
+                  0000f036    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_3)
+                  0000f03c    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_4)
+                  0000f042    00000006            : exit.c.obj (.text:abort)
+                  0000f048    00000004            : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000f04c    00000010     libclang_rt.builtins.a : addsf3.S.obj (.tramp.__aeabi_fadd.1)
+                  0000f05c    00000004     libc.a : e_asin.c.obj (.text.OUTLINED_FUNCTION_4)
+                  0000f060    00000004     startup_mspm0g350x_ticlang.o (.text.Reset_Handler)
+                  0000f064    00000004     libc.a : pre_init.c.obj (.text._system_pre_init)
+                  0000f068    00000008     --HOLE-- [fill = 0]
 
-.cinit     0    00012fe0    000000a0     
-                  00012fe0    0000007a     (.cinit..data.load) [load image, compression = lzss]
-                  0001305a    00000002     --HOLE-- [fill = 0]
-                  0001305c    0000000c     (__TI_handler_table)
-                  00013068    00000008     (.cinit..bss.load) [load image, compression = zero_init]
-                  00013070    00000010     (__TI_cinit_table)
+.cinit     0    00014150    000000a0     
+                  00014150    0000007b     (.cinit..data.load) [load image, compression = lzss]
+                  000141cb    00000001     --HOLE-- [fill = 0]
+                  000141cc    0000000c     (__TI_handler_table)
+                  000141d8    00000008     (.cinit..bss.load) [load image, compression = zero_init]
+                  000141e0    00000010     (__TI_cinit_table)
 
-.rodata    0    0000e0a0    00004f40     
-                  0000e0a0    000017c0     hw_lcd.o (.rodata.ascii_3216)
-                  0000f860    000011d0     hw_lcd.o (.rodata.ascii_2412)
-                  00010a30    00000bf6     inv_mpu_dmp_motion_driver.o (.rodata.dmp_memory)
-                  00011626    000005f0     hw_lcd.o (.rodata.ascii_1608)
-                  00011c16    00000474     hw_lcd.o (.rodata.ascii_1206)
-                  0001208a    00000006     libc.a : _scanfi.c.obj (.rodata._sproc_int.barr)
-                  00012090    00000400     app_image_store.o (.rodata..L.crctable)
-                  00012490    00000101     libc.a : aeabi_ctype.S.obj (.rodata:__aeabi_ctype_table_)
-                  00012591    00000092     app_mpu6050_attitude.o (.rodata.str1.17516838215580818881.1)
-                  00012623    00000090     app_car_control.o (.rodata.str1.5259596890075649042.1)
-                  000126b3    00000005     app_car_control.o (.rodata.str1.14187085924937509073.1)
-                  000126b8    00000080     libc.a : strtod.c.obj (.rodata.digits)
-                  00012738    00000077     app_car_control.o (.rodata.str1.14175076128169481003.1)
-                  000127af    0000004f     app_car_control.o (.rodata.str1.5964142759088803818.1)
-                  000127fe    00000002     ti_msp_dl_config.o (.rodata.gSPI_LCD_clockConfig)
-                  00012800    00000048     libc.a : strtod.c.obj (.rodata.powerof10)
-                  00012848    00000041     app_image_store.o (.rodata.str1.15089797052171653355.1)
-                  00012889    00000007     libc.a : _scanfi.c.obj (.rodata._sproc_int.flit)
-                  00012890    00000040            : s_atan.c.obj (.rodata.cst32)
-                  000128d0    00000040            : strtof.c.obj (.rodata.digits)
-                  00012910    00000038     app_car_control.o (.rodata.str1.11820653816532915241.1)
-                  00012948    00000030     app_image_store.o (.rodata.str1.88736359541321483.1)
-                  00012978    00000028     app_mpu6050_attitude.o (.rodata.str1.2453234728010463430.1)
-                  000129a0    00000028     inv_mpu.o (.rodata.test)
-                  000129c8    00000027     app_image_store.o (.rodata.str1.12518459513636896009.1)
-                  000129ef    00000026     inv_mpu.o (.rodata.str1.6385159555456066691.1)
-                  00012a15    00000025     app_mpu6050_attitude.o (.rodata.str1.11305671075085453862.1)
-                  00012a3a    00000002     ti_msp_dl_config.o (.rodata.gUART_DEBUGClockConfig)
-                  00012a3c    00000020     libc.a : s_atanf.c.obj (.rodata.cst16)
-                  00012a5c    0000001e     inv_mpu.o (.rodata.reg)
-                  00012a7a    0000001c     app_image_store.o (.rodata.str1.15302995582985116374.1)
-                  00012a96    0000001b     app_car_control.o (.rodata.str1.11767702346173402250.1)
-                  00012ab1    0000001b     app_car_control.o (.rodata.str1.7412545083657853309.1)
-                  00012acc    00000019     app_image_store.o (.rodata.str1.3943128210769034708.1)
-                  00012ae5    00000003     inv_mpu_dmp_motion_driver.o (.rodata..L__const.dmp_set_orientation.accel_axes)
-                  00012ae8    00000018     libc.a : strtof.c.obj (.rodata.powerof10)
-                  00012b00    00000018     app_mpu6050_attitude.o (.rodata.str1.647321615236321751.1)
-                  00012b18    00000018     app_image_store.o (.rodata.str1.7232703196782369634.1)
-                  00012b30    00000017     app_car_control.o (.rodata.str1.14718060586108094866.1)
-                  00012b47    00000017     app_image_store.o (.rodata.str1.3333276576617639139.1)
-                  00012b5e    00000016     app_image_store.o (.rodata.str1.10771746842938527832.1)
-                  00012b74    00000016     app_image_store.o (.rodata.str1.14325169853327357086.1)
-                  00012b8a    00000016     app_image_store.o (.rodata.str1.17701700798736101906.1)
-                  00012ba0    00000016     app_car_control.o (.rodata.str1.5648599197474771290.1)
-                  00012bb6    00000016     app_image_store.o (.rodata.str1.7788371886631451480.1)
-                  00012bcc    00000015     app_image_store.o (.rodata.str1.14140011708520654533.1)
-                  00012be1    00000015     app_image_store.o (.rodata.str1.5298027731853985607.1)
-                  00012bf6    00000014     app_car_control.o (.rodata.str1.11441606736553431316.1)
-                  00012c0a    00000014     app_image_store.o (.rodata.str1.18255799002341319570.1)
-                  00012c1e    00000014     app_image_store.o (.rodata.str1.3315526320607120612.1)
-                  00012c32    00000014     app_image_store.o (.rodata.str1.6620573711617949968.1)
-                  00012c46    00000013     app_image_store.o (.rodata.str1.10509079851279419267.1)
-                  00012c59    00000013     app_image_store.o (.rodata.str1.16276858914226573060.1)
-                  00012c6c    00000013     app_mpu6050_attitude.o (.rodata.str1.185286419999962137.1)
-                  00012c7f    00000012     app_image_store.o (.rodata.str1.1022218113181972255.1)
-                  00012c91    00000012     app_mpu6050_attitude.o (.rodata.str1.14496616608133864032.1)
-                  00012ca3    00000012     hw_uart.o (.rodata.str1.2093199925178161188.1)
-                  00012cb5    00000012     app_car_control.o (.rodata.str1.3663651136879122161.1)
-                  00012cc7    00000011     app_mpu6050_attitude.o (.rodata.str1.10145969503656377104.1)
-                  00012cd8    00000011     libc.a : _printfi.c.obj (.rodata.str1.10348868589481759720.1)
-                  00012ce9    00000011     app_image_store.o (.rodata.str1.13100746637483118525.1)
-                  00012cfa    00000011     app_image_store.o (.rodata.str1.14924896683467369587.1)
-                  00012d0b    00000011     libc.a : _printfi.c.obj (.rodata.str1.15363888844622738466.1)
-                  00012d1c    00000011     app_image_store.o (.rodata.str1.17058307470283294006.1)
-                  00012d2d    00000011     app_image_store.o (.rodata.str1.18007641529385435886.1)
-                  00012d3e    00000011     app_image_store.o (.rodata.str1.192982350882974882.1)
-                  00012d4f    00000011     app_image_store.o (.rodata.str1.8001765060508804488.1)
-                  00012d60    00000010     app_image_store.o (.rodata.str1.10030303806669008466.1)
-                  00012d70    00000010     app_image_store.o (.rodata.str1.1633866612525549658.1)
-                  00012d80    00000010     app_image_store.o (.rodata.str1.499212061291446025.1)
-                  00012d90    0000000f     app_image_store.o (.rodata.str1.10719668412084469107.1)
-                  00012d9f    0000000f     app_image_store.o (.rodata.str1.15254584463968736402.1)
-                  00012dae    0000000f     app_image_store.o (.rodata.str1.4896484217139496724.1)
-                  00012dbd    0000000f     app_image_store.o (.rodata.str1.675336549761521282.1)
-                  00012dcc    0000000f     app_image_store.o (.rodata.str1.7116285585965412896.1)
-                  00012ddb    0000000f     app_image_store.o (.rodata.str1.922866183752400037.1)
-                  00012dea    0000000e     app_mpu6050_attitude.o (.rodata.str1.18310685439970824587.1)
-                  00012df8    0000000e     app_image_store.o (.rodata.str1.6896973632456159792.1)
-                  00012e06    0000000e     app_image_store.o (.rodata.str1.7208172818732810984.1)
-                  00012e14    0000000d     app_car_control.o (.rodata.str1.11272716704398869594.1)
-                  00012e21    0000000d     app_car_control.o (.rodata.str1.4874208870431229975.1)
-                  00012e2e    0000000d     app_car_control.o (.rodata.str1.7569317419661685027.1)
-                  00012e3b    00000001     --HOLE-- [fill = 0]
-                  00012e3c    0000000c     inv_mpu.o (.rodata.hw)
-                  00012e48    0000000c     app_car_control.o (.rodata.str1.10416396766295915984.1)
-                  00012e54    0000000c     app_car_control.o (.rodata.str1.10986280395233754576.1)
-                  00012e60    0000000c     app_image_store.o (.rodata.str1.12458800325358982136.1)
-                  00012e6c    0000000c     app_car_control.o (.rodata.str1.16566837512891204500.1)
-                  00012e78    0000000c     app_car_control.o (.rodata.str1.26950527303777515.1)
-                  00012e84    0000000c     app_car_control.o (.rodata.str1.2882403439750828858.1)
-                  00012e90    0000000c     app_car_control.o (.rodata.str1.6493979626155181994.1)
-                  00012e9c    0000000b     main.o (.rodata.str1.17100691992556644108.1)
-                  00012ea7    0000000b     app_car_control.o (.rodata.str1.1822894261428252022.1)
-                  00012eb2    0000000b     app_image_store.o (.rodata.str1.453317182575259710.1)
-                  00012ebd    00000001     --HOLE-- [fill = 0]
-                  00012ebe    0000000a     ti_msp_dl_config.o (.rodata.gSPI_LCD_config)
-                  00012ec8    0000000a     ti_msp_dl_config.o (.rodata.gUART_DEBUGConfig)
-                  00012ed2    0000000a     ti_msp_dl_config.o (.rodata.gUART_OPENMVConfig)
-                  00012edc    0000000a     app_car_control.o (.rodata.str1.12484813675258476528.1)
-                  00012ee6    0000000a     main.o (.rodata.str1.15159059442110792349.1)
-                  00012ef0    0000000a     app_image_store.o (.rodata.str1.17298955117559882846.1)
-                  00012efa    0000000a     app_image_store.o (.rodata.str1.17518596821781156186.1)
-                  00012f04    0000000a     app_car_control.o (.rodata.str1.2972993705525450585.1)
-                  00012f0e    0000000a     app_car_control.o (.rodata.str1.6044509230432320655.1)
-                  00012f18    0000000a     app_car_control.o (.rodata.str1.9822639397776744045.1)
-                  00012f22    00000009     app_image_store.o (.rodata.str1.12600685386380521834.1)
-                  00012f2b    00000009     libc.a : _scanfi.c.obj (.rodata.str1.12964984209033246150.1)
-                  00012f34    00000009     app_image_store.o (.rodata.str1.14597090408004562942.1)
-                  00012f3d    00000009     app_car_control.o (.rodata.str1.8898464879457977813.1)
-                  00012f46    00000009     app_car_control.o (.rodata.str1.9984945524575007645.1)
-                  00012f4f    00000001     --HOLE-- [fill = 0]
-                  00012f50    00000008     ti_msp_dl_config.o (.rodata.gPWM_LEFTConfig)
-                  00012f58    00000008     ti_msp_dl_config.o (.rodata.gPWM_RIGHTConfig)
-                  00012f60    00000008     app_mpu6050_attitude.o (.rodata.str1.10592462481552837969.1)
-                  00012f68    00000008     app_car_control.o (.rodata.str1.12234416300867838885.1)
-                  00012f70    00000008     app_mpu6050_attitude.o (.rodata.str1.4290642367264271476.1)
-                  00012f78    00000008     app_image_store.o (.rodata.str1.6032708027505727261.1)
-                  00012f80    00000007     app_car_control.o (.rodata.str1.13032410439314695910.1)
-                  00012f87    00000007     app_image_store.o (.rodata.str1.13682038726605492326.1)
-                  00012f8e    00000007     main.o (.rodata.str1.8154729771448623357.1)
-                  00012f95    00000006     app_car_control.o (.rodata.str1.10099187617512664200.1)
-                  00012f9b    00000006     app_line_follow.o (.rodata.str1.13577393985823711167.1)
-                  00012fa1    00000006     app_motion_control.o (.rodata.str1.15845094093975241062.1)
-                  00012fa7    00000006     app_motion_control.o (.rodata.str1.4383496431151190140.1)
-                  00012fad    00000005     app_car_control.o (.rodata.str1.14880763104044842744.1)
-                  00012fb2    00000004     app_mpu6050_attitude.o (.rodata.str1.14209650735369554920.1)
-                  00012fb6    00000004     app_car_control.o (.rodata.str1.15872741239078135150.1)
-                  00012fba    00000004     app_car_control.o (.rodata.str1.1972896047161163948.1)
-                  00012fbe    00000004     app_mpu6050_attitude.o (.rodata.str1.2241510470943027804.1)
-                  00012fc2    00000004     app_mpu6050_attitude.o (.rodata.str1.2273788909218248888.1)
-                  00012fc6    00000004     libc.a : _scanfi.c.obj (.rodata.str1.3403580589742030990.1)
-                  00012fca    00000003     inv_mpu_dmp_motion_driver.o (.rodata..L__const.dmp_set_orientation.gyro_axes)
-                  00012fcd    00000003     ti_msp_dl_config.o (.rodata.gPWM_LEFTClockConfig)
-                  00012fd0    00000003     ti_msp_dl_config.o (.rodata.gPWM_RIGHTClockConfig)
-                  00012fd3    00000003     app_car_control.o (.rodata.str1.10785656375763943663.1)
-                  00012fd6    00000003     app_image_store.o (.rodata.str1.16994630871187842618.1)
-                  00012fd9    00000003     app_motion_control.o (.rodata.str1.825203759767528237.1)
-                  00012fdc    00000002     ti_msp_dl_config.o (.rodata.gUART_OPENMVClockConfig)
-                  00012fde    00000002     --HOLE-- [fill = 0]
+.rodata    0    0000f070    000050e0     
+                  0000f070    000017c0     hw_lcd.o (.rodata.ascii_3216)
+                  00010830    000011d0     hw_lcd.o (.rodata.ascii_2412)
+                  00011a00    00000bf6     inv_mpu_dmp_motion_driver.o (.rodata.dmp_memory)
+                  000125f6    000005f0     hw_lcd.o (.rodata.ascii_1608)
+                  00012be6    00000474     hw_lcd.o (.rodata.ascii_1206)
+                  0001305a    00000006     libc.a : _scanfi.c.obj (.rodata._sproc_int.barr)
+                  00013060    00000400     app_image_store.o (.rodata..L.crctable)
+                  00013460    00000101     libc.a : aeabi_ctype.S.obj (.rodata:__aeabi_ctype_table_)
+                  00013561    00000092     app_mpu6050_attitude.o (.rodata.str1.17516838215580818881.1)
+                  000135f3    00000090     app_car_control.o (.rodata.str1.5259596890075649042.1)
+                  00013683    00000005     app_menu.o (.rodata.str1.1152731303948041579.1)
+                  00013688    00000080     libc.a : strtod.c.obj (.rodata.digits)
+                  00013708    00000077     app_car_control.o (.rodata.str1.14175076128169481003.1)
+                  0001377f    0000004f     app_car_control.o (.rodata.str1.5964142759088803818.1)
+                  000137ce    00000002     ti_msp_dl_config.o (.rodata.gSPI_LCD_clockConfig)
+                  000137d0    00000048     libc.a : strtod.c.obj (.rodata.powerof10)
+                  00013818    00000041     app_image_store.o (.rodata.str1.3315526320607120612.1)
+                  00013859    00000007     libc.a : _scanfi.c.obj (.rodata._sproc_int.flit)
+                  00013860    00000040            : s_atan.c.obj (.rodata.cst32)
+                  000138a0    00000040            : strtof.c.obj (.rodata.digits)
+                  000138e0    00000038     app_car_control.o (.rodata.str1.11820653816532915241.1)
+                  00013918    00000030     app_menu.o (.rodata.gControlActions)
+                  00013948    00000030     app_image_store.o (.rodata.str1.7116285585965412896.1)
+                  00013978    00000028     app_mpu6050_attitude.o (.rodata.str1.2453234728010463430.1)
+                  000139a0    00000028     inv_mpu.o (.rodata.test)
+                  000139c8    00000027     app_image_store.o (.rodata.str1.1022218113181972255.1)
+                  000139ef    00000026     inv_mpu.o (.rodata.str1.6385159555456066691.1)
+                  00013a15    00000025     app_mpu6050_attitude.o (.rodata.str1.11305671075085453862.1)
+                  00013a3a    00000002     ti_msp_dl_config.o (.rodata.gUART_DEBUGClockConfig)
+                  00013a3c    00000020     libc.a : s_atanf.c.obj (.rodata.cst16)
+                  00013a5c    0000001e     inv_mpu.o (.rodata.reg)
+                  00013a7a    0000001c     app_image_store.o (.rodata.str1.14140011708520654533.1)
+                  00013a96    0000001b     app_car_control.o (.rodata.str1.11767702346173402250.1)
+                  00013ab1    0000001b     app_car_control.o (.rodata.str1.7412545083657853309.1)
+                  00013acc    00000019     app_image_store.o (.rodata.str1.88736359541321483.1)
+                  00013ae5    00000003     inv_mpu_dmp_motion_driver.o (.rodata..L__const.dmp_set_orientation.accel_axes)
+                  00013ae8    00000018     libc.a : strtof.c.obj (.rodata.powerof10)
+                  00013b00    00000018     app_image_store.o (.rodata.str1.10771746842938527832.1)
+                  00013b18    00000018     app_mpu6050_attitude.o (.rodata.str1.647321615236321751.1)
+                  00013b30    00000017     app_car_control.o (.rodata.str1.14718060586108094866.1)
+                  00013b47    00000017     app_image_store.o (.rodata.str1.7208172818732810984.1)
+                  00013b5e    00000016     app_image_store.o (.rodata.str1.14325169853327357086.1)
+                  00013b74    00000016     app_image_store.o (.rodata.str1.192982350882974882.1)
+                  00013b8a    00000016     app_image_store.o (.rodata.str1.3943128210769034708.1)
+                  00013ba0    00000016     app_car_control.o (.rodata.str1.5648599197474771290.1)
+                  00013bb6    00000016     app_image_store.o (.rodata.str1.7788371886631451480.1)
+                  00013bcc    00000015     app_image_store.o (.rodata.str1.18255799002341319570.1)
+                  00013be1    00000015     app_image_store.o (.rodata.str1.6620573711617949968.1)
+                  00013bf6    00000014     app_car_control.o (.rodata.str1.11441606736553431316.1)
+                  00013c0a    00000014     app_image_store.o (.rodata.str1.15089797052171653355.1)
+                  00013c1e    00000014     app_image_store.o (.rodata.str1.3333276576617639139.1)
+                  00013c32    00000014     app_image_store.o (.rodata.str1.7232703196782369634.1)
+                  00013c46    00000013     app_menu.o (.rodata.str1.10179918132242277246.1)
+                  00013c59    00000013     app_image_store.o (.rodata.str1.10509079851279419267.1)
+                  00013c6c    00000013     app_image_store.o (.rodata.str1.16276858914226573060.1)
+                  00013c7f    00000013     app_menu.o (.rodata.str1.17019962864983933259.1)
+                  00013c92    00000013     app_mpu6050_attitude.o (.rodata.str1.185286419999962137.1)
+                  00013ca5    00000012     app_mpu6050_attitude.o (.rodata.str1.14496616608133864032.1)
+                  00013cb7    00000012     hw_uart.o (.rodata.str1.2093199925178161188.1)
+                  00013cc9    00000012     app_car_control.o (.rodata.str1.3663651136879122161.1)
+                  00013cdb    00000012     app_image_store.o (.rodata.str1.5298027731853985607.1)
+                  00013ced    00000011     app_mpu6050_attitude.o (.rodata.str1.10145969503656377104.1)
+                  00013cfe    00000011     libc.a : _printfi.c.obj (.rodata.str1.10348868589481759720.1)
+                  00013d0f    00000011     app_image_store.o (.rodata.str1.13100746637483118525.1)
+                  00013d20    00000011     app_image_store.o (.rodata.str1.14924896683467369587.1)
+                  00013d31    00000011     libc.a : _printfi.c.obj (.rodata.str1.15363888844622738466.1)
+                  00013d42    00000011     app_image_store.o (.rodata.str1.18007641529385435886.1)
+                  00013d53    00000011     app_menu.o (.rodata.str1.2227258521325309534.1)
+                  00013d64    00000011     app_image_store.o (.rodata.str1.499212061291446025.1)
+                  00013d75    00000011     app_image_store.o (.rodata.str1.6896973632456159792.1)
+                  00013d86    00000011     app_menu.o (.rodata.str1.7531628254874797983.1)
+                  00013d97    00000011     app_image_store.o (.rodata.str1.8001765060508804488.1)
+                  00013da8    00000010     app_image_store.o (.rodata.str1.10030303806669008466.1)
+                  00013db8    00000010     app_menu.o (.rodata.str1.14126570398133045751.1)
+                  00013dc8    00000010     app_image_store.o (.rodata.str1.1633866612525549658.1)
+                  00013dd8    00000010     app_menu.o (.rodata.str1.17095892086526201591.1)
+                  00013de8    00000010     app_menu.o (.rodata.str1.236204657446602858.1)
+                  00013df8    00000010     app_menu.o (.rodata.str1.2502805813946034081.1)
+                  00013e08    00000010     app_image_store.o (.rodata.str1.4953579345119954976.1)
+                  00013e18    0000000f     app_image_store.o (.rodata.str1.10719668412084469107.1)
+                  00013e27    0000000f     app_image_store.o (.rodata.str1.15254584463968736402.1)
+                  00013e36    0000000f     app_image_store.o (.rodata.str1.17058307470283294006.1)
+                  00013e45    0000000f     app_image_store.o (.rodata.str1.4896484217139496724.1)
+                  00013e54    0000000f     app_image_store.o (.rodata.str1.675336549761521282.1)
+                  00013e63    0000000f     app_menu.o (.rodata.str1.7701684975333963447.1)
+                  00013e72    0000000f     app_image_store.o (.rodata.str1.922866183752400037.1)
+                  00013e81    0000000f     app_menu.o (.rodata.str1.9507348189867938020.1)
+                  00013e90    0000000e     app_image_store.o (.rodata.str1.12518459513636896009.1)
+                  00013e9e    0000000e     app_menu.o (.rodata.str1.12774373472051410650.1)
+                  00013eac    0000000e     app_image_store.o (.rodata.str1.17701700798736101906.1)
+                  00013eba    0000000e     app_mpu6050_attitude.o (.rodata.str1.18310685439970824587.1)
+                  00013ec8    0000000d     app_car_control.o (.rodata.str1.11272716704398869594.1)
+                  00013ed5    0000000d     app_menu.o (.rodata.str1.13024445473359218120.1)
+                  00013ee2    0000000d     app_menu.o (.rodata.str1.13291200952344795083.1)
+                  00013eef    0000000d     app_menu.o (.rodata.str1.16205392958640528880.1)
+                  00013efc    0000000d     app_car_control.o (.rodata.str1.4874208870431229975.1)
+                  00013f09    0000000d     app_menu.o (.rodata.str1.5248584222339851319.1)
+                  00013f16    0000000d     app_car_control.o (.rodata.str1.7569317419661685027.1)
+                  00013f23    00000001     --HOLE-- [fill = 0]
+                  00013f24    0000000c     inv_mpu.o (.rodata.hw)
+                  00013f30    0000000c     app_car_control.o (.rodata.str1.10416396766295915984.1)
+                  00013f3c    0000000c     app_car_control.o (.rodata.str1.10986280395233754576.1)
+                  00013f48    0000000c     app_image_store.o (.rodata.str1.12458800325358982136.1)
+                  00013f54    0000000c     app_menu.o (.rodata.str1.14486978520946485314.1)
+                  00013f60    0000000c     app_car_control.o (.rodata.str1.16566837512891204500.1)
+                  00013f6c    0000000c     app_car_control.o (.rodata.str1.26950527303777515.1)
+                  00013f78    0000000c     app_car_control.o (.rodata.str1.2882403439750828858.1)
+                  00013f84    0000000c     app_car_control.o (.rodata.str1.6493979626155181994.1)
+                  00013f90    0000000c     app_menu.o (.rodata.str1.8365603212124221852.1)
+                  00013f9c    0000000b     main.o (.rodata.str1.17100691992556644108.1)
+                  00013fa7    0000000b     app_car_control.o (.rodata.str1.1822894261428252022.1)
+                  00013fb2    0000000b     app_image_store.o (.rodata.str1.453317182575259710.1)
+                  00013fbd    00000001     --HOLE-- [fill = 0]
+                  00013fbe    0000000a     ti_msp_dl_config.o (.rodata.gSPI_LCD_config)
+                  00013fc8    0000000a     ti_msp_dl_config.o (.rodata.gUART_DEBUGConfig)
+                  00013fd2    0000000a     ti_msp_dl_config.o (.rodata.gUART_OPENMVConfig)
+                  00013fdc    0000000a     app_car_control.o (.rodata.str1.12484813675258476528.1)
+                  00013fe6    0000000a     main.o (.rodata.str1.15159059442110792349.1)
+                  00013ff0    0000000a     app_image_store.o (.rodata.str1.17298955117559882846.1)
+                  00013ffa    0000000a     app_image_store.o (.rodata.str1.17518596821781156186.1)
+                  00014004    0000000a     app_car_control.o (.rodata.str1.2972993705525450585.1)
+                  0001400e    0000000a     app_car_control.o (.rodata.str1.6044509230432320655.1)
+                  00014018    0000000a     app_menu.o (.rodata.str1.7877668351663821929.1)
+                  00014022    0000000a     app_menu.o (.rodata.str1.8374456079885623809.1)
+                  0001402c    0000000a     app_menu.o (.rodata.str1.8587423524971408815.1)
+                  00014036    0000000a     app_car_control.o (.rodata.str1.9822639397776744045.1)
+                  00014040    00000009     app_image_store.o (.rodata.str1.12600685386380521834.1)
+                  00014049    00000009     libc.a : _scanfi.c.obj (.rodata.str1.12964984209033246150.1)
+                  00014052    00000009     app_image_store.o (.rodata.str1.14597090408004562942.1)
+                  0001405b    00000009     app_menu.o (.rodata.str1.7729255960333412300.1)
+                  00014064    00000009     app_car_control.o (.rodata.str1.8898464879457977813.1)
+                  0001406d    00000009     app_car_control.o (.rodata.str1.9984945524575007645.1)
+                  00014076    00000002     ti_msp_dl_config.o (.rodata.gUART_OPENMVClockConfig)
+                  00014078    00000008     ti_msp_dl_config.o (.rodata.gPWM_LEFTConfig)
+                  00014080    00000008     ti_msp_dl_config.o (.rodata.gPWM_RIGHTConfig)
+                  00014088    00000008     app_mpu6050_attitude.o (.rodata.str1.10592462481552837969.1)
+                  00014090    00000008     app_menu.o (.rodata.str1.11932593214074061278.1)
+                  00014098    00000008     app_car_control.o (.rodata.str1.12234416300867838885.1)
+                  000140a0    00000008     app_mpu6050_attitude.o (.rodata.str1.4290642367264271476.1)
+                  000140a8    00000008     app_menu.o (.rodata.str1.5986042308352981742.1)
+                  000140b0    00000008     app_image_store.o (.rodata.str1.6032708027505727261.1)
+                  000140b8    00000007     app_car_control.o (.rodata.str1.13032410439314695910.1)
+                  000140bf    00000007     app_image_store.o (.rodata.str1.13682038726605492326.1)
+                  000140c6    00000007     app_menu.o (.rodata.str1.14706561077188554416.1)
+                  000140cd    00000007     app_menu.o (.rodata.str1.1551400316678538729.1)
+                  000140d4    00000007     app_menu.o (.rodata.str1.2963573859074234144.1)
+                  000140db    00000007     app_menu.o (.rodata.str1.5646529578594857381.1)
+                  000140e2    00000007     main.o (.rodata.str1.8154729771448623357.1)
+                  000140e9    00000007     app_menu.o (.rodata.str1.888971180331502718.1)
+                  000140f0    00000006     app_car_control.o (.rodata.str1.10099187617512664200.1)
+                  000140f6    00000006     app_line_follow.o (.rodata.str1.13577393985823711167.1)
+                  000140fc    00000006     app_menu.o (.rodata.str1.15264288196382591912.1)
+                  00014102    00000006     app_motion_control.o (.rodata.str1.15845094093975241062.1)
+                  00014108    00000006     app_motion_control.o (.rodata.str1.4383496431151190140.1)
+                  0001410e    00000006     app_menu.o (.rodata.str1.8778062457141544432.1)
+                  00014114    00000005     app_car_control.o (.rodata.str1.14187085924937509073.1)
+                  00014119    00000005     app_car_control.o (.rodata.str1.14880763104044842744.1)
+                  0001411e    00000005     app_menu.o (.rodata.str1.17370931082652322430.1)
+                  00014123    00000004     app_mpu6050_attitude.o (.rodata.str1.14209650735369554920.1)
+                  00014127    00000004     app_car_control.o (.rodata.str1.15872741239078135150.1)
+                  0001412b    00000004     app_car_control.o (.rodata.str1.1972896047161163948.1)
+                  0001412f    00000004     app_mpu6050_attitude.o (.rodata.str1.2241510470943027804.1)
+                  00014133    00000004     app_mpu6050_attitude.o (.rodata.str1.2273788909218248888.1)
+                  00014137    00000004     libc.a : _scanfi.c.obj (.rodata.str1.3403580589742030990.1)
+                  0001413b    00000003     inv_mpu_dmp_motion_driver.o (.rodata..L__const.dmp_set_orientation.gyro_axes)
+                  0001413e    00000003     ti_msp_dl_config.o (.rodata.gPWM_LEFTClockConfig)
+                  00014141    00000003     ti_msp_dl_config.o (.rodata.gPWM_RIGHTClockConfig)
+                  00014144    00000003     app_car_control.o (.rodata.str1.10785656375763943663.1)
+                  00014147    00000003     app_image_store.o (.rodata.str1.16994630871187842618.1)
+                  0001414a    00000003     app_motion_control.o (.rodata.str1.825203759767528237.1)
+                  0001414d    00000003     --HOLE-- [fill = 0]
 
 .init_array 
 *          0    00000000    00000000     UNINITIALIZED
 
 .binit     0    00000000    00000000     
 
-.bss       0    20200000    00002a18     UNINITIALIZED
+.bss       0    20200000    00002a48     UNINITIALIZED
                   20200000    00001680     app_image_store.o (.bss.gIndexCompactEntries)
                   20201680    00000800     hw_uart.o (.bss.gUartTxBuffer)
                   20201e80    00000400     hw_uart.o (.bss.gUartRxBuffer)
@@ -510,115 +548,127 @@ section   page    origin      length       input sections
                   20202878    00000028     (.common:gSPI_LCDBackup)
                   202028a0    00000024     app_car_control.o (.bss.gLeftSpeedPid)
                   202028c4    00000024     app_car_control.o (.bss.gRightSpeedPid)
-                  202028e8    00000020     hw_openmv_uart.o (.bss.uart_openmv_read_line.rxLine)
-                  20202908    00000010     app_image_store.o (.bss.gFileName)
-                  20202918    00000008     libsysbm.a : hostopen.c.obj (.bss.parmbuf)
-                  20202920    00000004     app_mpu6050_attitude.o (.bss.gAccelFallbackCount)
-                  20202924    00000004     app_mpu6050_attitude.o (.bss.gAccelReadFailCount)
-                  20202928    00000004     app_motion_control.o (.bss.gAngularSpeedDegS)
-                  2020292c    00000004     app_image_store.o (.bss.gDataAddress)
-                  20202930    00000004     app_mpu6050_attitude.o (.bss.gDmpReadFailCount)
-                  20202934    00000004     app_image_store.o (.bss.gExpectedCrc)
-                  20202938    00000004     app_image_store.o (.bss.gExpectedSize)
-                  2020293c    00000004     bsp_mpu6050.o (.bss.gFallbackLastMs)
-                  20202940    00000004     bsp_mpu6050.o (.bss.gFallbackYaw)
-                  20202944    00000004     app_car_control.o (.bss.gFilteredLeftSpeed)
-                  20202948    00000004     app_car_control.o (.bss.gFilteredRightSpeed)
-                  2020294c    00000004     bsp_mpu6050.o (.bss.gGyroZBias)
-                  20202950    00000004     app_car_control.o (.bss.gLTurnDirection)
-                  20202954    00000004     app_car_control.o (.bss.gLTurnStartLeftCount)
-                  20202958    00000004     app_car_control.o (.bss.gLTurnStartRightCount)
-                  2020295c    00000004     app_car_control.o (.bss.gLTurnTargetCounts)
-                  20202960    00000004     app_car_control.o (.bss.gLastLeftDelta)
-                  20202964    00000004     app_car_control.o (.bss.gLastLeftOutput)
-                  20202968    00000004     app_car_control.o (.bss.gLastLeftTargetSpeed)
-                  2020296c    00000004     app_line_follow.o (.bss.gLastLineMs)
-                  20202970    00000004     app_car_control.o (.bss.gLastPidError)
-                  20202974    00000004     app_car_control.o (.bss.gLastRightDelta)
-                  20202978    00000004     app_car_control.o (.bss.gLastRightOutput)
-                  2020297c    00000004     app_car_control.o (.bss.gLastRightTargetSpeed)
-                  20202980    00000004     app_car_control.o (.bss.gLastUpdateMs)
-                  20202984    00000004     hw_encoder.o (.bss.gLeftEncoderCount)
-                  20202988    00000004     app_line_follow.o (.bss.gLineError)
-                  2020298c    00000004     app_car_control.o (.bss.gLineFollowResumeMs)
-                  20202990    00000004     app_motion_control.o (.bss.gLinearSpeedMmS)
-                  20202994    00000004     app_car_control.o (.bss.gManualLeftDutyPercent)
-                  20202998    00000004     app_car_control.o (.bss.gManualPulseStopMs)
-                  2020299c    00000004     app_car_control.o (.bss.gManualRightDutyPercent)
-                  202029a0    00000004     hw_openmv_uart.o (.bss.gOpenmvRxDroppedBytes)
-                  202029a4    00000004     app_car_control.o (.bss.gPreviousLeftCount)
-                  202029a8    00000004     app_car_control.o (.bss.gPreviousRightCount)
-                  202029ac    00000004     app_image_store.o (.bss.gReceivedSize)
-                  202029b0    00000004     hw_encoder.o (.bss.gRightEncoderCount)
-                  202029b4    00000004     app_image_store.o (.bss.gRunningCrc)
-                  202029b8    00000004     app_image_store.o (.bss.gRxLength)
-                  202029bc    00000004     app_car_control.o (.bss.gSpeedTargetCounts)
-                  202029c0    00000004     app_motion_control.o (.bss.gStartLeftCount)
-                  202029c4    00000004     app_motion_control.o (.bss.gStartRightCount)
-                  202029c8    00000004     main.o (.bss.gSysTickMs)
-                  202029cc    00000004     app_motion_control.o (.bss.gTargetCounts)
-                  202029d0    00000004     app_car_control.o (.bss.gTargetManualLeftDutyPercent)
-                  202029d4    00000004     app_car_control.o (.bss.gTargetManualRightDutyPercent)
-                  202029d8    00000004     app_car_control.o (.bss.gTargetSpeedCounts)
-                  202029dc    00000004     hw_uart.o (.bss.gUartRxDroppedBytes)
-                  202029e0    00000004     hw_uart.o (.bss.gUartTxDroppedBytes)
-                  202029e4    00000004     app_image_store.o (.bss.gWriteAddress)
-                  202029e8    00000004     libc.a : memory.c.obj (.bss.sys_free)
-                  202029ec    00000004     hw_uart.o (.bss.uart_debug_read_line.rxIndex)
-                  202029f0    00000004     hw_openmv_uart.o (.bss.uart_openmv_read_line.rxIndex)
-                  202029f4    00000002     bsp_mpu6050.o (.bss.gGyroZBiasSamples)
-                  202029f6    00000002     app_image_store.o (.bss.gHeight)
-                  202029f8    00000002     hw_openmv_uart.o (.bss.gOpenmvRxHead)
-                  202029fa    00000002     hw_openmv_uart.o (.bss.gOpenmvRxTail)
-                  202029fc    00000002     hw_uart.o (.bss.gUartRxHead)
-                  202029fe    00000002     hw_uart.o (.bss.gUartRxTail)
-                  20202a00    00000002     hw_uart.o (.bss.gUartTxHead)
-                  20202a02    00000002     hw_uart.o (.bss.gUartTxTail)
-                  20202a04    00000002     app_image_store.o (.bss.gWidth)
-                  20202a06    00000001     main.o (.bss.gAttitudeUpdatePending)
-                  20202a07    00000001     app_motion_control.o (.bss.gBusy)
-                  20202a08    00000001     main.o (.bss.gControlUpdatePending)
-                  20202a09    00000001     bsp_mpu6050.o (.bss.gFallbackYawValid)
-                  20202a0a    00000001     app_image_store.o (.bss.gFileId)
-                  20202a0b    00000001     main.o (.bss.gHeartbeatUpdatePending)
-                  20202a0c    00000001     app_car_control.o (.bss.gLTurnActive)
-                  20202a0d    00000001     bsp_mpu6050.o (.bss.gLastDmpError)
-                  20202a0e    00000001     bsp_mpu6050.o (.bss.gLastDmpInitError)
-                  20202a0f    00000001     app_line_follow.o (.bss.gLineEnabled)
-                  20202a10    00000001     app_line_follow.o (.bss.gLineValid)
-                  20202a11    00000001     app_car_control.o (.bss.gManualMotorMode)
-                  20202a12    00000001     app_motion_control.o (.bss.gMode)
-                  20202a13    00000001     app_mpu6050_attitude.o (.bss.gMpu6050Ready)
-                  20202a14    00000001     app_image_store.o (.bss.gReceiving)
-                  20202a15    00000001     main.o (.bss.gStatusLedUpdatePending)
-                  20202a16    00000001     app_car_control.o (.bss.gTelemetryEnabled)
-                  20202a17    00000001     main.o (.bss.gTelemetryUpdatePending)
+                  202028e8    00000020     app_menu.o (.bss.gMessage)
+                  20202908    00000020     hw_openmv_uart.o (.bss.uart_openmv_read_line.rxLine)
+                  20202928    00000010     app_image_store.o (.bss.gFileName)
+                  20202938    00000008     libsysbm.a : hostopen.c.obj (.bss.parmbuf)
+                  20202940    00000004     app_mpu6050_attitude.o (.bss.gAccelFallbackCount)
+                  20202944    00000004     app_mpu6050_attitude.o (.bss.gAccelReadFailCount)
+                  20202948    00000004     app_motion_control.o (.bss.gAngularSpeedDegS)
+                  2020294c    00000004     app_menu.o (.bss.gBackOkKey.2)
+                  20202950    00000004     app_image_store.o (.bss.gDataAddress)
+                  20202954    00000004     app_mpu6050_attitude.o (.bss.gDmpReadFailCount)
+                  20202958    00000004     app_image_store.o (.bss.gExpectedCrc)
+                  2020295c    00000004     app_image_store.o (.bss.gExpectedSize)
+                  20202960    00000004     bsp_mpu6050.o (.bss.gFallbackLastMs)
+                  20202964    00000004     bsp_mpu6050.o (.bss.gFallbackYaw)
+                  20202968    00000004     app_car_control.o (.bss.gFilteredLeftSpeed)
+                  2020296c    00000004     app_car_control.o (.bss.gFilteredRightSpeed)
+                  20202970    00000004     bsp_mpu6050.o (.bss.gGyroZBias)
+                  20202974    00000004     app_car_control.o (.bss.gLTurnDirection)
+                  20202978    00000004     app_car_control.o (.bss.gLTurnStartLeftCount)
+                  2020297c    00000004     app_car_control.o (.bss.gLTurnStartRightCount)
+                  20202980    00000004     app_car_control.o (.bss.gLTurnTargetCounts)
+                  20202984    00000004     app_car_control.o (.bss.gLastLeftDelta)
+                  20202988    00000004     app_car_control.o (.bss.gLastLeftOutput)
+                  2020298c    00000004     app_car_control.o (.bss.gLastLeftTargetSpeed)
+                  20202990    00000004     app_line_follow.o (.bss.gLastLineMs)
+                  20202994    00000004     app_car_control.o (.bss.gLastPidError)
+                  20202998    00000004     app_car_control.o (.bss.gLastRightDelta)
+                  2020299c    00000004     app_car_control.o (.bss.gLastRightOutput)
+                  202029a0    00000004     app_car_control.o (.bss.gLastRightTargetSpeed)
+                  202029a4    00000004     app_menu.o (.bss.gLastStatusRefreshMs)
+                  202029a8    00000004     app_car_control.o (.bss.gLastUpdateMs)
+                  202029ac    00000004     hw_encoder.o (.bss.gLeftEncoderCount)
+                  202029b0    00000004     app_line_follow.o (.bss.gLineError)
+                  202029b4    00000004     app_car_control.o (.bss.gLineFollowResumeMs)
+                  202029b8    00000004     app_motion_control.o (.bss.gLinearSpeedMmS)
+                  202029bc    00000004     app_car_control.o (.bss.gManualLeftDutyPercent)
+                  202029c0    00000004     app_car_control.o (.bss.gManualPulseStopMs)
+                  202029c4    00000004     app_car_control.o (.bss.gManualRightDutyPercent)
+                  202029c8    00000004     hw_openmv_uart.o (.bss.gOpenmvRxDroppedBytes)
+                  202029cc    00000004     app_car_control.o (.bss.gPreviousLeftCount)
+                  202029d0    00000004     app_car_control.o (.bss.gPreviousRightCount)
+                  202029d4    00000004     app_image_store.o (.bss.gReceivedSize)
+                  202029d8    00000004     hw_encoder.o (.bss.gRightEncoderCount)
+                  202029dc    00000004     app_image_store.o (.bss.gRunningCrc)
+                  202029e0    00000004     app_image_store.o (.bss.gRxLength)
+                  202029e4    00000004     app_car_control.o (.bss.gSpeedTargetCounts)
+                  202029e8    00000004     app_motion_control.o (.bss.gStartLeftCount)
+                  202029ec    00000004     app_motion_control.o (.bss.gStartRightCount)
+                  202029f0    00000004     main.o (.bss.gSysTickMs)
+                  202029f4    00000004     app_motion_control.o (.bss.gTargetCounts)
+                  202029f8    00000004     app_car_control.o (.bss.gTargetManualLeftDutyPercent)
+                  202029fc    00000004     app_car_control.o (.bss.gTargetManualRightDutyPercent)
+                  20202a00    00000004     app_car_control.o (.bss.gTargetSpeedCounts)
+                  20202a04    00000004     hw_uart.o (.bss.gUartRxDroppedBytes)
+                  20202a08    00000004     hw_uart.o (.bss.gUartTxDroppedBytes)
+                  20202a0c    00000004     app_image_store.o (.bss.gWriteAddress)
+                  20202a10    00000004     libc.a : memory.c.obj (.bss.sys_free)
+                  20202a14    00000004     hw_uart.o (.bss.uart_debug_read_line.rxIndex)
+                  20202a18    00000004     hw_openmv_uart.o (.bss.uart_openmv_read_line.rxIndex)
+                  20202a1c    00000002     bsp_mpu6050.o (.bss.gGyroZBiasSamples)
+                  20202a1e    00000002     app_image_store.o (.bss.gHeight)
+                  20202a20    00000002     hw_openmv_uart.o (.bss.gOpenmvRxHead)
+                  20202a22    00000002     hw_openmv_uart.o (.bss.gOpenmvRxTail)
+                  20202a24    00000002     hw_uart.o (.bss.gUartRxHead)
+                  20202a26    00000002     hw_uart.o (.bss.gUartRxTail)
+                  20202a28    00000002     hw_uart.o (.bss.gUartTxHead)
+                  20202a2a    00000002     hw_uart.o (.bss.gUartTxTail)
+                  20202a2c    00000002     app_image_store.o (.bss.gWidth)
+                  20202a2e    00000001     app_menu.o (.bss.app_menu_update.previousDownPressed)
+                  20202a2f    00000001     app_menu.o (.bss.app_menu_update.previousUpPressed)
+                  20202a30    00000001     main.o (.bss.gAttitudeUpdatePending)
+                  20202a31    00000001     app_menu.o (.bss.gBackOkKey.1)
+                  20202a32    00000001     app_motion_control.o (.bss.gBusy)
+                  20202a33    00000001     app_menu.o (.bss.gControlSelected)
+                  20202a34    00000001     app_menu.o (.bss.gBackOkKey.0)
+                  20202a35    00000001     main.o (.bss.gControlUpdatePending)
+                  20202a36    00000001     bsp_mpu6050.o (.bss.gFallbackYawValid)
+                  20202a37    00000001     app_image_store.o (.bss.gFileId)
+                  20202a38    00000001     app_menu.o (.bss.gFileSelected)
+                  20202a39    00000001     main.o (.bss.gHeartbeatUpdatePending)
+                  20202a3a    00000001     app_car_control.o (.bss.gLTurnActive)
+                  20202a3b    00000001     bsp_mpu6050.o (.bss.gLastDmpError)
+                  20202a3c    00000001     bsp_mpu6050.o (.bss.gLastDmpInitError)
+                  20202a3d    00000001     app_line_follow.o (.bss.gLineEnabled)
+                  20202a3e    00000001     app_line_follow.o (.bss.gLineValid)
+                  20202a3f    00000001     app_car_control.o (.bss.gManualMotorMode)
+                  20202a40    00000001     main.o (.bss.gMenuUpdatePending)
+                  20202a41    00000001     app_motion_control.o (.bss.gMode)
+                  20202a42    00000001     app_mpu6050_attitude.o (.bss.gMpu6050Ready)
+                  20202a43    00000001     app_image_store.o (.bss.gReceiving)
+                  20202a44    00000001     app_menu.o (.bss.gRootSelected)
+                  20202a45    00000001     main.o (.bss.gStatusLedUpdatePending)
+                  20202a46    00000001     app_car_control.o (.bss.gTelemetryEnabled)
+                  20202a47    00000001     main.o (.bss.gTelemetryUpdatePending)
 
-.sysmem    0    20202a18    00000800     UNINITIALIZED
-                  20202a18    00000010     libc.a : memory.c.obj (.sysmem)
-                  20202a28    000007f0     --HOLE--
+.sysmem    0    20202a48    00000800     UNINITIALIZED
+                  20202a48    00000010     libc.a : memory.c.obj (.sysmem)
+                  20202a58    000007f0     --HOLE--
 
-.data      0    20203218    00000219     UNINITIALIZED
-                  20203218    000000f0     libc.a : defs.c.obj (.data._ftable)
-                  20203308    00000078     libsysbm.a : host_device.c.obj (.data._device)
-                  20203380    00000050                : host_device.c.obj (.data._stream)
-                  202033d0    0000002c     inv_mpu.o (.data.st)
-                  202033fc    00000009     inv_mpu.o (.data.gyro_orientation)
-                  20203405    00000001     --HOLE--
-                  20203406    00000002     inv_mpu_dmp_motion_driver.o (.data.dmp.3)
-                  20203408    00000008     libc.a : exit.c.obj (.data..L_MergedGlobals)
-                  20203410    00000004            : defs.c.obj (.data.__TI_ft_end)
-                  20203414    00000004            : aeabi_portable.c.obj (.data.__aeabi_errno)
-                  20203418    00000004            : _lock.c.obj (.data._lock)
-                  2020341c    00000004            : _lock.c.obj (.data._unlock)
-                  20203420    00000004     inv_mpu_dmp_motion_driver.o (.data.dmp.0)
-                  20203424    00000004     inv_mpu_dmp_motion_driver.o (.data.dmp.1)
-                  20203428    00000002     inv_mpu_dmp_motion_driver.o (.data.dmp.2)
-                  2020342a    00000001     inv_mpu_dmp_motion_driver.o (.data.dmp.5)
-                  2020342b    00000001     --HOLE--
-                  2020342c    00000002     inv_mpu_dmp_motion_driver.o (.data.dmp.4)
-                  2020342e    00000002     --HOLE--
-                  20203430    00000001     libc.a : memory.c.obj (.data.memory_is_initialized)
+.data      0    20203248    00000219     UNINITIALIZED
+                  20203248    000000f0     libc.a : defs.c.obj (.data._ftable)
+                  20203338    00000078     libsysbm.a : host_device.c.obj (.data._device)
+                  202033b0    00000050                : host_device.c.obj (.data._stream)
+                  20203400    0000002c     inv_mpu.o (.data.st)
+                  2020342c    00000009     inv_mpu.o (.data.gyro_orientation)
+                  20203435    00000001     app_menu.o (.data.gDirty)
+                  20203436    00000002     inv_mpu_dmp_motion_driver.o (.data.dmp.3)
+                  20203438    00000008     libc.a : exit.c.obj (.data..L_MergedGlobals)
+                  20203440    00000004            : defs.c.obj (.data.__TI_ft_end)
+                  20203444    00000004            : aeabi_portable.c.obj (.data.__aeabi_errno)
+                  20203448    00000004            : _lock.c.obj (.data._lock)
+                  2020344c    00000004            : _lock.c.obj (.data._unlock)
+                  20203450    00000004     inv_mpu_dmp_motion_driver.o (.data.dmp.0)
+                  20203454    00000004     inv_mpu_dmp_motion_driver.o (.data.dmp.1)
+                  20203458    00000002     inv_mpu_dmp_motion_driver.o (.data.dmp.2)
+                  2020345a    00000001     inv_mpu_dmp_motion_driver.o (.data.dmp.5)
+                  2020345b    00000001     app_menu.o (.data.gPage)
+                  2020345c    00000002     inv_mpu_dmp_motion_driver.o (.data.dmp.4)
+                  2020345e    00000001     app_menu.o (.data.gRenderedPage)
+                  2020345f    00000001     app_menu.o (.data.gReturnPage)
+                  20203460    00000001     libc.a : memory.c.obj (.data.memory_is_initialized)
 
 .stack     0    20207e00    00000200     UNINITIALIZED
                   20207e00    00000004     libc.a : boot_cortex_m.c.obj (.stack)
@@ -635,20 +685,21 @@ MODULE SUMMARY
        Module                         code    ro data   rw data
        ------                         ----    -------   -------
     .\
-       ti_msp_dl_config.o             1028    58        416    
-       main.o                         636     28        9      
+       ti_msp_dl_config.o             1048    58        416    
+       main.o                         688     28        10     
        startup_mspm0g350x_ticlang.o   6       192       0      
     +--+------------------------------+-------+---------+---------+
-       Total:                         1670    278       425    
+       Total:                         1742    278       426    
                                                                
     .\app\
-       app_image_store.o              6488    1869      6322   
+       app_image_store.o              7284    1869      6322   
        app_car_control.o              5410    757       171    
+       app_menu.o                     3184    416       51     
        app_motion_control.o           1396    15        22     
        app_mpu6050_attitude.o         796     343       13     
        app_line_follow.o              412     6         10     
     +--+------------------------------+-------+---------+---------+
-       Total:                         14502   2990      6538   
+       Total:                         18482   3406      6589   
                                                                
     .\bsp\
        bsp_tb6612.o                   360     0         0      
@@ -788,21 +839,21 @@ MODULE SUMMARY
                                                                
        Heap:                          0       0         2048   
        Stack:                         0       0         512    
-       Linker Generated:              0       158       0      
+       Linker Generated:              0       159       0      
     +--+------------------------------+-------+---------+---------+
-       Grand Total:                   57270   20633     13869  
+       Grand Total:                   61322   21050     13921  
 
 
 LINKER GENERATED COPY TABLES
 
-__TI_cinit_table @ 00013070 records: 2, size/record: 8, table size: 16
-	.data: load addr=00012fe0, load size=0000007a bytes, run addr=20203218, run size=00000219 bytes, compression=lzss
-	.bss: load addr=00013068, load size=00000008 bytes, run addr=20200000, run size=00002a18 bytes, compression=zero_init
+__TI_cinit_table @ 000141e0 records: 2, size/record: 8, table size: 16
+	.data: load addr=00014150, load size=0000007b bytes, run addr=20203248, run size=00000219 bytes, compression=lzss
+	.bss: load addr=000141d8, load size=00000008 bytes, run addr=20200000, run size=00002a48 bytes, compression=zero_init
 
 
 LINKER GENERATED HANDLER TABLE
 
-__TI_handler_table @ 0001305c records: 3, size/record: 4, table size: 12
+__TI_handler_table @ 000141cc records: 3, size/record: 4, table size: 12
 	index: 0, handler: __TI_decompress_lzss
 	index: 1, handler: __TI_decompress_none
 	index: 2, handler: __TI_zero_init
@@ -814,14 +865,14 @@ callee name               trampoline name
    callee addr  tramp addr   call addr  call info
 --------------  -----------  ---------  ----------------
 __aeabi_dcmpeq            $Tramp$TT$L$PI$$__aeabi_dcmpeq
-   0000cda9     0000dfc0     0000dfbc   libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
+   0000dd75     0000ef98     0000ef94   libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
 __aeabi_fdiv              $Tramp$TT$L$PI$$__aeabi_fdiv
-   0000bf89     0000e030     0000e02c   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
+   0000cee9     0000f008     0000f004   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
 __aeabi_dadd              $Tramp$TT$L$PI$$__aeabi_dadd
-   0000884b     0000e048     0000e044   libc.a : s_atan.c.obj (.text.OUTLINED_FUNCTION_1)
-                             0000e08a          : e_asin.c.obj (.text.OUTLINED_FUNCTION_4)
+   0000961b     0000f020     0000f01c   libc.a : s_atan.c.obj (.text.OUTLINED_FUNCTION_1)
+                             0000f05e          : e_asin.c.obj (.text.OUTLINED_FUNCTION_4)
 __aeabi_fadd              $Tramp$TT$L$PI$$__aeabi_fadd
-   0000ae6b     0000e078     0000e076   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
+   0000bd33     0000f04c     0000f04a   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
 
 [4 trampolines]
 [5 trampoline calls]
@@ -831,79 +882,79 @@ GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name
 
 address   name                                
 -------   ----                                
-000089d3  ADC0_IRQHandler                     
-000089d3  ADC1_IRQHandler                     
-000089d3  AES_IRQHandler                      
-0000ce61  AO_Control                          
-0000cbd5  BO_Control                          
-0000e070  C$$EXIT                             
-0000d705  C$$IO$$                             
-000089d3  CANFD0_IRQHandler                   
-000089d3  DAC0_IRQHandler                     
-0000df2d  DL_Common_delayCycles               
-0000d341  DL_SPI_init                         
-0000dda1  DL_SPI_setClockConfig               
-0000a541  DL_Timer_initFourCCPWMMode          
-0000dbd1  DL_Timer_setCaptCompUpdateMethod    
-0000dce9  DL_Timer_setCaptureCompareOutCtl    
-0000ddd9  DL_Timer_setCaptureCompareValue     
-0000dbed  DL_Timer_setClockConfig             
-0000d191  DL_UART_init                        
-0000dc09  DL_UART_receiveDataCheck            
-0000ddb3  DL_UART_setClockConfig              
-0000dc25  DL_UART_transmitDataCheck           
-000089d3  DMA_IRQHandler                      
-000089d3  Default_Handler                     
-000089d3  GROUP0_IRQHandler                   
-0000df97  GROUP1_IRQHandler                   
-0000d1d9  HOSTclose                           
-0000e071  HOSTexit                            
-0000c615  HOSTlseek                           
-0000cc95  HOSTopen                            
-0000ceb9  HOSTread                            
-0000c681  HOSTrename                          
-0000d221  HOSTunlink                          
-0000cf11  HOSTwrite                           
-000089d3  HardFault_Handler                   
-000089d3  I2C0_IRQHandler                     
-000089d3  I2C1_IRQHandler                     
-0000b495  LCD_Address_Set                     
-000047ad  LCD_Fill                            
-00003e01  LCD_ShowChar                        
-0000d145  LCD_ShowString                      
-0000dd01  LCD_WR_DATA8                        
-00002bb1  MPU6050_ReadData                    
-000042e1  MPU6050_WriteReg                    
-000089d3  NMI_Handler                         
-000089d3  PendSV_Handler                      
-000089d3  RTC_IRQHandler                      
-0000e08d  Reset_Handler                       
-000089d3  SPI0_IRQHandler                     
-000089d3  SPI1_IRQHandler                     
-000089d3  SVC_Handler                         
-0000a229  SYSCFG_DL_GPIO_init                 
-0000c6ed  SYSCFG_DL_PWM_LEFT_init             
-0000c759  SYSCFG_DL_PWM_RIGHT_init            
-0000d269  SYSCFG_DL_SPI_LCD_init              
-0000d451  SYSCFG_DL_SYSCTL_init               
-0000c00d  SYSCFG_DL_UART_DEBUG_init           
-0000c089  SYSCFG_DL_UART_OPENMV_init          
-0000d385  SYSCFG_DL_init                      
-0000cc35  SYSCFG_DL_initPower                 
-0000b541  SysTick_Handler                     
-0000ca45  TB6612_Init                         
-0000d061  TB6612_Motor_Stop                   
-000089d3  TIMA0_IRQHandler                    
-000089d3  TIMA1_IRQHandler                    
-000089d3  TIMG0_IRQHandler                    
-000089d3  TIMG12_IRQHandler                   
-000089d3  TIMG6_IRQHandler                    
-000089d3  TIMG7_IRQHandler                    
-000089d3  TIMG8_IRQHandler                    
-0000dfe1  UART0_IRQHandler                    
-000089d3  UART1_IRQHandler                    
-0000dfe9  UART2_IRQHandler                    
-000089d3  UART3_IRQHandler                    
+000097a3  ADC0_IRQHandler                     
+000097a3  ADC1_IRQHandler                     
+000097a3  AES_IRQHandler                      
+0000de2d  AO_Control                          
+0000dba1  BO_Control                          
+0000ce5c  C$$EXIT                             
+0000e6d1  C$$IO$$                             
+000097a3  CANFD0_IRQHandler                   
+000097a3  DAC0_IRQHandler                     
+0000ef05  DL_Common_delayCycles               
+0000e30d  DL_SPI_init                         
+0000ed6d  DL_SPI_setClockConfig               
+0000b325  DL_Timer_initFourCCPWMMode          
+0000eb9d  DL_Timer_setCaptCompUpdateMethod    
+0000ecb5  DL_Timer_setCaptureCompareOutCtl    
+0000eda5  DL_Timer_setCaptureCompareValue     
+0000ebb9  DL_Timer_setClockConfig             
+0000e15d  DL_UART_init                        
+0000ebd5  DL_UART_receiveDataCheck            
+0000ed7f  DL_UART_setClockConfig              
+0000ebf1  DL_UART_transmitDataCheck           
+000097a3  DMA_IRQHandler                      
+000097a3  Default_Handler                     
+000097a3  GROUP0_IRQHandler                   
+0000ef6f  GROUP1_IRQHandler                   
+0000e1a5  HOSTclose                           
+0000ce5d  HOSTexit                            
+0000d575  HOSTlseek                           
+0000dc61  HOSTopen                            
+0000de85  HOSTread                            
+0000d5e1  HOSTrename                          
+0000e1ed  HOSTunlink                          
+0000dedd  HOSTwrite                           
+000097a3  HardFault_Handler                   
+000097a3  I2C0_IRQHandler                     
+000097a3  I2C1_IRQHandler                     
+0000c421  LCD_Address_Set                     
+00004fa9  LCD_Fill                            
+000045fd  LCD_ShowChar                        
+0000e111  LCD_ShowString                      
+0000eccd  LCD_WR_DATA8                        
+000033ad  MPU6050_ReadData                    
+00004add  MPU6050_WriteReg                    
+000097a3  NMI_Handler                         
+000097a3  PendSV_Handler                      
+000097a3  RTC_IRQHandler                      
+0000f061  Reset_Handler                       
+000097a3  SPI0_IRQHandler                     
+000097a3  SPI1_IRQHandler                     
+000097a3  SVC_Handler                         
+0000add5  SYSCFG_DL_GPIO_init                 
+0000d64d  SYSCFG_DL_PWM_LEFT_init             
+0000d6b9  SYSCFG_DL_PWM_RIGHT_init            
+0000e235  SYSCFG_DL_SPI_LCD_init              
+0000e41d  SYSCFG_DL_SYSCTL_init               
+0000cf6d  SYSCFG_DL_UART_DEBUG_init           
+0000cfe9  SYSCFG_DL_UART_OPENMV_init          
+0000e351  SYSCFG_DL_init                      
+0000dc01  SYSCFG_DL_initPower                 
+0000c06d  SysTick_Handler                     
+0000da11  TB6612_Init                         
+0000e02d  TB6612_Motor_Stop                   
+000097a3  TIMA0_IRQHandler                    
+000097a3  TIMA1_IRQHandler                    
+000097a3  TIMG0_IRQHandler                    
+000097a3  TIMG12_IRQHandler                   
+000097a3  TIMG6_IRQHandler                    
+000097a3  TIMG7_IRQHandler                    
+000097a3  TIMG8_IRQHandler                    
+0000efb9  UART0_IRQHandler                    
+000097a3  UART1_IRQHandler                    
+0000efc1  UART2_IRQHandler                    
+000097a3  UART3_IRQHandler                    
 20202280  _CIOBUF_                            
 20202280  __CIOBUF_                           
 20208000  __STACK_END                         
@@ -918,281 +969,286 @@ address   name
 00000000  __TI_ATRegion2_region_sz            
 00000000  __TI_ATRegion2_src_addr             
 00000000  __TI_ATRegion2_trg_addr             
-00013070  __TI_CINIT_Base                     
-00013080  __TI_CINIT_Limit                    
-00013080  __TI_CINIT_Warm                     
-0001305c  __TI_Handler_Table_Base             
-00013068  __TI_Handler_Table_Limit            
-0000d54d  __TI_auto_init_nobinit_nopinit      
-0000d671  __TI_cleanup                        
-20203408  __TI_cleanup_ptr                    
-0000c105  __TI_closefile                      
-0000c181  __TI_decompress_lzss                
-0000ddc5  __TI_decompress_none                
-0000cfbd  __TI_doflush                        
-2020340c  __TI_dtors_ptr                      
-20203410  __TI_ft_end                         
+000141e0  __TI_CINIT_Base                     
+000141f0  __TI_CINIT_Limit                    
+000141f0  __TI_CINIT_Warm                     
+000141cc  __TI_Handler_Table_Base             
+000141d8  __TI_Handler_Table_Limit            
+0000e519  __TI_auto_init_nobinit_nopinit      
+0000e63d  __TI_cleanup                        
+20203438  __TI_cleanup_ptr                    
+0000d065  __TI_closefile                      
+0000d0e1  __TI_decompress_lzss                
+0000ed91  __TI_decompress_none                
+0000df89  __TI_doflush                        
+2020343c  __TI_dtors_ptr                      
+20203440  __TI_ft_end                         
 ffffffff  __TI_pprof_out_hndl                 
 00000d49  __TI_printfi_nofloat                
 ffffffff  __TI_prof_data_size                 
 ffffffff  __TI_prof_data_start                
-0000d6a5  __TI_readmsg                        
+0000e671  __TI_readmsg                        
 000000c1  __TI_scanfi                         
 00000000  __TI_static_base__                  
 20202718  __TI_tmpnams                        
-0000d6d9  __TI_writemsg                       
-0000caa9  __TI_wrt_ok                         
-0000de59  __TI_zero_init                      
-0000884b  __adddf3                            
-0000ae6b  __addsf3                            
-00012490  __aeabi_ctype_table_                
-00012490  __aeabi_ctype_table_C               
-0000c4c1  __aeabi_d2f                         
-0000884b  __aeabi_dadd                        
-0000cda9  __aeabi_dcmpeq                      
-0000cddf  __aeabi_dcmpge                      
-0000cdf1  __aeabi_dcmpgt                      
-0000cdcd  __aeabi_dcmple                      
-0000cdbb  __aeabi_dcmplt                      
-0000dff1  __aeabi_ddiv_fast                   
-0000df7b  __aeabi_dmul_fast                   
-00008841  __aeabi_dsub                        
-20203414  __aeabi_errno                       
-0000df4d  __aeabi_errno_addr                  
-0000d4d1  __aeabi_f2d                         
-0000d639  __aeabi_f2iz                        
-0000d80d  __aeabi_f2uiz                       
-0000ae6b  __aeabi_fadd                        
-0000ce05  __aeabi_fcmpeq                      
-0000ce3b  __aeabi_fcmpge                      
-0000ce4d  __aeabi_fcmpgt                      
-0000ce29  __aeabi_fcmple                      
-0000ce17  __aeabi_fcmplt                      
-0000bdcb  __aeabi_fcmpun                      
-0000bf89  __aeabi_fdiv                        
-0000bde1  __aeabi_fmul                        
-0000ae61  __aeabi_fsub                        
-0000d589  __aeabi_i2f                         
-0000b883  __aeabi_idiv0                       
-0000bb97  __aeabi_ldiv0                       
-0000dbb1  __aeabi_llsl                        
-0000db29  __aeabi_lmul                        
-0000dcdb  __aeabi_memclr                      
-0000dcdb  __aeabi_memclr4                     
-0000dcdb  __aeabi_memclr8                     
-0000e021  __aeabi_memcpy                      
-0000e021  __aeabi_memcpy4                     
-0000e021  __aeabi_memcpy8                     
-0000dccd  __aeabi_memset                      
-0000dccd  __aeabi_memset4                     
-0000dccd  __aeabi_memset8                     
-0000da95  __aeabi_ui2f                        
-0000d491  __aeabi_uidiv                       
-0000d491  __aeabi_uidivmod                    
-0000dd8d  __aeabi_uldivmod                    
-0000dbb1  __ashldi3                           
+0000e6a5  __TI_writemsg                       
+0000da75  __TI_wrt_ok                         
+0000ee25  __TI_zero_init                      
+0000961b  __adddf3                            
+0000bd33  __addsf3                            
+00013460  __aeabi_ctype_table_                
+00013460  __aeabi_ctype_table_C               
+0000d421  __aeabi_d2f                         
+0000961b  __aeabi_dadd                        
+0000dd75  __aeabi_dcmpeq                      
+0000ddab  __aeabi_dcmpge                      
+0000ddbd  __aeabi_dcmpgt                      
+0000dd99  __aeabi_dcmple                      
+0000dd87  __aeabi_dcmplt                      
+0000efc9  __aeabi_ddiv_fast                   
+0000ef53  __aeabi_dmul_fast                   
+00009611  __aeabi_dsub                        
+20203444  __aeabi_errno                       
+0000ef25  __aeabi_errno_addr                  
+0000e49d  __aeabi_f2d                         
+0000e605  __aeabi_f2iz                        
+0000e7d9  __aeabi_f2uiz                       
+0000bd33  __aeabi_fadd                        
+0000ddd1  __aeabi_fcmpeq                      
+0000de07  __aeabi_fcmpge                      
+0000de19  __aeabi_fcmpgt                      
+0000ddf5  __aeabi_fcmple                      
+0000dde3  __aeabi_fcmplt                      
+0000ccab  __aeabi_fcmpun                      
+0000cee9  __aeabi_fdiv                        
+0000ccc1  __aeabi_fmul                        
+0000bd29  __aeabi_fsub                        
+0000e555  __aeabi_i2f                         
+0000c763  __aeabi_idiv0                       
+0000ca77  __aeabi_ldiv0                       
+0000eb7d  __aeabi_llsl                        
+0000eaf5  __aeabi_lmul                        
+0000eca7  __aeabi_memclr                      
+0000eca7  __aeabi_memclr4                     
+0000eca7  __aeabi_memclr8                     
+0000eff9  __aeabi_memcpy                      
+0000eff9  __aeabi_memcpy4                     
+0000eff9  __aeabi_memcpy8                     
+0000ec99  __aeabi_memset                      
+0000ec99  __aeabi_memset4                     
+0000ec99  __aeabi_memset8                     
+0000ea61  __aeabi_ui2f                        
+0000e45d  __aeabi_uidiv                       
+0000e45d  __aeabi_uidivmod                    
+0000ed59  __aeabi_uldivmod                    
+0000eb7d  __ashldi3                           
 ffffffff  __binit__                           
-0000c975  __cmpdf2                            
-0000bd55  __cmpsf2                            
-00006b41  __divdf3_fast                       
-0000bf89  __divsf3                            
-0000c975  __eqdf2                             
-0000bd55  __eqsf2                             
-0000d4d1  __extendsfdf2                       
-0000d639  __fixsfsi                           
-0000d80d  __fixunssfsi                        
-0000d589  __floatsisf                         
-0000da95  __floatunsisf                       
-0000c365  __gedf2                             
-0000bd8f  __gesf2                             
-0000c365  __gtdf2                             
-0000bd8f  __gtsf2                             
-0000c975  __ledf2                             
-0000bd55  __lesf2                             
-0000c975  __ltdf2                             
-0000bd55  __ltsf2                             
+0000d941  __cmpdf2                            
+0000cc35  __cmpsf2                            
+00007745  __divdf3_fast                       
+0000cee9  __divsf3                            
+0000d941  __eqdf2                             
+0000cc35  __eqsf2                             
+0000e49d  __extendsfdf2                       
+0000e605  __fixsfsi                           
+0000e7d9  __fixunssfsi                        
+0000e555  __floatsisf                         
+0000ea61  __floatunsisf                       
+0000d2c5  __gedf2                             
+0000cc6f  __gesf2                             
+0000d2c5  __gtdf2                             
+0000cc6f  __gtsf2                             
+0000d941  __ledf2                             
+0000cc35  __lesf2                             
+0000d941  __ltdf2                             
+0000cc35  __ltsf2                             
 UNDEFED   __mpu_init                          
-00007bf1  __muldf3_fast                       
-0000db29  __muldi3                            
-0000d5c5  __muldsi3                           
-0000bde1  __mulsf3                            
-0000c975  __nedf2                             
-0000bd55  __nesf2                             
+000087f5  __muldf3_fast                       
+0000eaf5  __muldi3                            
+0000e591  __muldsi3                           
+0000ccc1  __mulsf3                            
+0000d941  __nedf2                             
+0000cc35  __nesf2                             
 20207e00  __stack                             
 20200000  __start___llvm_prf_bits             
 20200000  __start___llvm_prf_cnts             
 20200000  __stop___llvm_prf_bits              
 20200000  __stop___llvm_prf_cnts              
-00008841  __subdf3                            
-0000ae61  __subsf3                            
-0000c4c1  __truncdfsf2                        
-0000b7e1  __udivmoddi4                        
-0000bdcb  __unordsf2                          
-0000da6d  _c_int00_noargs                     
-20203308  _device                             
-20203218  _ftable                             
-20203418  _lock                               
-0000c00b  _nop                                
-20203380  _stream                             
-20202a18  _sys_memory                         
+00009611  __subdf3                            
+0000bd29  __subsf3                            
+0000d421  __truncdfsf2                        
+0000c6c1  __udivmoddi4                        
+0000ccab  __unordsf2                          
+0000ea39  _c_int00_noargs                     
+20203338  _device                             
+20203248  _ftable                             
+20203448  _lock                               
+0000cf6b  _nop                                
+202033b0  _stream                             
+20202a48  _sys_memory                         
 UNDEFED   _system_post_cinit                  
-0000e091  _system_pre_init                    
-2020341c  _unlock                             
-0000e06b  abort                               
-0000a11d  aligned_alloc                       
-0000c7c5  app_car_control_init                
-000024a9  app_car_control_process_command     
-0000d3c9  app_car_control_send_heartbeat      
-00007365  app_car_control_send_telemetry      
-0000dde9  app_car_control_toggle_status_led   
-00003809  app_car_control_update              
-0000e001  app_image_store_init                
-0000bef5  app_image_store_is_receiving        
-00001625  app_image_store_process_command     
-00001d85  app_image_store_service             
-0000e009  app_mpu6050_attitude_init           
-0000ccf1  app_mpu6050_attitude_process_command
-0000a331  app_mpu6050_attitude_send           
-00011c16  ascii_1206                          
-00011626  ascii_1608                          
-0000f860  ascii_2412                          
-0000e0a0  ascii_3216                          
-000057d9  asin                                
-000057d9  asinl                               
-00006849  atan                                
-000089d5  atan2                               
-0000a005  atan2f                              
-000089d5  atan2l                              
-00007f99  atanf                               
-00006849  atanl                               
-0000d40d  atoi                                
+0000f065  _system_pre_init                    
+2020344c  _unlock                             
+0000f043  abort                               
+0000b009  aligned_alloc                       
+0000d725  app_car_control_init                
+00002ca5  app_car_control_process_command     
+0000e395  app_car_control_send_heartbeat      
+00007f69  app_car_control_send_telemetry      
+0000edb5  app_car_control_toggle_status_led   
+00004005  app_car_control_update              
+0000b7e1  app_image_store_get_file_by_index   
+000092c9  app_image_store_get_file_count      
+0000efd9  app_image_store_init                
+0000eea5  app_image_store_is_receiving        
+00001e21  app_image_store_process_command     
+00002581  app_image_store_service             
+0000cd4d  app_image_store_show_image          
+0000d791  app_menu_init                       
+00005875  app_menu_update                     
+0000efe1  app_mpu6050_attitude_init           
+0000dcbd  app_mpu6050_attitude_process_command
+0000b115  app_mpu6050_attitude_send           
+00012be6  ascii_1206                          
+000125f6  ascii_1608                          
+00010830  ascii_2412                          
+0000f070  ascii_3216                          
+000063dd  asin                                
+000063dd  asinl                               
+0000744d  atan                                
+000097a5  atan2                               
+0000aef1  atan2f                              
+000097a5  atan2l                              
+00008d71  atanf                               
+0000744d  atanl                               
+0000e3d9  atoi                                
 ffffffff  binit                               
-0000d011  close                               
-00006e1d  dmp_enable_feature                  
-0000dc41  dmp_load_motion_driver_firmware     
-000086a9  dmp_read_fifo                       
-0000c9dd  dmp_set_fifo_rate                   
-0000a829  dmp_set_orientation                 
-00008cd9  dmp_set_tap_thresh                  
-0000dd31  encoder_get_counts                  
-0000bc31  encoder_handle_gpio_irq             
-0000d2b1  encoder_init                        
-0000dd49  encoder_reset                       
-0000d70d  exit                                
-0000d741  finddevice                          
-0000b9c5  fputc                               
-0000a739  fputs                               
-0000a9fd  free                                
-0000e011  fseek                               
-0000c831  fseeko                              
+0000dfdd  close                               
+00007a21  dmp_enable_feature                  
+0000ec0d  dmp_load_motion_driver_firmware     
+00009479  dmp_read_fifo                       
+0000d9a9  dmp_set_fifo_rate                   
+0000b60d  dmp_set_orientation                 
+00009aa9  dmp_set_tap_thresh                  
+0000ecfd  encoder_get_counts                  
+0000cb11  encoder_handle_gpio_irq             
+0000e27d  encoder_init                        
+0000ed15  encoder_reset                       
+0000e6d9  exit                                
+0000e70d  finddevice                          
+0000c8a5  fputc                               
+0000b51d  fputs                               
+0000b8c5  free                                
+0000efe9  fseek                               
+0000d7fd  fseeko                              
 202025a0  gPWM_LEFTBackup                     
 2020265c  gPWM_RIGHTBackup                    
 20202878  gSPI_LCDBackup                      
-0000c89d  getdevice                           
-00012e3c  hw                                  
+0000d869  getdevice                           
+00013f24  hw                                  
 00000000  interruptVectors                    
-0000b269  inv_orientation_matrix_to_scalar    
-0000653d  lcd_init                            
-0000ad85  ldexp                               
-0000b325  ldexpf                              
-0000ad85  ldexpl                              
-0000ded9  line_follow_get_error               
-0000c1fd  line_follow_get_turn_adjust         
-0000dabd  line_follow_init                    
-0000d97d  line_follow_is_active               
-0000d841  line_follow_is_valid                
-0000ba61  line_follow_parse_command           
-0000d9a5  lseek                               
-000084f1  main                                
-0000dee5  malloc                              
-0000a11d  memalign                            
-0000db4d  memccpy                             
-0000bafd  memcpy                              
-0000cb71  memset                              
-0000cbd3  mget_ms                             
-0000def1  motion_control_get_mode             
-0000ddf9  motion_control_get_target_deg_s     
-0000de09  motion_control_get_target_mm_s      
-0000d511  motion_control_init                 
-0000de19  motion_control_is_active            
-0000defd  motion_control_is_busy              
-00005079  motion_control_parse_command        
-000097ad  motion_control_update               
-0000de77  mpu6050_delay_ms                    
-0000df8d  mpu6050_delay_us                    
-0000b885  mpu6050_dmp_init                    
-000098ed  mpu6050_init                        
-0000dae1  mpu6050_read_angles                 
-0000c275  mpu6050_read_debug                  
-000070f9  mpu6050_read_fallback_angles        
-0000db91  mpu6050_read_id                     
-0000d9cd  mpu6050_release_bus                 
-0000d8d1  mpu6050_reset_fallback_angles       
-0000de29  mpu6050_scl_is_high                 
-0000de39  mpu6050_sda_is_high                 
-0000b5ed  mpu_configure_fifo                  
-00008161  mpu_dmp_get_data                    
-0000a915  mpu_dmp_init                        
-0000d775  mpu_get_accel_fsr                   
-00009dc1  mpu_init                            
-000093e1  mpu_load_firmware                   
-00009525  mpu_lp_accel_mode                   
-0000b925  mpu_read_fifo_stream                
-00009291  mpu_reset_fifo                      
-0000bb99  mpu_set_accel_fsr                   
-0000af39  mpu_set_bypass                      
-0000b009  mpu_set_dmp_state                   
-0000be6d  mpu_set_gyro_fsr                    
-0000c44d  mpu_set_lpf                         
-00009a29  mpu_set_sample_rate                 
-0000abc5  mpu_set_sensors                     
-0000c909  mpu_write_mem                       
-20202918  parmbuf                             
-0000b699  pid_calc                            
-0000dd61  pid_init                            
-0000df09  pid_reset                           
-0000cd4d  printf                              
-00012a5c  reg                                 
-0000e019  remove                              
-0000ad85  scalbn                              
-0000b325  scalbnf                             
-0000ad85  scalbnl                             
-0000aca5  setvbuf                             
-0000d2f9  snprintf                            
-0000dc79  spi_write_bus                       
-00008e51  sqrt                                
-0000b3e1  sqrtf                               
-00008e51  sqrtl                               
-0000d8a1  sscanf                              
-0000bf01  strcmp                              
-00005429  strtod                              
-000061ed  strtof                              
-00009669  strtol                              
-00005429  strtold                             
-00007a15  strtoll                             
-00009c95  strtoul                             
-00008fc5  strtoull                            
-000129a0  test                                
-0000df15  uart_debug_get_rx_dropped_bytes     
-0000df21  uart_debug_get_tx_dropped_bytes     
-0000c535  uart_debug_handle_irq               
-0000d9f5  uart_debug_init                     
-0000d601  uart_debug_read_byte                
-00009b61  uart_debug_read_line                
-0000d0ad  uart_debug_service_tx               
-0000d0f9  uart_debug_write_string             
-0000c5a5  uart_openmv_handle_irq              
-0000da1d  uart_openmv_init                    
-0000b73d  uart_openmv_read_line               
-0000d929  unlink                              
-00007dc9  w25q64_erase_sector                 
-0000dc95  w25q64_init                         
-0000db05  w25q64_is_valid_jedec_id            
-000075cd  w25q64_read                         
-00004c41  w25q64_read_jedec_id                
-00005b3d  w25q64_write                        
-0000de49  wcslen                              
-0000da45  write                               
+0000c1f5  inv_orientation_matrix_to_scalar    
+00007141  lcd_init                            
+0000bc4d  ldexp                               
+0000c2b1  ldexpf                              
+0000bc4d  ldexpl                              
+0000eeb1  line_follow_get_error               
+0000d15d  line_follow_get_turn_adjust         
+0000ea89  line_follow_init                    
+0000e949  line_follow_is_active               
+0000e80d  line_follow_is_valid                
+0000c941  line_follow_parse_command           
+0000e971  lseek                               
+000089cd  main                                
+0000eebd  malloc                              
+0000b009  memalign                            
+0000eb19  memccpy                             
+0000c9dd  memcpy                              
+0000db3d  memset                              
+0000db9f  mget_ms                             
+0000eec9  motion_control_get_mode             
+0000edc5  motion_control_get_target_deg_s     
+0000edd5  motion_control_get_target_mm_s      
+0000e4dd  motion_control_init                 
+0000ede5  motion_control_is_active            
+0000eed5  motion_control_is_busy              
+00005c7d  motion_control_parse_command        
+0000a57d  motion_control_update               
+0000ee43  mpu6050_delay_ms                    
+0000ef65  mpu6050_delay_us                    
+0000c765  mpu6050_dmp_init                    
+0000a6bd  mpu6050_init                        
+0000eaad  mpu6050_read_angles                 
+0000d1d5  mpu6050_read_debug                  
+00007cfd  mpu6050_read_fallback_angles        
+0000eb5d  mpu6050_read_id                     
+0000e999  mpu6050_release_bus                 
+0000e89d  mpu6050_reset_fallback_angles       
+0000edf5  mpu6050_scl_is_high                 
+0000ee05  mpu6050_sda_is_high                 
+0000c4cd  mpu_configure_fifo                  
+00008f39  mpu_dmp_get_data                    
+0000b6f9  mpu_dmp_init                        
+0000e741  mpu_get_accel_fsr                   
+0000ab91  mpu_init                            
+0000a1b1  mpu_load_firmware                   
+0000a2f5  mpu_lp_accel_mode                   
+0000c805  mpu_read_fifo_stream                
+0000a061  mpu_reset_fifo                      
+0000ca79  mpu_set_accel_fsr                   
+0000be01  mpu_set_bypass                      
+0000bed1  mpu_set_dmp_state                   
+0000cdd5  mpu_set_gyro_fsr                    
+0000d3ad  mpu_set_lpf                         
+0000a7f9  mpu_set_sample_rate                 
+0000ba8d  mpu_set_sensors                     
+0000d8d5  mpu_write_mem                       
+20202938  parmbuf                             
+0000c579  pid_calc                            
+0000ed2d  pid_init                            
+0000eee1  pid_reset                           
+0000dd19  printf                              
+00013a5c  reg                                 
+0000eff1  remove                              
+0000bc4d  scalbn                              
+0000c2b1  scalbnf                             
+0000bc4d  scalbnl                             
+0000bb6d  setvbuf                             
+0000e2c5  snprintf                            
+0000ec45  spi_write_bus                       
+00009c21  sqrt                                
+0000c36d  sqrtf                               
+00009c21  sqrtl                               
+0000e86d  sscanf                              
+0000ce61  strcmp                              
+0000602d  strtod                              
+00006df1  strtof                              
+0000a439  strtol                              
+0000602d  strtold                             
+00008619  strtoll                             
+0000aa65  strtoul                             
+00009d95  strtoull                            
+000139a0  test                                
+0000eeed  uart_debug_get_rx_dropped_bytes     
+0000eef9  uart_debug_get_tx_dropped_bytes     
+0000d495  uart_debug_handle_irq               
+0000e9c1  uart_debug_init                     
+0000e5cd  uart_debug_read_byte                
+0000a931  uart_debug_read_line                
+0000e079  uart_debug_service_tx               
+0000e0c5  uart_debug_write_string             
+0000d505  uart_openmv_handle_irq              
+0000e9e9  uart_openmv_init                    
+0000c61d  uart_openmv_read_line               
+0000e8f5  unlink                              
+00008ba1  w25q64_erase_sector                 
+0000ec61  w25q64_init                         
+0000ead1  w25q64_is_valid_jedec_id            
+000081d1  w25q64_read                         
+0000543d  w25q64_read_jedec_id                
+00006741  w25q64_write                        
+0000ee15  wcslen                              
+0000ea11  write                               
 
 
 GLOBAL SYMBOLS: SORTED BY Symbol Address 
@@ -1214,323 +1270,328 @@ address   name
 00000200  __STACK_SIZE                        
 00000800  __SYSMEM_SIZE                       
 00000d49  __TI_printfi_nofloat                
-00001625  app_image_store_process_command     
-00001d85  app_image_store_service             
-000024a9  app_car_control_process_command     
-00002bb1  MPU6050_ReadData                    
-00003809  app_car_control_update              
-00003e01  LCD_ShowChar                        
-000042e1  MPU6050_WriteReg                    
-000047ad  LCD_Fill                            
-00004c41  w25q64_read_jedec_id                
-00005079  motion_control_parse_command        
-00005429  strtod                              
-00005429  strtold                             
-000057d9  asin                                
-000057d9  asinl                               
-00005b3d  w25q64_write                        
-000061ed  strtof                              
-0000653d  lcd_init                            
-00006849  atan                                
-00006849  atanl                               
-00006b41  __divdf3_fast                       
-00006e1d  dmp_enable_feature                  
-000070f9  mpu6050_read_fallback_angles        
-00007365  app_car_control_send_telemetry      
-000075cd  w25q64_read                         
-00007a15  strtoll                             
-00007bf1  __muldf3_fast                       
-00007dc9  w25q64_erase_sector                 
-00007f99  atanf                               
-00008161  mpu_dmp_get_data                    
-000084f1  main                                
-000086a9  dmp_read_fifo                       
-00008841  __aeabi_dsub                        
-00008841  __subdf3                            
-0000884b  __adddf3                            
-0000884b  __aeabi_dadd                        
-000089d3  ADC0_IRQHandler                     
-000089d3  ADC1_IRQHandler                     
-000089d3  AES_IRQHandler                      
-000089d3  CANFD0_IRQHandler                   
-000089d3  DAC0_IRQHandler                     
-000089d3  DMA_IRQHandler                      
-000089d3  Default_Handler                     
-000089d3  GROUP0_IRQHandler                   
-000089d3  HardFault_Handler                   
-000089d3  I2C0_IRQHandler                     
-000089d3  I2C1_IRQHandler                     
-000089d3  NMI_Handler                         
-000089d3  PendSV_Handler                      
-000089d3  RTC_IRQHandler                      
-000089d3  SPI0_IRQHandler                     
-000089d3  SPI1_IRQHandler                     
-000089d3  SVC_Handler                         
-000089d3  TIMA0_IRQHandler                    
-000089d3  TIMA1_IRQHandler                    
-000089d3  TIMG0_IRQHandler                    
-000089d3  TIMG12_IRQHandler                   
-000089d3  TIMG6_IRQHandler                    
-000089d3  TIMG7_IRQHandler                    
-000089d3  TIMG8_IRQHandler                    
-000089d3  UART1_IRQHandler                    
-000089d3  UART3_IRQHandler                    
-000089d5  atan2                               
-000089d5  atan2l                              
-00008cd9  dmp_set_tap_thresh                  
-00008e51  sqrt                                
-00008e51  sqrtl                               
-00008fc5  strtoull                            
-00009291  mpu_reset_fifo                      
-000093e1  mpu_load_firmware                   
-00009525  mpu_lp_accel_mode                   
-00009669  strtol                              
-000097ad  motion_control_update               
-000098ed  mpu6050_init                        
-00009a29  mpu_set_sample_rate                 
-00009b61  uart_debug_read_line                
-00009c95  strtoul                             
-00009dc1  mpu_init                            
-0000a005  atan2f                              
-0000a11d  aligned_alloc                       
-0000a11d  memalign                            
-0000a229  SYSCFG_DL_GPIO_init                 
-0000a331  app_mpu6050_attitude_send           
-0000a541  DL_Timer_initFourCCPWMMode          
-0000a739  fputs                               
-0000a829  dmp_set_orientation                 
-0000a915  mpu_dmp_init                        
-0000a9fd  free                                
-0000abc5  mpu_set_sensors                     
-0000aca5  setvbuf                             
-0000ad85  ldexp                               
-0000ad85  ldexpl                              
-0000ad85  scalbn                              
-0000ad85  scalbnl                             
-0000ae61  __aeabi_fsub                        
-0000ae61  __subsf3                            
-0000ae6b  __addsf3                            
-0000ae6b  __aeabi_fadd                        
-0000af39  mpu_set_bypass                      
-0000b009  mpu_set_dmp_state                   
-0000b269  inv_orientation_matrix_to_scalar    
-0000b325  ldexpf                              
-0000b325  scalbnf                             
-0000b3e1  sqrtf                               
-0000b495  LCD_Address_Set                     
-0000b541  SysTick_Handler                     
-0000b5ed  mpu_configure_fifo                  
-0000b699  pid_calc                            
-0000b73d  uart_openmv_read_line               
-0000b7e1  __udivmoddi4                        
-0000b883  __aeabi_idiv0                       
-0000b885  mpu6050_dmp_init                    
-0000b925  mpu_read_fifo_stream                
-0000b9c5  fputc                               
-0000ba61  line_follow_parse_command           
-0000bafd  memcpy                              
-0000bb97  __aeabi_ldiv0                       
-0000bb99  mpu_set_accel_fsr                   
-0000bc31  encoder_handle_gpio_irq             
-0000bd55  __cmpsf2                            
-0000bd55  __eqsf2                             
-0000bd55  __lesf2                             
-0000bd55  __ltsf2                             
-0000bd55  __nesf2                             
-0000bd8f  __gesf2                             
-0000bd8f  __gtsf2                             
-0000bdcb  __aeabi_fcmpun                      
-0000bdcb  __unordsf2                          
-0000bde1  __aeabi_fmul                        
-0000bde1  __mulsf3                            
-0000be6d  mpu_set_gyro_fsr                    
-0000bef5  app_image_store_is_receiving        
-0000bf01  strcmp                              
-0000bf89  __aeabi_fdiv                        
-0000bf89  __divsf3                            
-0000c00b  _nop                                
-0000c00d  SYSCFG_DL_UART_DEBUG_init           
-0000c089  SYSCFG_DL_UART_OPENMV_init          
-0000c105  __TI_closefile                      
-0000c181  __TI_decompress_lzss                
-0000c1fd  line_follow_get_turn_adjust         
-0000c275  mpu6050_read_debug                  
-0000c365  __gedf2                             
-0000c365  __gtdf2                             
-0000c44d  mpu_set_lpf                         
-0000c4c1  __aeabi_d2f                         
-0000c4c1  __truncdfsf2                        
-0000c535  uart_debug_handle_irq               
-0000c5a5  uart_openmv_handle_irq              
-0000c615  HOSTlseek                           
-0000c681  HOSTrename                          
-0000c6ed  SYSCFG_DL_PWM_LEFT_init             
-0000c759  SYSCFG_DL_PWM_RIGHT_init            
-0000c7c5  app_car_control_init                
-0000c831  fseeko                              
-0000c89d  getdevice                           
-0000c909  mpu_write_mem                       
-0000c975  __cmpdf2                            
-0000c975  __eqdf2                             
-0000c975  __ledf2                             
-0000c975  __ltdf2                             
-0000c975  __nedf2                             
-0000c9dd  dmp_set_fifo_rate                   
-0000ca45  TB6612_Init                         
-0000caa9  __TI_wrt_ok                         
-0000cb71  memset                              
-0000cbd3  mget_ms                             
-0000cbd5  BO_Control                          
-0000cc35  SYSCFG_DL_initPower                 
-0000cc95  HOSTopen                            
-0000ccf1  app_mpu6050_attitude_process_command
-0000cd4d  printf                              
-0000cda9  __aeabi_dcmpeq                      
-0000cdbb  __aeabi_dcmplt                      
-0000cdcd  __aeabi_dcmple                      
-0000cddf  __aeabi_dcmpge                      
-0000cdf1  __aeabi_dcmpgt                      
-0000ce05  __aeabi_fcmpeq                      
-0000ce17  __aeabi_fcmplt                      
-0000ce29  __aeabi_fcmple                      
-0000ce3b  __aeabi_fcmpge                      
-0000ce4d  __aeabi_fcmpgt                      
-0000ce61  AO_Control                          
-0000ceb9  HOSTread                            
-0000cf11  HOSTwrite                           
-0000cfbd  __TI_doflush                        
-0000d011  close                               
-0000d061  TB6612_Motor_Stop                   
-0000d0ad  uart_debug_service_tx               
-0000d0f9  uart_debug_write_string             
-0000d145  LCD_ShowString                      
-0000d191  DL_UART_init                        
-0000d1d9  HOSTclose                           
-0000d221  HOSTunlink                          
-0000d269  SYSCFG_DL_SPI_LCD_init              
-0000d2b1  encoder_init                        
-0000d2f9  snprintf                            
-0000d341  DL_SPI_init                         
-0000d385  SYSCFG_DL_init                      
-0000d3c9  app_car_control_send_heartbeat      
-0000d40d  atoi                                
-0000d451  SYSCFG_DL_SYSCTL_init               
-0000d491  __aeabi_uidiv                       
-0000d491  __aeabi_uidivmod                    
-0000d4d1  __aeabi_f2d                         
-0000d4d1  __extendsfdf2                       
-0000d511  motion_control_init                 
-0000d54d  __TI_auto_init_nobinit_nopinit      
-0000d589  __aeabi_i2f                         
-0000d589  __floatsisf                         
-0000d5c5  __muldsi3                           
-0000d601  uart_debug_read_byte                
-0000d639  __aeabi_f2iz                        
-0000d639  __fixsfsi                           
-0000d671  __TI_cleanup                        
-0000d6a5  __TI_readmsg                        
-0000d6d9  __TI_writemsg                       
-0000d705  C$$IO$$                             
-0000d70d  exit                                
-0000d741  finddevice                          
-0000d775  mpu_get_accel_fsr                   
-0000d80d  __aeabi_f2uiz                       
-0000d80d  __fixunssfsi                        
-0000d841  line_follow_is_valid                
-0000d8a1  sscanf                              
-0000d8d1  mpu6050_reset_fallback_angles       
-0000d929  unlink                              
-0000d97d  line_follow_is_active               
-0000d9a5  lseek                               
-0000d9cd  mpu6050_release_bus                 
-0000d9f5  uart_debug_init                     
-0000da1d  uart_openmv_init                    
-0000da45  write                               
-0000da6d  _c_int00_noargs                     
-0000da95  __aeabi_ui2f                        
-0000da95  __floatunsisf                       
-0000dabd  line_follow_init                    
-0000dae1  mpu6050_read_angles                 
-0000db05  w25q64_is_valid_jedec_id            
-0000db29  __aeabi_lmul                        
-0000db29  __muldi3                            
-0000db4d  memccpy                             
-0000db91  mpu6050_read_id                     
-0000dbb1  __aeabi_llsl                        
-0000dbb1  __ashldi3                           
-0000dbd1  DL_Timer_setCaptCompUpdateMethod    
-0000dbed  DL_Timer_setClockConfig             
-0000dc09  DL_UART_receiveDataCheck            
-0000dc25  DL_UART_transmitDataCheck           
-0000dc41  dmp_load_motion_driver_firmware     
-0000dc79  spi_write_bus                       
-0000dc95  w25q64_init                         
-0000dccd  __aeabi_memset                      
-0000dccd  __aeabi_memset4                     
-0000dccd  __aeabi_memset8                     
-0000dcdb  __aeabi_memclr                      
-0000dcdb  __aeabi_memclr4                     
-0000dcdb  __aeabi_memclr8                     
-0000dce9  DL_Timer_setCaptureCompareOutCtl    
-0000dd01  LCD_WR_DATA8                        
-0000dd31  encoder_get_counts                  
-0000dd49  encoder_reset                       
-0000dd61  pid_init                            
-0000dd8d  __aeabi_uldivmod                    
-0000dda1  DL_SPI_setClockConfig               
-0000ddb3  DL_UART_setClockConfig              
-0000ddc5  __TI_decompress_none                
-0000ddd9  DL_Timer_setCaptureCompareValue     
-0000dde9  app_car_control_toggle_status_led   
-0000ddf9  motion_control_get_target_deg_s     
-0000de09  motion_control_get_target_mm_s      
-0000de19  motion_control_is_active            
-0000de29  mpu6050_scl_is_high                 
-0000de39  mpu6050_sda_is_high                 
-0000de49  wcslen                              
-0000de59  __TI_zero_init                      
-0000de77  mpu6050_delay_ms                    
-0000ded9  line_follow_get_error               
-0000dee5  malloc                              
-0000def1  motion_control_get_mode             
-0000defd  motion_control_is_busy              
-0000df09  pid_reset                           
-0000df15  uart_debug_get_rx_dropped_bytes     
-0000df21  uart_debug_get_tx_dropped_bytes     
-0000df2d  DL_Common_delayCycles               
-0000df4d  __aeabi_errno_addr                  
-0000df7b  __aeabi_dmul_fast                   
-0000df8d  mpu6050_delay_us                    
-0000df97  GROUP1_IRQHandler                   
-0000dfe1  UART0_IRQHandler                    
-0000dfe9  UART2_IRQHandler                    
-0000dff1  __aeabi_ddiv_fast                   
-0000e001  app_image_store_init                
-0000e009  app_mpu6050_attitude_init           
-0000e011  fseek                               
-0000e019  remove                              
-0000e021  __aeabi_memcpy                      
-0000e021  __aeabi_memcpy4                     
-0000e021  __aeabi_memcpy8                     
-0000e06b  abort                               
-0000e070  C$$EXIT                             
-0000e071  HOSTexit                            
-0000e08d  Reset_Handler                       
-0000e091  _system_pre_init                    
-0000e0a0  ascii_3216                          
-0000f860  ascii_2412                          
-00011626  ascii_1608                          
-00011c16  ascii_1206                          
-00012490  __aeabi_ctype_table_                
-00012490  __aeabi_ctype_table_C               
-000129a0  test                                
-00012a5c  reg                                 
-00012e3c  hw                                  
-0001305c  __TI_Handler_Table_Base             
-00013068  __TI_Handler_Table_Limit            
-00013070  __TI_CINIT_Base                     
-00013080  __TI_CINIT_Limit                    
-00013080  __TI_CINIT_Warm                     
+00001e21  app_image_store_process_command     
+00002581  app_image_store_service             
+00002ca5  app_car_control_process_command     
+000033ad  MPU6050_ReadData                    
+00004005  app_car_control_update              
+000045fd  LCD_ShowChar                        
+00004add  MPU6050_WriteReg                    
+00004fa9  LCD_Fill                            
+0000543d  w25q64_read_jedec_id                
+00005875  app_menu_update                     
+00005c7d  motion_control_parse_command        
+0000602d  strtod                              
+0000602d  strtold                             
+000063dd  asin                                
+000063dd  asinl                               
+00006741  w25q64_write                        
+00006df1  strtof                              
+00007141  lcd_init                            
+0000744d  atan                                
+0000744d  atanl                               
+00007745  __divdf3_fast                       
+00007a21  dmp_enable_feature                  
+00007cfd  mpu6050_read_fallback_angles        
+00007f69  app_car_control_send_telemetry      
+000081d1  w25q64_read                         
+00008619  strtoll                             
+000087f5  __muldf3_fast                       
+000089cd  main                                
+00008ba1  w25q64_erase_sector                 
+00008d71  atanf                               
+00008f39  mpu_dmp_get_data                    
+000092c9  app_image_store_get_file_count      
+00009479  dmp_read_fifo                       
+00009611  __aeabi_dsub                        
+00009611  __subdf3                            
+0000961b  __adddf3                            
+0000961b  __aeabi_dadd                        
+000097a3  ADC0_IRQHandler                     
+000097a3  ADC1_IRQHandler                     
+000097a3  AES_IRQHandler                      
+000097a3  CANFD0_IRQHandler                   
+000097a3  DAC0_IRQHandler                     
+000097a3  DMA_IRQHandler                      
+000097a3  Default_Handler                     
+000097a3  GROUP0_IRQHandler                   
+000097a3  HardFault_Handler                   
+000097a3  I2C0_IRQHandler                     
+000097a3  I2C1_IRQHandler                     
+000097a3  NMI_Handler                         
+000097a3  PendSV_Handler                      
+000097a3  RTC_IRQHandler                      
+000097a3  SPI0_IRQHandler                     
+000097a3  SPI1_IRQHandler                     
+000097a3  SVC_Handler                         
+000097a3  TIMA0_IRQHandler                    
+000097a3  TIMA1_IRQHandler                    
+000097a3  TIMG0_IRQHandler                    
+000097a3  TIMG12_IRQHandler                   
+000097a3  TIMG6_IRQHandler                    
+000097a3  TIMG7_IRQHandler                    
+000097a3  TIMG8_IRQHandler                    
+000097a3  UART1_IRQHandler                    
+000097a3  UART3_IRQHandler                    
+000097a5  atan2                               
+000097a5  atan2l                              
+00009aa9  dmp_set_tap_thresh                  
+00009c21  sqrt                                
+00009c21  sqrtl                               
+00009d95  strtoull                            
+0000a061  mpu_reset_fifo                      
+0000a1b1  mpu_load_firmware                   
+0000a2f5  mpu_lp_accel_mode                   
+0000a439  strtol                              
+0000a57d  motion_control_update               
+0000a6bd  mpu6050_init                        
+0000a7f9  mpu_set_sample_rate                 
+0000a931  uart_debug_read_line                
+0000aa65  strtoul                             
+0000ab91  mpu_init                            
+0000add5  SYSCFG_DL_GPIO_init                 
+0000aef1  atan2f                              
+0000b009  aligned_alloc                       
+0000b009  memalign                            
+0000b115  app_mpu6050_attitude_send           
+0000b325  DL_Timer_initFourCCPWMMode          
+0000b51d  fputs                               
+0000b60d  dmp_set_orientation                 
+0000b6f9  mpu_dmp_init                        
+0000b7e1  app_image_store_get_file_by_index   
+0000b8c5  free                                
+0000ba8d  mpu_set_sensors                     
+0000bb6d  setvbuf                             
+0000bc4d  ldexp                               
+0000bc4d  ldexpl                              
+0000bc4d  scalbn                              
+0000bc4d  scalbnl                             
+0000bd29  __aeabi_fsub                        
+0000bd29  __subsf3                            
+0000bd33  __addsf3                            
+0000bd33  __aeabi_fadd                        
+0000be01  mpu_set_bypass                      
+0000bed1  mpu_set_dmp_state                   
+0000c06d  SysTick_Handler                     
+0000c1f5  inv_orientation_matrix_to_scalar    
+0000c2b1  ldexpf                              
+0000c2b1  scalbnf                             
+0000c36d  sqrtf                               
+0000c421  LCD_Address_Set                     
+0000c4cd  mpu_configure_fifo                  
+0000c579  pid_calc                            
+0000c61d  uart_openmv_read_line               
+0000c6c1  __udivmoddi4                        
+0000c763  __aeabi_idiv0                       
+0000c765  mpu6050_dmp_init                    
+0000c805  mpu_read_fifo_stream                
+0000c8a5  fputc                               
+0000c941  line_follow_parse_command           
+0000c9dd  memcpy                              
+0000ca77  __aeabi_ldiv0                       
+0000ca79  mpu_set_accel_fsr                   
+0000cb11  encoder_handle_gpio_irq             
+0000cc35  __cmpsf2                            
+0000cc35  __eqsf2                             
+0000cc35  __lesf2                             
+0000cc35  __ltsf2                             
+0000cc35  __nesf2                             
+0000cc6f  __gesf2                             
+0000cc6f  __gtsf2                             
+0000ccab  __aeabi_fcmpun                      
+0000ccab  __unordsf2                          
+0000ccc1  __aeabi_fmul                        
+0000ccc1  __mulsf3                            
+0000cd4d  app_image_store_show_image          
+0000cdd5  mpu_set_gyro_fsr                    
+0000ce5c  C$$EXIT                             
+0000ce5d  HOSTexit                            
+0000ce61  strcmp                              
+0000cee9  __aeabi_fdiv                        
+0000cee9  __divsf3                            
+0000cf6b  _nop                                
+0000cf6d  SYSCFG_DL_UART_DEBUG_init           
+0000cfe9  SYSCFG_DL_UART_OPENMV_init          
+0000d065  __TI_closefile                      
+0000d0e1  __TI_decompress_lzss                
+0000d15d  line_follow_get_turn_adjust         
+0000d1d5  mpu6050_read_debug                  
+0000d2c5  __gedf2                             
+0000d2c5  __gtdf2                             
+0000d3ad  mpu_set_lpf                         
+0000d421  __aeabi_d2f                         
+0000d421  __truncdfsf2                        
+0000d495  uart_debug_handle_irq               
+0000d505  uart_openmv_handle_irq              
+0000d575  HOSTlseek                           
+0000d5e1  HOSTrename                          
+0000d64d  SYSCFG_DL_PWM_LEFT_init             
+0000d6b9  SYSCFG_DL_PWM_RIGHT_init            
+0000d725  app_car_control_init                
+0000d791  app_menu_init                       
+0000d7fd  fseeko                              
+0000d869  getdevice                           
+0000d8d5  mpu_write_mem                       
+0000d941  __cmpdf2                            
+0000d941  __eqdf2                             
+0000d941  __ledf2                             
+0000d941  __ltdf2                             
+0000d941  __nedf2                             
+0000d9a9  dmp_set_fifo_rate                   
+0000da11  TB6612_Init                         
+0000da75  __TI_wrt_ok                         
+0000db3d  memset                              
+0000db9f  mget_ms                             
+0000dba1  BO_Control                          
+0000dc01  SYSCFG_DL_initPower                 
+0000dc61  HOSTopen                            
+0000dcbd  app_mpu6050_attitude_process_command
+0000dd19  printf                              
+0000dd75  __aeabi_dcmpeq                      
+0000dd87  __aeabi_dcmplt                      
+0000dd99  __aeabi_dcmple                      
+0000ddab  __aeabi_dcmpge                      
+0000ddbd  __aeabi_dcmpgt                      
+0000ddd1  __aeabi_fcmpeq                      
+0000dde3  __aeabi_fcmplt                      
+0000ddf5  __aeabi_fcmple                      
+0000de07  __aeabi_fcmpge                      
+0000de19  __aeabi_fcmpgt                      
+0000de2d  AO_Control                          
+0000de85  HOSTread                            
+0000dedd  HOSTwrite                           
+0000df89  __TI_doflush                        
+0000dfdd  close                               
+0000e02d  TB6612_Motor_Stop                   
+0000e079  uart_debug_service_tx               
+0000e0c5  uart_debug_write_string             
+0000e111  LCD_ShowString                      
+0000e15d  DL_UART_init                        
+0000e1a5  HOSTclose                           
+0000e1ed  HOSTunlink                          
+0000e235  SYSCFG_DL_SPI_LCD_init              
+0000e27d  encoder_init                        
+0000e2c5  snprintf                            
+0000e30d  DL_SPI_init                         
+0000e351  SYSCFG_DL_init                      
+0000e395  app_car_control_send_heartbeat      
+0000e3d9  atoi                                
+0000e41d  SYSCFG_DL_SYSCTL_init               
+0000e45d  __aeabi_uidiv                       
+0000e45d  __aeabi_uidivmod                    
+0000e49d  __aeabi_f2d                         
+0000e49d  __extendsfdf2                       
+0000e4dd  motion_control_init                 
+0000e519  __TI_auto_init_nobinit_nopinit      
+0000e555  __aeabi_i2f                         
+0000e555  __floatsisf                         
+0000e591  __muldsi3                           
+0000e5cd  uart_debug_read_byte                
+0000e605  __aeabi_f2iz                        
+0000e605  __fixsfsi                           
+0000e63d  __TI_cleanup                        
+0000e671  __TI_readmsg                        
+0000e6a5  __TI_writemsg                       
+0000e6d1  C$$IO$$                             
+0000e6d9  exit                                
+0000e70d  finddevice                          
+0000e741  mpu_get_accel_fsr                   
+0000e7d9  __aeabi_f2uiz                       
+0000e7d9  __fixunssfsi                        
+0000e80d  line_follow_is_valid                
+0000e86d  sscanf                              
+0000e89d  mpu6050_reset_fallback_angles       
+0000e8f5  unlink                              
+0000e949  line_follow_is_active               
+0000e971  lseek                               
+0000e999  mpu6050_release_bus                 
+0000e9c1  uart_debug_init                     
+0000e9e9  uart_openmv_init                    
+0000ea11  write                               
+0000ea39  _c_int00_noargs                     
+0000ea61  __aeabi_ui2f                        
+0000ea61  __floatunsisf                       
+0000ea89  line_follow_init                    
+0000eaad  mpu6050_read_angles                 
+0000ead1  w25q64_is_valid_jedec_id            
+0000eaf5  __aeabi_lmul                        
+0000eaf5  __muldi3                            
+0000eb19  memccpy                             
+0000eb5d  mpu6050_read_id                     
+0000eb7d  __aeabi_llsl                        
+0000eb7d  __ashldi3                           
+0000eb9d  DL_Timer_setCaptCompUpdateMethod    
+0000ebb9  DL_Timer_setClockConfig             
+0000ebd5  DL_UART_receiveDataCheck            
+0000ebf1  DL_UART_transmitDataCheck           
+0000ec0d  dmp_load_motion_driver_firmware     
+0000ec45  spi_write_bus                       
+0000ec61  w25q64_init                         
+0000ec99  __aeabi_memset                      
+0000ec99  __aeabi_memset4                     
+0000ec99  __aeabi_memset8                     
+0000eca7  __aeabi_memclr                      
+0000eca7  __aeabi_memclr4                     
+0000eca7  __aeabi_memclr8                     
+0000ecb5  DL_Timer_setCaptureCompareOutCtl    
+0000eccd  LCD_WR_DATA8                        
+0000ecfd  encoder_get_counts                  
+0000ed15  encoder_reset                       
+0000ed2d  pid_init                            
+0000ed59  __aeabi_uldivmod                    
+0000ed6d  DL_SPI_setClockConfig               
+0000ed7f  DL_UART_setClockConfig              
+0000ed91  __TI_decompress_none                
+0000eda5  DL_Timer_setCaptureCompareValue     
+0000edb5  app_car_control_toggle_status_led   
+0000edc5  motion_control_get_target_deg_s     
+0000edd5  motion_control_get_target_mm_s      
+0000ede5  motion_control_is_active            
+0000edf5  mpu6050_scl_is_high                 
+0000ee05  mpu6050_sda_is_high                 
+0000ee15  wcslen                              
+0000ee25  __TI_zero_init                      
+0000ee43  mpu6050_delay_ms                    
+0000eea5  app_image_store_is_receiving        
+0000eeb1  line_follow_get_error               
+0000eebd  malloc                              
+0000eec9  motion_control_get_mode             
+0000eed5  motion_control_is_busy              
+0000eee1  pid_reset                           
+0000eeed  uart_debug_get_rx_dropped_bytes     
+0000eef9  uart_debug_get_tx_dropped_bytes     
+0000ef05  DL_Common_delayCycles               
+0000ef25  __aeabi_errno_addr                  
+0000ef53  __aeabi_dmul_fast                   
+0000ef65  mpu6050_delay_us                    
+0000ef6f  GROUP1_IRQHandler                   
+0000efb9  UART0_IRQHandler                    
+0000efc1  UART2_IRQHandler                    
+0000efc9  __aeabi_ddiv_fast                   
+0000efd9  app_image_store_init                
+0000efe1  app_mpu6050_attitude_init           
+0000efe9  fseek                               
+0000eff1  remove                              
+0000eff9  __aeabi_memcpy                      
+0000eff9  __aeabi_memcpy4                     
+0000eff9  __aeabi_memcpy8                     
+0000f043  abort                               
+0000f061  Reset_Handler                       
+0000f065  _system_pre_init                    
+0000f070  ascii_3216                          
+00010830  ascii_2412                          
+000125f6  ascii_1608                          
+00012be6  ascii_1206                          
+00013460  __aeabi_ctype_table_                
+00013460  __aeabi_ctype_table_C               
+000139a0  test                                
+00013a5c  reg                                 
+00013f24  hw                                  
+000141cc  __TI_Handler_Table_Base             
+000141d8  __TI_Handler_Table_Limit            
+000141e0  __TI_CINIT_Base                     
+000141f0  __TI_CINIT_Limit                    
+000141f0  __TI_CINIT_Warm                     
 20200000  __start___llvm_prf_bits             
 20200000  __start___llvm_prf_cnts             
 20200000  __stop___llvm_prf_bits              
@@ -1541,17 +1602,17 @@ address   name
 2020265c  gPWM_RIGHTBackup                    
 20202718  __TI_tmpnams                        
 20202878  gSPI_LCDBackup                      
-20202918  parmbuf                             
-20202a18  _sys_memory                         
-20203218  _ftable                             
-20203308  _device                             
-20203380  _stream                             
-20203408  __TI_cleanup_ptr                    
-2020340c  __TI_dtors_ptr                      
-20203410  __TI_ft_end                         
-20203414  __aeabi_errno                       
-20203418  _lock                               
-2020341c  _unlock                             
+20202938  parmbuf                             
+20202a48  _sys_memory                         
+20203248  _ftable                             
+20203338  _device                             
+202033b0  _stream                             
+20203438  __TI_cleanup_ptr                    
+2020343c  __TI_dtors_ptr                      
+20203440  __TI_ft_end                         
+20203444  __aeabi_errno                       
+20203448  _lock                               
+2020344c  _unlock                             
 20207e00  __stack                             
 20208000  __STACK_END                         
 ffffffff  __TI_pprof_out_hndl                 
@@ -1562,4 +1623,4 @@ ffffffff  binit
 UNDEFED   __mpu_init                          
 UNDEFED   _system_post_cinit                  
 
-[362 symbols]
+[367 symbols]
