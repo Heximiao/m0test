@@ -9,8 +9,9 @@
 #include "app/app_car_control.h"
 #include "app/app_image_store.h"
 #include "app/app_menu.h"
-#include "app/app_mpu6050_attitude.h"
+#include "app/app_attitude.h"
 #include "bsp/bsp_tb6612.h"
+#include "bsp/jy61/bsp_jy61.h"
 #include "hw/hw_encoder.h"
 #include "hw/hw_lcd.h"
 #include "hw/hw_openmv_uart.h"
@@ -89,10 +90,11 @@ int main(void)
      *   PB14 -> LCD CS
      *   PB26 -> LCD BLK/backlight
      *
-     * MPU6050 software I2C:
-     *   PA1 -> SCL
-     *   PA0 -> SDA
-     *   DMP attitude telemetry: ATT PITCH/ROLL/YAW, degrees * 100
+     * JY61P attitude UART:
+     *   PB6 -> UART1 TX, connect to JY61P RX
+     *   PB7 -> UART1 RX, connect to JY61P TX
+     *   Baud rate: 9600, 8N1
+     *   Attitude telemetry: ATT PITCH/ROLL/YAW, degrees * 100
      *
      * W25Q64 software SPI:
      *   PA12 -> CS
@@ -122,7 +124,7 @@ int main(void)
     app_car_control_init();
     app_menu_init(gSysTickMs);
 
-    app_mpu6050_attitude_init();
+    app_attitude_init();
 
     SysTick_Config(CPUCLK_FREQ / 1000U);
 
@@ -137,7 +139,7 @@ int main(void)
 
         while (uart_debug_read_line(command, sizeof(command))) {
             if (app_image_store_process_command(command)) {
-            } else if (!app_mpu6050_attitude_process_command(command)) {
+            } else if (!app_attitude_process_command(command)) {
                 app_car_control_process_command(command);
             }
         }
@@ -146,6 +148,7 @@ int main(void)
             app_car_control_process_command(command);
         }
 
+        app_attitude_poll();
         uart_debug_service_tx();
 
         if (gControlUpdatePending) {
@@ -155,7 +158,7 @@ int main(void)
 
         if (gAttitudeUpdatePending) {
             gAttitudeUpdatePending = false;
-            app_mpu6050_attitude_send(gSysTickMs);
+            app_attitude_send(gSysTickMs);
         }
 
         if (gTelemetryUpdatePending) {
@@ -214,6 +217,11 @@ void UART_DEBUG_INST_IRQHandler(void)
 void UART_OPENMV_INST_IRQHandler(void)
 {
     uart_openmv_handle_irq();
+}
+
+void UART_JY61P_INST_IRQHandler(void)
+{
+    jy61_handle_irq();
 }
 
 void GROUP1_IRQHandler(void)

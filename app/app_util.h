@@ -39,4 +39,13 @@ static inline int32_t app_scale_float_1000(float value)
     return (int32_t) ((value * 1000.0f) - 0.5f);
 }
 
+static inline int32_t app_scale_float_10000(float value)
+{
+    if (value >= 0.0f) {
+        return (int32_t) ((value * 10000.0f) + 0.5f);
+    }
+
+    return (int32_t) ((value * 10000.0f) - 0.5f);
+}
+
 #endif
