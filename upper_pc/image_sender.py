@@ -1,6 +1,7 @@
 import argparse
 import binascii
 import pathlib
+import re
 import struct
 import sys
 import time
@@ -18,6 +19,12 @@ except ImportError:
 
 DEFAULT_BAUD = 115200
 DEFAULT_CHUNK = 256
+
+
+def image_name_from_path(path):
+    stem = pathlib.Path(path).stem[:15]
+    clean = re.sub(r"[^A-Za-z0-9_.-]", "_", stem)
+    return clean or "image"
 
 
 def image_to_rgb565(path, width=None, height=None):
@@ -84,7 +91,17 @@ def send_image(args):
         width, height, payload = image_to_rgb565(path, args.width, args.height)
 
     crc = binascii.crc32(payload) & 0xFFFFFFFF
-    command = f"IMG_WRITE {args.slot} {width} {height} {len(payload)} {crc:08X}\n"
+    slot_text = str(args.slot).strip().lower()
+    slot = None if slot_text in ("", "auto") else int(slot_text)
+    if slot is not None and not (0 <= slot < 255):
+        raise RuntimeError("--slot must be auto or 0..254")
+    if slot is None:
+        command = (
+            f"IMG_SAVE {image_name_from_path(path)} {width} {height} "
+            f"{len(payload)} {crc:08X}\n"
+        )
+    else:
+        command = f"IMG_WRITE {slot} {width} {height} {len(payload)} {crc:08X}\n"
 
     with serial.Serial(args.port, args.baud, timeout=0.2, write_timeout=2.0) as port:
         port.reset_input_buffer()
@@ -119,10 +136,14 @@ def send_image(args):
 
         if args.progress:
             print()
-        wait_for(port, "OK IMG_DONE", timeout_s=60.0)
+        done_line = wait_for(port, "OK IMG_DONE", timeout_s=60.0)
 
         if args.show:
-            show_cmd = f"IMG_SHOW {args.slot}\n"
+            image_id = slot
+            if image_id is None:
+                done_match = done_line.split("ID=", 1)
+                image_id = int(done_match[1].split()[0])
+            show_cmd = f"IMG_SHOW {image_id}\n"
             print(f"> {show_cmd.strip()}")
             port.write(show_cmd.encode("ascii"))
             wait_for(port, "OK IMG_SHOW", timeout_s=20.0)
@@ -133,7 +154,7 @@ def parse_args(argv):
     parser.add_argument("image", help="PNG/JPG image or raw RGB565 .bin")
     parser.add_argument("--port", required=True, help="COM port, for example COM6")
     parser.add_argument("--baud", type=int, default=DEFAULT_BAUD)
-    parser.add_argument("--slot", type=int, default=0)
+    parser.add_argument("--slot", default="auto", help="Image ID 0..254, or auto")
     parser.add_argument("--width", type=int, default=320)
     parser.add_argument("--height", type=int, default=170)
     parser.add_argument("--chunk", type=int, default=DEFAULT_CHUNK)

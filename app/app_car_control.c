@@ -432,8 +432,9 @@ static void set_motor_duty(float leftDutyPercent, float rightDutyPercent)
     }
 
     /*
-     * Board wiring: TB6612 channel A drives the physical left wheel, and
-     * channel B drives the physical right wheel.
+     * Logical left/right follow the wiring map in main.c: left uses
+     * PWM_LEFT plus PA25/PA31 direction pins, right uses PWM_RIGHT plus
+     * PB16/PB13 direction pins.
      */
     AO_Control((leftDutyPercent >= 0.0f) ? 1U : 0U,
         duty_percent_to_speed(abs_float(leftDutyPercent)));

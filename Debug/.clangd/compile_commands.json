@@ -77,11 +77,11 @@
    {
       "directory" : "C:/Users/14166/workspace_ccstheia/gpio_toggle_output/Debug",
       "command"   : "clang++ -I\"C:/Users/14166/workspace_ccstheia/gpio_toggle_output\" -I\"C:/Users/14166/workspace_ccstheia/gpio_toggle_output/Debug\" -I\"C:/TI/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"C:/TI/mspm0_sdk_2_10_00_04/source\" -isystem\"F:/yingyong/ccs/ccs/tools/compiler/ti-cgt-armllvm_5.1.1.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"F:/yingyong/ccs/ccs/tools/compiler/ti-cgt-armllvm_5.1.1.LTS/include/c++/v1\" -isystem\"F:/yingyong/ccs/ccs/tools/compiler/ti-cgt-armllvm_5.1.1.LTS/lib/clang/22/include\" -isystem\"F:/yingyong/ccs/ccs/tools/compiler/ti-cgt-armllvm_5.1.1.LTS/include/c\" -xc",
-      "file"      : "C:/Users/14166/workspace_ccstheia/gpio_toggle_output/app/app_image_store.c"
+      "file"      : "C:/Users/14166/workspace_ccstheia/gpio_toggle_output/hw/hw_w25q64.c"
    },
    {
       "directory" : "C:/Users/14166/workspace_ccstheia/gpio_toggle_output/Debug",
       "command"   : "clang++ -I\"C:/Users/14166/workspace_ccstheia/gpio_toggle_output\" -I\"C:/Users/14166/workspace_ccstheia/gpio_toggle_output/Debug\" -I\"C:/TI/mspm0_sdk_2_10_00_04/source/third_party/CMSIS/Core/Include\" -I\"C:/TI/mspm0_sdk_2_10_00_04/source\" -isystem\"F:/yingyong/ccs/ccs/tools/compiler/ti-cgt-armllvm_5.1.1.LTS/include/armv7em-ti-none-eabihf/c++/v1\" -isystem\"F:/yingyong/ccs/ccs/tools/compiler/ti-cgt-armllvm_5.1.1.LTS/include/c++/v1\" -isystem\"F:/yingyong/ccs/ccs/tools/compiler/ti-cgt-armllvm_5.1.1.LTS/lib/clang/22/include\" -isystem\"F:/yingyong/ccs/ccs/tools/compiler/ti-cgt-armllvm_5.1.1.LTS/include/c\" -xc",
-      "file"      : "C:/Users/14166/workspace_ccstheia/gpio_toggle_output/hw/hw_w25q64.c"
+      "file"      : "C:/Users/14166/workspace_ccstheia/gpio_toggle_output/app/app_image_store.c"
    }
 ]

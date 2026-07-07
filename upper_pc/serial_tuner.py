@@ -1,6 +1,7 @@
 import csv
 import binascii
 import math
+import pathlib
 import queue
 import re
 import threading
@@ -71,10 +72,14 @@ class SerialTunerApp:
         self.image_transfer = None
         self.image_writer_thread = None
         self.image_page_ack = threading.Event()
+        self.image_manager = None
+        self.image_list_active = False
+        self.image_list_rows = []
+        self.image_info_text = ""
 
         self.port_var = tk.StringVar()
         self.baud_var = tk.StringVar(value="115200")
-        self.image_slot_var = tk.StringVar(value="0")
+        self.image_slot_var = tk.StringVar(value="auto")
         self.image_show_after_send_var = tk.BooleanVar(value=True)
         self.base_var = tk.StringVar(value="20")
         self.kp_var = tk.StringVar(value="4.0")
@@ -128,11 +133,14 @@ class SerialTunerApp:
         ttk.Button(controls, text="Request Status", command=lambda: self.send_line("GET")).pack(
             side=tk.LEFT, padx=4
         )
-        ttk.Label(controls, text="Image Slot").pack(side=tk.LEFT, padx=(16, 0))
+        ttk.Label(controls, text="Image ID").pack(side=tk.LEFT, padx=(16, 0))
         ttk.Entry(controls, textvariable=self.image_slot_var, width=4).pack(
             side=tk.LEFT, padx=(4, 4)
         )
         ttk.Button(controls, text="Send Image", command=self.choose_image).pack(
+            side=tk.LEFT, padx=4
+        )
+        ttk.Button(controls, text="Image Files", command=self.open_image_manager).pack(
             side=tk.LEFT, padx=4
         )
         ttk.Checkbutton(
@@ -598,9 +606,10 @@ class SerialTunerApp:
             return
 
         try:
-            slot = int(self.image_slot_var.get().strip())
-            if slot < 0:
-                raise ValueError("slot must be non-negative")
+            slot_text = self.image_slot_var.get().strip().lower()
+            slot = -1 if slot_text in ("", "auto") else int(slot_text)
+            if slot < -1:
+                raise ValueError("image id must be auto or non-negative")
             if path.lower().endswith(".bin"):
                 width, height, payload = load_raw_rgb565(path, 320, 170)
             else:
@@ -615,7 +624,7 @@ class SerialTunerApp:
             "Send image",
             (
                 f"File: {path}\n"
-                f"Slot: {slot}\n"
+                f"Image ID: {'auto' if slot < 0 else slot}\n"
                 f"Size: {width} x {height}\n"
                 f"RGB565 bytes: {len(payload)} ({size_kb:.1f} KB)\n"
                 f"CRC32: {crc:08X}\n\n"
@@ -627,6 +636,7 @@ class SerialTunerApp:
 
         self.image_transfer = {
             "slot": slot,
+            "name": self._image_name_from_path(path),
             "width": width,
             "height": height,
             "payload": payload,
@@ -637,10 +647,20 @@ class SerialTunerApp:
             "show_after_send": self.image_show_after_send_var.get(),
         }
         self.image_page_ack.clear()
+        self.image_list_active = False
         self.status_var.set("Preparing image send")
-        self.send_line(f"IMG_WRITE {slot} {width} {height} {len(payload)} {crc:08X}")
+        if slot >= 0:
+            self.send_line(f"IMG_WRITE {slot} {width} {height} {len(payload)} {crc:08X}")
+        else:
+            self.send_line(
+                f"IMG_SAVE {self.image_transfer['name']} {width} {height} "
+                f"{len(payload)} {crc:08X}"
+            )
 
     def _handle_image_transfer_line(self, line):
+        if self._handle_image_manager_line(line):
+            return
+
         if self.image_transfer is None:
             return
 
@@ -665,16 +685,241 @@ class SerialTunerApp:
             slot = self.image_transfer["slot"]
             show_after_send = self.image_transfer["show_after_send"]
             self.image_transfer = None
-            self.status_var.set(f"Image slot {slot} sent")
+            self.status_var.set("Image sent")
             if show_after_send:
-                self.send_line(f"IMG_SHOW {slot}")
-            messagebox.showinfo("Image sent", f"Image slot {slot} written successfully.")
+                image_id = self._image_id_from_done_line(line, slot)
+                self.send_line(f"IMG_SHOW {image_id}")
+            if self.image_manager:
+                self.request_image_list()
+            messagebox.showinfo("Image sent", "Image written successfully.")
             return
 
         if line.startswith("ERR IMG") or line.startswith("ERR FLASH"):
             self.image_transfer = None
             self.status_var.set("Image send failed")
             messagebox.showerror("Image send failed", line)
+
+    def open_image_manager(self):
+        if not self.serial_port or not self.serial_port.is_open:
+            messagebox.showwarning("Not connected", "Connect to a COM port first.")
+            return
+
+        if self.image_manager and self.image_manager["window"].winfo_exists():
+            self.image_manager["window"].lift()
+            self.request_image_list()
+            return
+
+        window = tk.Toplevel(self.root)
+        window.title("Image File Manager")
+        window.geometry("760x420")
+
+        toolbar = ttk.Frame(window, padding=8)
+        toolbar.pack(fill=tk.X)
+        ttk.Button(toolbar, text="Refresh", command=self.request_image_list).pack(
+            side=tk.LEFT, padx=(0, 6)
+        )
+        ttk.Button(toolbar, text="Upload", command=self.choose_image).pack(
+            side=tk.LEFT, padx=6
+        )
+        ttk.Button(toolbar, text="Show", command=self.show_selected_image).pack(
+            side=tk.LEFT, padx=6
+        )
+        ttk.Button(toolbar, text="Delete", command=self.delete_selected_image).pack(
+            side=tk.LEFT, padx=6
+        )
+        info_var = tk.StringVar(value="No storage info yet")
+        ttk.Label(toolbar, textvariable=info_var).pack(side=tk.RIGHT)
+
+        columns = ("id", "name", "size", "resolution", "crc", "address")
+        tree = ttk.Treeview(window, columns=columns, show="headings", selectmode="browse")
+        tree.heading("id", text="ID")
+        tree.heading("name", text="Name")
+        tree.heading("size", text="Size")
+        tree.heading("resolution", text="Resolution")
+        tree.heading("crc", text="CRC32")
+        tree.heading("address", text="Address")
+        tree.column("id", width=54, anchor=tk.CENTER)
+        tree.column("name", width=160)
+        tree.column("size", width=96, anchor=tk.E)
+        tree.column("resolution", width=110, anchor=tk.CENTER)
+        tree.column("crc", width=110, anchor=tk.CENTER)
+        tree.column("address", width=90, anchor=tk.CENTER)
+        tree.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
+        tree.bind("<Double-1>", lambda _event: self.show_selected_image())
+
+        status_var = tk.StringVar(value="Ready")
+        ttk.Label(window, textvariable=status_var, padding=(8, 0, 8, 8)).pack(
+            fill=tk.X
+        )
+
+        self.image_manager = {
+            "window": window,
+            "tree": tree,
+            "status": status_var,
+            "info": info_var,
+        }
+        window.protocol("WM_DELETE_WINDOW", self.close_image_manager)
+        self.request_image_list()
+
+    def close_image_manager(self):
+        if self.image_manager and self.image_manager["window"].winfo_exists():
+            self.image_manager["window"].destroy()
+        self.image_manager = None
+        self.image_list_active = False
+
+    def request_image_list(self):
+        if not self.image_manager:
+            return
+        self.image_list_rows = []
+        self.image_list_active = True
+        self.image_manager["status"].set("Refreshing image list...")
+        self.send_line("IMG_INFO")
+        self.send_line("IMG_LIST")
+
+    def show_selected_image(self):
+        image_id = self._selected_image_id()
+        if image_id is None:
+            messagebox.showinfo("No selection", "Choose an image first.")
+            return
+        self.send_line(f"IMG_SHOW {image_id}")
+        if self.image_manager:
+            self.image_manager["status"].set(f"Showing image {image_id}")
+
+    def delete_selected_image(self):
+        image_id = self._selected_image_id()
+        if image_id is None:
+            messagebox.showinfo("No selection", "Choose an image first.")
+            return
+        if not messagebox.askokcancel("Delete image", f"Delete image {image_id}?"):
+            return
+        self.send_line(f"IMG_DELETE {image_id}")
+        if self.image_manager:
+            self.image_manager["status"].set(f"Deleting image {image_id}")
+
+    def _selected_image_id(self):
+        if not self.image_manager:
+            return None
+        tree = self.image_manager["tree"]
+        selection = tree.selection()
+        if not selection:
+            return None
+        values = tree.item(selection[0], "values")
+        if not values:
+            return None
+        try:
+            return int(values[0])
+        except ValueError:
+            return None
+
+    def _handle_image_manager_line(self, line):
+        if line.startswith("IMG_INFO "):
+            self.image_info_text = self._format_image_info(line)
+            if self.image_manager:
+                self.image_manager["info"].set(self.image_info_text)
+            return True
+
+        if line.startswith("IMG_LIST_BEGIN"):
+            self.image_list_active = True
+            self.image_list_rows = []
+            return True
+
+        if line.startswith("IMG_FILE "):
+            row = self._parse_image_file_line(line)
+            if row is not None:
+                self.image_list_rows.append(row)
+            return True
+
+        if line.startswith("IMG_LIST_END"):
+            self.image_list_active = False
+            self._update_image_manager_rows()
+            return True
+
+        if line.startswith("OK IMG_DELETE"):
+            if self.image_manager and self.image_transfer is None:
+                self.image_manager["status"].set(line)
+                self.request_image_list()
+            return True
+
+        if line.startswith("OK IMG_SHOW"):
+            if self.image_manager:
+                self.image_manager["status"].set("Image shown on LCD")
+            return False
+
+        if line.startswith("ERR IMG") and self.image_manager:
+            self.image_manager["status"].set(line)
+            return False
+
+        return self.image_list_active
+
+    def _parse_image_file_line(self, line):
+        values = {}
+        for part in line.split()[1:]:
+            if "=" not in part:
+                continue
+            key, value = part.split("=", 1)
+            values[key] = value
+        try:
+            size = int(values.get("SIZE", "0"))
+            width = int(values.get("W", "0"))
+            height = int(values.get("H", "0"))
+            return {
+                "id": int(values["ID"]),
+                "name": values.get("NAME", ""),
+                "size": size,
+                "resolution": f"{width} x {height}",
+                "crc": values.get("CRC", ""),
+                "address": values.get("ADDR", ""),
+            }
+        except (KeyError, ValueError):
+            return None
+
+    def _update_image_manager_rows(self):
+        if not self.image_manager:
+            return
+        tree = self.image_manager["tree"]
+        for item in tree.get_children():
+            tree.delete(item)
+        for row in sorted(self.image_list_rows, key=lambda item: item["id"]):
+            tree.insert(
+                "",
+                tk.END,
+                values=(
+                    row["id"],
+                    row["name"],
+                    self._format_bytes(row["size"]),
+                    row["resolution"],
+                    row["crc"],
+                    row["address"],
+                ),
+            )
+        self.image_manager["status"].set(f"{len(self.image_list_rows)} image(s)")
+
+    def _format_image_info(self, line):
+        values = {}
+        for part in line.split()[1:]:
+            if "=" in part:
+                key, value = part.split("=", 1)
+                values[key] = value
+        try:
+            used = int(values.get("USED", "0"))
+            free = int(values.get("FREE", "0"))
+            total = int(values.get("TOTAL", "0"))
+            count = int(values.get("COUNT", "0"))
+            return (
+                f"{count} files  "
+                f"{self._format_bytes(used)} used  "
+                f"{self._format_bytes(free)} free  "
+                f"{self._format_bytes(total)} total"
+            )
+        except ValueError:
+            return line
+
+    def _format_bytes(self, value):
+        if value >= 1024 * 1024:
+            return f"{value / (1024 * 1024):.2f} MB"
+        if value >= 1024:
+            return f"{value / 1024:.1f} KB"
+        return f"{value} B"
 
     def _write_image_payload(self):
         transfer = self.image_transfer
@@ -706,6 +951,17 @@ class SerialTunerApp:
             self.rx_queue.put(("image_status", "[IMAGE] payload sent, waiting for MCU CRC"))
         except Exception as exc:
             self.rx_queue.put(("image_error", str(exc)))
+
+    def _image_name_from_path(self, path):
+        stem = pathlib.Path(path).stem[:15]
+        clean = "".join(ch if ch.isalnum() or ch in ("_", "-", ".") else "_" for ch in stem)
+        return clean or "image"
+
+    def _image_id_from_done_line(self, line, fallback):
+        match = re.search(r"ID=(\d+)", line)
+        if match:
+            return int(match.group(1))
+        return fallback
 
     def send_manual(self):
         command = self.manual_cmd_var.get().strip()

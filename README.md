@@ -85,6 +85,8 @@ TELE 0|1
 QUIET 0|1
 ```
 
+命令会自动忽略行首空格、制表符和 `>`，并转成大写后再解析。`PID` 更新左右轮共用的速度环参数；`BASE` 设置共享目标速度并退出手动电机/运动控制；`STOP` 停止电机、清除运动和手动模式；`GET` 输出当前状态；`ENCZERO` 清零左右编码器计数；`TELE 1/0` 打开或关闭 100 ms 遥测；`QUIET 1` 等价于关闭遥测。
+
 常用调试流程：
 
 ```text
@@ -103,7 +105,7 @@ MOTOR <duty_percent> [duration_ms]
 PULSE <duty_percent> <duration_ms>
 ```
 
-`MOTOR` 和 `PWM` 默认运行 2000 ms，最长 10000 ms；`PULSE` 最长 2000 ms。占空比会被限制在 `0%` 到 `85%`。
+`PWM` 分别设置左右轮开环占空比，`MOTOR` 给左右轮同一个开环占空比，`PULSE` 是短时同占空比脉冲测试。`MOTOR` 和 `PWM` 默认运行 2000 ms，最长 10000 ms；持续时间填 `0` 时会一直保持手动模式，直到 `STOP` 或新的控制命令。`PULSE` 最长 2000 ms。占空比会被限制在 `0%` 到 `85%`。
 
 ### 运动命令
 
@@ -115,6 +117,8 @@ TURN <angle_deg> [angular_deg_s]
 ANGLE <angle_deg> [angular_deg_s]
 MSTOP
 ```
+
+`DRIVE` 同时给线速度和角速度，`SPEED` 只给直线速度，`DIST` 按距离运行，`TURN`/`ANGLE` 按角度原地转向；`TURN`/`ANGLE` 不写角速度时默认 `90 deg/s`。收到运动命令后，固件会停止 `BASE` 目标并返回 `OK MOTION`；`MSTOP` 只停止运动控制模式。
 
 运动换算参数在 `app/app_motion_control.c`：
 
@@ -147,6 +151,21 @@ MPUZERO
 
 `MPU` 输出初始化状态、I2C 引脚状态、DMP/FIFO 调试信息和失败计数。`MPUINIT` 重新初始化 MPU6050 和 DMP。`MPUZERO` 清零回退姿态算法的参考角。
 
+### W25Q64 图片存储
+
+```text
+FLASHID
+IMG_SAVE <name> <width> <height> <size> <crc32>
+IMG_WRITE <id> <width> <height> <size> <crc32>
+IMG_LIST
+IMG_INFO
+IMG_SHOW <id>
+IMG_SLOT_SHOW <slot>
+IMG_DELETE <id>
+```
+
+图片数据通过 UART0 发送，格式为 RGB565 原始像素流。`IMG_SAVE` 自动分配图片 ID，名称最长 15 个非空白字符；`IMG_WRITE` 覆盖指定 ID，`id` 范围为 `0..254`；`IMG_SHOW` 从索引中按 ID 显示图片；`IMG_SLOT_SHOW` 兼容旧版固定槽位地址；`IMG_INFO` 输出容量、已用空间、剩余空间和图片数量；`IMG_LIST` 输出所有索引项。推荐使用 `upper_pc/image_sender.py` 或上位机工具发送图片，不手工敲二进制数据。
+
 ## 遥测格式
 
 开启 `TELE 1` 后，固件每 100 ms 输出一行键值对，例如：
@@ -172,9 +191,9 @@ RUN ms=30000 L=1234 R=1230 RXDROP=0 TXDROP=0 LED=PB22
 | 功能 | 引脚 | 代码/SysConfig 名称 |
 | --- | --- | --- |
 | 左轮 PWM / TB6612 PWMD | PA8 | `PWM_LEFT` / TIMA0 CCP0 |
-| 左轮方向 / DIN1, DIN2 | PA25, PA31 | `GPIO_MOTOR_A_AIN1`, `GPIO_MOTOR_A_AIN2` |
+| 左轮方向 / TB6612 DIN1, DIN2 | PA25, PA31 | `GPIO_MOTOR_A_AIN1`, `GPIO_MOTOR_A_AIN2` |
 | 右轮 PWM / TB6612 PWMA | PB4 | `PWM_RIGHT` / TIMA1 CCP0 |
-| 右轮方向 / AIN1, AIN2 | PB16, PB13 | `GPIO_MOTOR_B_BIN1`, `GPIO_MOTOR_B_BIN2` |
+| 右轮方向 / TB6612 AIN1, AIN2 | PB16, PB13 | `GPIO_MOTOR_B_BIN1`, `GPIO_MOTOR_B_BIN2` |
 | TB6612 STBY | PA27 | `GPIO_MOTOR_A_STBY` |
 | 左轮编码器 E4A, E4B | PB2, PB3 | `LEFT_C0`, `LEFT_C1` |
 | 右轮编码器 E1A, E1B | PB0, PB1 | `RIGHT_C0`, `RIGHT_C1` |
@@ -190,7 +209,7 @@ RUN ms=30000 L=1234 R=1230 RXDROP=0 TXDROP=0 LED=PB22
 | W25Q64 CS, SCLK, MOSI, MISO | PA12, PA13, PA14, PA15 | 软件 SPI，`GPIO_W25Q64` |
 | 状态 LED | PB22 | `GPIO_STATUS_LED_PB22_LED` |
 
-左右轮命名以车尾看向车头为准。代码中 TB6612 通道 A 驱动左轮、通道 B 驱动右轮；编码器极性在 `hw/hw_encoder.c` 中处理，前进方向计数为正。`PB9` 当前用于 LCD SCLK，不再是右轮 PWM。
+左右轮命名以车尾看向车头为准，并与 `main.c` 的当前接线注释一致：左轮接 TB6612 的 `PWMD/DIN1/DIN2`，右轮接 TB6612 的 `PWMA/AIN1/AIN2`。代码里 `AO_Control()` 输出左轮 PWM（`PWM_LEFT`/PA8）并控制 PA25、PA31 两个方向脚，`BO_Control()` 输出右轮 PWM（`PWM_RIGHT`/PB4）并控制 PB16、PB13 两个方向脚；这里的 `GPIO_MOTOR_A/B` 是工程里的 GPIO 分组名，不等同于物理左右轮命名。编码器极性在 `hw/hw_encoder.c` 中处理，前进方向计数为正。`PB9` 当前用于 LCD SCLK，不再是右轮 PWM。
 
 ## 上位机工具
 
@@ -203,10 +222,10 @@ python serial_tuner.py
 图片写入 W25Q64：
 
 ```powershell
-python upper_pc/image_sender.py path\to\image.png --port COMx --slot 0 --show
+python upper_pc/image_sender.py path\to\image.png --port COMx --show
 ```
 
-脚本会把 PNG/JPG 转成 `320x170` RGB565，先发送 `IMG_WRITE` 命令，再通过 UART0 发送二进制像素数据。固件端支持 `FLASHID`、`IMG_WRITE <slot> <width> <height> <size> <crc32>` 和 `IMG_SHOW <slot>`。
+脚本会把 PNG/JPG 转成 `320x170` RGB565，先发送 `IMG_SAVE` 命令自动分配图片 ID，再通过 UART0 发送二进制像素数据。需要覆盖指定 ID 时可加 `--slot 3`。固件端支持 `FLASHID`、`IMG_SAVE <name> <width> <height> <size> <crc32>`、`IMG_WRITE <id> <width> <height> <size> <crc32>`、`IMG_LIST`、`IMG_INFO`、`IMG_DELETE <id>` 和 `IMG_SHOW <id>`。
 
 上位机主要用于连接 COM 口、下发 `PID`/`BASE`/`GET`、绘制 `TARGET`、`LD`、`RD`、`ERR` 曲线并保存 CSV。更详细说明见 `upper_pc/README.md`。
 
@@ -241,6 +260,7 @@ gpio_toggle_output/
 ├── README.md                    当前工程说明
 ├── app/                         应用层逻辑
 │   ├── app_car_control.c/.h     小车主控制、速度环、串口命令、遥测、巡线融合
+│   ├── app_image_store.c/.h     W25Q64 图片索引、写入、列表、显示和删除
 │   ├── app_line_follow.c/.h     解析 LINE 数据并生成巡线转向修正
 │   ├── app_motion_control.c/.h  距离、速度、转角等运动命令换算
 │   ├── app_mpu6050_attitude.c/.h MPU6050 姿态初始化、读取和命令处理
@@ -254,6 +274,7 @@ gpio_toggle_output/
 │   ├── hw_spi.c/.h              LCD SPI 写总线封装
 │   ├── hw_uart.c/.h             UART0 调试串口
 │   ├── hw_openmv_uart.c/.h      UART2 OpenMV/视觉串口
+│   ├── hw_w25q64.c/.h           W25Q64 软件 SPI Flash 读写擦除
 │   ├── lcdfont.h                LCD 中文字库
 │   └── lcdfont_ascii.h          LCD ASCII 字库
 ├── mid/
@@ -263,6 +284,7 @@ gpio_toggle_output/
 ├── opencv/
 │   └── line_follow_opencv.py    树莓派/OpenCV 巡线脚本
 ├── upper_pc/
+│   ├── image_sender.py          图片转 RGB565 并通过 UART 写入 W25Q64
 │   ├── serial_tuner.py          PC 串口调参和曲线工具
 │   ├── requirements.txt         Python 依赖
 │   └── README.md                上位机说明
