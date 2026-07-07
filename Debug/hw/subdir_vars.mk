@@ -10,41 +10,47 @@ C_SRCS += \
 ../hw/hw_lcd.c \
 ../hw/hw_openmv_uart.c \
 ../hw/hw_spi.c \
-../hw/hw_uart.c 
+../hw/hw_uart.c \
+../hw/hw_w25q64.c 
 
 C_DEPS += \
 ./hw/hw_encoder.d \
 ./hw/hw_lcd.d \
 ./hw/hw_openmv_uart.d \
 ./hw/hw_spi.d \
-./hw/hw_uart.d 
+./hw/hw_uart.d \
+./hw/hw_w25q64.d 
 
 OBJS += \
 ./hw/hw_encoder.o \
 ./hw/hw_lcd.o \
 ./hw/hw_openmv_uart.o \
 ./hw/hw_spi.o \
-./hw/hw_uart.o 
+./hw/hw_uart.o \
+./hw/hw_w25q64.o 
 
 OBJS__QUOTED += \
 "hw\hw_encoder.o" \
 "hw\hw_lcd.o" \
 "hw\hw_openmv_uart.o" \
 "hw\hw_spi.o" \
-"hw\hw_uart.o" 
+"hw\hw_uart.o" \
+"hw\hw_w25q64.o" 
 
 C_DEPS__QUOTED += \
 "hw\hw_encoder.d" \
 "hw\hw_lcd.d" \
 "hw\hw_openmv_uart.d" \
 "hw\hw_spi.d" \
-"hw\hw_uart.d" 
+"hw\hw_uart.d" \
+"hw\hw_w25q64.d" 
 
 C_SRCS__QUOTED += \
 "../hw/hw_encoder.c" \
 "../hw/hw_lcd.c" \
 "../hw/hw_openmv_uart.c" \
 "../hw/hw_spi.c" \
-"../hw/hw_uart.c" 
+"../hw/hw_uart.c" \
+"../hw/hw_w25q64.c" 
 
 

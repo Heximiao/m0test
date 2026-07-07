@@ -2,7 +2,7 @@
 #include "ti_msp_dl_config.h"
 
 #define UART_TX_BUFFER_SIZE (2048U)
-#define UART_RX_BUFFER_SIZE (128U)
+#define UART_RX_BUFFER_SIZE (1024U)
 
 static uint8_t gUartTxBuffer[UART_TX_BUFFER_SIZE];
 static volatile uint16_t gUartTxHead;
@@ -76,6 +76,11 @@ bool uart_debug_read_line(char *line, size_t lineSize)
     }
 
     return false;
+}
+
+bool uart_debug_read_byte(uint8_t *byte)
+{
+    return read_rx_byte(byte);
 }
 
 void uart_debug_handle_irq(void)

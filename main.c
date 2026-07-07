@@ -7,6 +7,7 @@
  */
 
 #include "app/app_car_control.h"
+#include "app/app_image_store.h"
 #include "app/app_mpu6050_attitude.h"
 #include "bsp/bsp_tb6612.h"
 #include "hw/hw_encoder.h"
@@ -89,10 +90,17 @@ int main(void)
      *   PA1 -> SCL
      *   PA0 -> SDA
      *   DMP attitude telemetry: ATT PITCH/ROLL/YAW, degrees * 100
+     *
+     * W25Q64 software SPI:
+     *   PA12 -> CS
+     *   PA13 -> SCLK
+     *   PA14 -> MOSI   DI
+     *   PA15 -> MISO   DO
      */
     encoder_init();
     uart_debug_init();
     uart_openmv_init();
+    app_image_store_init();
     TB6612_Init();
     lcd_init();
     LCD_Fill(0, 0, LCD_W, LCD_H, BLACK);
@@ -112,8 +120,15 @@ int main(void)
     while (1) {
         char command[UART_DEBUG_LINE_BUFFER_SIZE];
 
+        if (app_image_store_is_receiving()) {
+            app_image_store_service();
+            uart_debug_service_tx();
+            continue;
+        }
+
         while (uart_debug_read_line(command, sizeof(command))) {
-            if (!app_mpu6050_attitude_process_command(command)) {
+            if (app_image_store_process_command(command)) {
+            } else if (!app_mpu6050_attitude_process_command(command)) {
                 app_car_control_process_command(command);
             }
         }

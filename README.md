@@ -187,6 +187,7 @@ RUN ms=30000 L=1234 R=1230 RXDROP=0 TXDROP=0 LED=PB22
 | MPU6050 SCL, SDA | PA1, PA0 | 软件 I2C，开漏上拉 |
 | LCD SPI MOSI, SCLK | PB8, PB9 | `SPI_LCD`，16 MHz |
 | LCD RES, DC, CS, BLK | PB10, PB11, PB14, PB26 | `GPIO_LCD` |
+| W25Q64 CS, SCLK, MOSI, MISO | PA12, PA13, PA14, PA15 | 软件 SPI，`GPIO_W25Q64` |
 | 状态 LED | PB22 | `GPIO_STATUS_LED_PB22_LED` |
 
 左右轮命名以车尾看向车头为准。代码中 TB6612 通道 A 驱动左轮、通道 B 驱动右轮；编码器极性在 `hw/hw_encoder.c` 中处理，前进方向计数为正。`PB9` 当前用于 LCD SCLK，不再是右轮 PWM。
@@ -198,6 +199,14 @@ cd upper_pc
 python -m pip install -r requirements.txt
 python serial_tuner.py
 ```
+
+图片写入 W25Q64：
+
+```powershell
+python upper_pc/image_sender.py path\to\image.png --port COMx --slot 0 --show
+```
+
+脚本会把 PNG/JPG 转成 `320x170` RGB565，先发送 `IMG_WRITE` 命令，再通过 UART0 发送二进制像素数据。固件端支持 `FLASHID`、`IMG_WRITE <slot> <width> <height> <size> <crc32>` 和 `IMG_SHOW <slot>`。
 
 上位机主要用于连接 COM 口、下发 `PID`/`BASE`/`GET`、绘制 `TARGET`、`LD`、`RD`、`ERR` 曲线并保存 CSV。更详细说明见 `upper_pc/README.md`。
 

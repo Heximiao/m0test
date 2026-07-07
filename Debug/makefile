@@ -14,6 +14,7 @@ ORDERED_OBJS += \
 "./startup_mspm0g350x_ticlang.o" \
 "./main.o" \
 "./app/app_car_control.o" \
+"./app/app_image_store.o" \
 "./app/app_line_follow.o" \
 "./app/app_motion_control.o" \
 "./app/app_mpu6050_attitude.o" \
@@ -26,6 +27,7 @@ ORDERED_OBJS += \
 "./hw/hw_openmv_uart.o" \
 "./hw/hw_spi.o" \
 "./hw/hw_uart.o" \
+"./hw/hw_w25q64.o" \
 "./mid/mid_pid.o" \
 $(GEN_CMDS__FLAG) \
 -Wl,-ldevice.cmd.genlibs \
@@ -161,8 +163,8 @@ gpio_toggle_output.out: $(OBJS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(GEN_MISC_FILES__QUOTED)$(GEN_FILES__QUOTED)$(EXE_OUTPUTS__QUOTED)
-	-$(RM) "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "main.o" "app\app_car_control.o" "app\app_line_follow.o" "app\app_motion_control.o" "app\app_mpu6050_attitude.o" "bsp\bsp_tb6612.o" "bsp\mpu6050\bsp_mpu6050.o" "bsp\mpu6050\inv_mpu.o" "bsp\mpu6050\inv_mpu_dmp_motion_driver.o" "hw\hw_encoder.o" "hw\hw_lcd.o" "hw\hw_openmv_uart.o" "hw\hw_spi.o" "hw\hw_uart.o" "mid\mid_pid.o" 
-	-$(RM) "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "main.d" "app\app_car_control.d" "app\app_line_follow.d" "app\app_motion_control.d" "app\app_mpu6050_attitude.d" "bsp\bsp_tb6612.d" "bsp\mpu6050\bsp_mpu6050.d" "bsp\mpu6050\inv_mpu.d" "bsp\mpu6050\inv_mpu_dmp_motion_driver.d" "hw\hw_encoder.d" "hw\hw_lcd.d" "hw\hw_openmv_uart.d" "hw\hw_spi.d" "hw\hw_uart.d" "mid\mid_pid.d" 
+	-$(RM) "ti_msp_dl_config.o" "startup_mspm0g350x_ticlang.o" "main.o" "app\app_car_control.o" "app\app_image_store.o" "app\app_line_follow.o" "app\app_motion_control.o" "app\app_mpu6050_attitude.o" "bsp\bsp_tb6612.o" "bsp\mpu6050\bsp_mpu6050.o" "bsp\mpu6050\inv_mpu.o" "bsp\mpu6050\inv_mpu_dmp_motion_driver.o" "hw\hw_encoder.o" "hw\hw_lcd.o" "hw\hw_openmv_uart.o" "hw\hw_spi.o" "hw\hw_uart.o" "hw\hw_w25q64.o" "mid\mid_pid.o" 
+	-$(RM) "ti_msp_dl_config.d" "startup_mspm0g350x_ticlang.d" "main.d" "app\app_car_control.d" "app\app_image_store.d" "app\app_line_follow.d" "app\app_motion_control.d" "app\app_mpu6050_attitude.d" "bsp\bsp_tb6612.d" "bsp\mpu6050\bsp_mpu6050.d" "bsp\mpu6050\inv_mpu.d" "bsp\mpu6050\inv_mpu_dmp_motion_driver.d" "hw\hw_encoder.d" "hw\hw_lcd.d" "hw\hw_openmv_uart.d" "hw\hw_spi.d" "hw\hw_uart.d" "hw\hw_w25q64.d" "mid\mid_pid.d" 
 	-@echo ' '
 
 post-build:

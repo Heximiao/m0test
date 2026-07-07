@@ -19,6 +19,7 @@
 #define LCD_BLK_Set() DL_GPIO_setPins(GPIO_LCD_PORT, GPIO_LCD_PIN_BLK_PIN)
 
 void LCD_WR_DATA(unsigned int dat);
+void LCD_WR_DATA8(unsigned char dat);
 void lcd_init(void);
 void LCD_Address_Set(unsigned int x1, unsigned int y1, unsigned int x2,
     unsigned int y2);

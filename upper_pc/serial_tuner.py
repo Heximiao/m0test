@@ -1,4 +1,5 @@
 import csv
+import binascii
 import math
 import queue
 import re
@@ -6,6 +7,8 @@ import threading
 import time
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
+
+from image_sender import image_to_rgb565, load_raw_rgb565
 
 try:
     import serial
@@ -65,9 +68,14 @@ class SerialTunerApp:
         self.last_debug_sample_count = 0
         self.last_debug_draw_count = 0
         self.draw_pending = False
+        self.image_transfer = None
+        self.image_writer_thread = None
+        self.image_page_ack = threading.Event()
 
         self.port_var = tk.StringVar()
         self.baud_var = tk.StringVar(value="115200")
+        self.image_slot_var = tk.StringVar(value="0")
+        self.image_show_after_send_var = tk.BooleanVar(value=True)
         self.base_var = tk.StringVar(value="20")
         self.kp_var = tk.StringVar(value="4.0")
         self.ki_var = tk.StringVar(value="0.2")
@@ -120,6 +128,16 @@ class SerialTunerApp:
         ttk.Button(controls, text="Request Status", command=lambda: self.send_line("GET")).pack(
             side=tk.LEFT, padx=4
         )
+        ttk.Label(controls, text="Image Slot").pack(side=tk.LEFT, padx=(16, 0))
+        ttk.Entry(controls, textvariable=self.image_slot_var, width=4).pack(
+            side=tk.LEFT, padx=(4, 4)
+        )
+        ttk.Button(controls, text="Send Image", command=self.choose_image).pack(
+            side=tk.LEFT, padx=4
+        )
+        ttk.Checkbutton(
+            controls, text="Show", variable=self.image_show_after_send_var
+        ).pack(side=tk.LEFT, padx=(0, 8))
         ttk.Button(controls, text="Save CSV", command=self.save_csv).pack(side=tk.RIGHT, padx=4)
         ttk.Button(controls, text="Clear", command=self.clear_data).pack(side=tk.RIGHT, padx=4)
 
@@ -249,12 +267,24 @@ class SerialTunerApp:
 
             if kind == "line":
                 self.ui_line_count += 1
+                self._handle_image_transfer_line(payload)
                 if self._should_log_line(payload):
                     self._queue_log(payload)
                 sample = self._parse_sample(payload)
                 if sample is not None:
                     latest_sample = sample
                     should_draw = True
+            elif kind == "image_status":
+                self._queue_log(payload)
+            elif kind == "image_done":
+                self._queue_log(payload)
+                self.status_var.set(payload)
+                if self.image_transfer is not None:
+                    self.image_transfer["writing"] = False
+            elif kind == "image_error":
+                self._queue_log(f"[IMAGE ERROR] {payload}")
+                self.status_var.set("Image send failed")
+                self.image_transfer = None
             else:
                 self._queue_log(f"[ERROR] {payload}")
                 self.disconnect()
@@ -547,6 +577,135 @@ class SerialTunerApp:
 
     def send_base(self):
         self.send_line(f"BASE {self.base_var.get()}")
+
+    def choose_image(self):
+        if not self.serial_port or not self.serial_port.is_open:
+            messagebox.showwarning("Not connected", "Connect to a COM port first.")
+            return
+        if self.image_transfer is not None:
+            messagebox.showinfo("Busy", "An image transfer is already running.")
+            return
+
+        path = filedialog.askopenfilename(
+            title="Choose image",
+            filetypes=(
+                ("Images", "*.png;*.jpg;*.jpeg;*.bmp"),
+                ("Raw RGB565", "*.bin"),
+                ("All files", "*.*"),
+            ),
+        )
+        if not path:
+            return
+
+        try:
+            slot = int(self.image_slot_var.get().strip())
+            if slot < 0:
+                raise ValueError("slot must be non-negative")
+            if path.lower().endswith(".bin"):
+                width, height, payload = load_raw_rgb565(path, 320, 170)
+            else:
+                width, height, payload = image_to_rgb565(path, 320, 170)
+        except Exception as exc:
+            messagebox.showerror("Image conversion failed", str(exc))
+            return
+
+        crc = binascii.crc32(payload) & 0xFFFFFFFF
+        size_kb = len(payload) / 1024.0
+        confirmed = messagebox.askokcancel(
+            "Send image",
+            (
+                f"File: {path}\n"
+                f"Slot: {slot}\n"
+                f"Size: {width} x {height}\n"
+                f"RGB565 bytes: {len(payload)} ({size_kb:.1f} KB)\n"
+                f"CRC32: {crc:08X}\n\n"
+                "Send to W25Q64 now?"
+            ),
+        )
+        if not confirmed:
+            return
+
+        self.image_transfer = {
+            "slot": slot,
+            "width": width,
+            "height": height,
+            "payload": payload,
+            "crc": crc,
+            "writing": False,
+            "sent": 0,
+            "acked": 0,
+            "show_after_send": self.image_show_after_send_var.get(),
+        }
+        self.image_page_ack.clear()
+        self.status_var.set("Preparing image send")
+        self.send_line(f"IMG_WRITE {slot} {width} {height} {len(payload)} {crc:08X}")
+
+    def _handle_image_transfer_line(self, line):
+        if self.image_transfer is None:
+            return
+
+        if line.startswith("OK IMG_READY"):
+            if not self.image_transfer["writing"]:
+                self.image_transfer["writing"] = True
+                self.image_writer_thread = threading.Thread(
+                    target=self._write_image_payload, daemon=True
+                )
+                self.image_writer_thread.start()
+            return
+
+        if line.startswith("OK IMG_PAGE "):
+            try:
+                self.image_transfer["acked"] = int(line.split()[2])
+                self.image_page_ack.set()
+            except (IndexError, ValueError):
+                pass
+            return
+
+        if line.startswith("OK IMG_DONE"):
+            slot = self.image_transfer["slot"]
+            show_after_send = self.image_transfer["show_after_send"]
+            self.image_transfer = None
+            self.status_var.set(f"Image slot {slot} sent")
+            if show_after_send:
+                self.send_line(f"IMG_SHOW {slot}")
+            messagebox.showinfo("Image sent", f"Image slot {slot} written successfully.")
+            return
+
+        if line.startswith("ERR IMG") or line.startswith("ERR FLASH"):
+            self.image_transfer = None
+            self.status_var.set("Image send failed")
+            messagebox.showerror("Image send failed", line)
+
+    def _write_image_payload(self):
+        transfer = self.image_transfer
+        if transfer is None:
+            return
+
+        payload = transfer["payload"]
+        chunk_size = 256
+        page_timeout_s = 3.0
+
+        try:
+            sent = 0
+            while sent < len(payload):
+                if self.stop_event.is_set():
+                    return
+                chunk = payload[sent : sent + chunk_size]
+                self.image_page_ack.clear()
+                self.serial_port.write(chunk)
+                sent += len(chunk)
+                transfer["sent"] = sent
+                if not self.image_page_ack.wait(page_timeout_s):
+                    raise TimeoutError(f"timeout waiting for IMG_PAGE {sent}")
+                if transfer.get("acked", 0) != sent:
+                    raise RuntimeError(
+                        f"unexpected IMG_PAGE ack {transfer.get('acked')} expected {sent}"
+                    )
+                percent = sent * 100.0 / len(payload)
+                self.rx_queue.put(("image_status", f"[IMAGE] {sent}/{len(payload)} {percent:.1f}%"))
+            self.rx_queue.put(("image_status", "[IMAGE] payload sent, waiting for MCU CRC"))
+        except Exception as exc:
+            self.rx_queue.put(("image_error", str(exc)))
 
     def send_manual(self):
         command = self.manual_cmd_var.get().strip()
