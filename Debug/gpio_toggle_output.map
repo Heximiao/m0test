@@ -1,10 +1,10 @@
 ******************************************************************************
             TI ARM Clang Linker PC v5.1.1                      
 ******************************************************************************
->> Linked Wed Jul  8 14:19:23 2026
+>> Linked Wed Jul  8 14:34:13 2026
 
 OUTPUT FILE NAME:   <gpio_toggle_output.out>
-ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000e085
+ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000e075
 
 
 MEMORY CONFIGURATION
@@ -51,253 +51,253 @@ section   page    origin      length       input sections
                   00003c68    00000678     libc.a : k_rem_pio2.c.obj (.text.__kernel_rem_pio2)
                   000042e0    0000061c     app_image_store.o (.text.start_image_write)
                   000048fc    00000610     app_image_store.o (.text.app_image_store_service)
-                  00004f0c    000005f8     app_car_control.o (.text.app_car_control_update)
-                  00005504    000004e0     hw_lcd.o (.text.LCD_ShowChar)
-                  000059e4    00000494     hw_lcd.o (.text.LCD_Fill)
-                  00005e78    00000438     hw_w25q64.o (.text.w25q64_read_jedec_id)
-                  000062b0    00000408     app_menu.o (.text.app_menu_update)
-                  000066b8    000003f0     app_motion_control.o (.text.motion_control_parse_command)
-                  00006aa8    000003b0     libc.a : strtod.c.obj (.text.strtod)
-                  00006e58    0000035c     hw_w25q64.o (.text.w25q64_write)
-                  000071b4    00000354     hw_w25q64.o (.text.w25q64_send_address)
-                  00007508    00000350     libc.a : strtof.c.obj (.text.strtof)
-                  00007858    0000031c     app_attitude.o (.text.app_attitude_process_command)
-                  00007b74    0000030c     hw_lcd.o (.text.lcd_init)
-                  00007e80    000002dc     libc.a : divdf3_fast.c.obj (.text.__divdf3_fast)
-                  0000815c    000002cc     app_motion_control.o (.text.motion_control_update)
-                  00008428    000002ac     bsp_jy61.o (.text.jy61_probe_baudrate)
-                  000086d4    00000268     app_car_control.o (.text.app_car_control_send_telemetry)
-                  0000893c    00000240     hw_w25q64.o (.text.w25q64_read)
-                  00008b7c    00000228     app_car_control.o (.text.update_lturn)
-                  00008da4    00000208     hw_w25q64.o (.text.w25q64_wait_ready)
-                  00008fac    000001e0     app_image_store.o (.text.rewrite_index_entries)
-                  0000918c    000001dc     libc.a : strtoll.c.obj (.text.strtoll)
-                  00009368    000001d8            : muldf3_fast.c.obj (.text.__muldf3_fast)
-                  00009540    000001d8            : s_cosf.c.obj (.text.cosf)
-                  00009718    000001d8     main.o (.text.main)
-                  000098f0    000001d0     hw_w25q64.o (.text.w25q64_erase_sector)
-                  00009ac0    000001cc     libc.a : s_sinf.c.obj (.text.sinf)
-                  00009c8c    000001c8            : s_atanf.c.obj (.text.atanf)
-                  00009e54    000001c8     app_car_control.o (.text.send_status)
-                  0000a01c    000001b0     app_image_store.o (.text.app_image_store_get_file_count)
-                  0000a1cc    00000192     libclang_rt.builtins.a : adddf3.S.obj (.text)
-                  0000a35e    00000002     startup_mspm0g350x_ticlang.o (.text.Default_Handler)
-                  0000a360    0000017c     app_image_store.o (.text.ensure_index)
-                  0000a4dc    00000174     libc.a : e_sqrt.c.obj (.text.sqrt)
-                  0000a650    00000168            : strtoull.c.obj (.text.strtoull)
-                  0000a7b8    00000164     app_image_store.o (.text.delete_image_id)
-                  0000a91c    00000160     libc.a : e_asinf.c.obj (.text.asinf)
-                  0000aa7c    0000015c     bsp_jy61.o (.text.process_byte)
-                  0000abd8    00000148     libc.a : s_floor.c.obj (.text.floor)
-                  0000ad20    00000144     app_attitude.o (.text.send_jy61_status)
-                  0000ae64    00000144     libc.a : strtol.c.obj (.text.strtol)
-                  0000afa8    00000138     bsp_jy61.o (.text.jy61_set_baudrate)
-                  0000b0e0    00000134     hw_uart.o (.text.uart_debug_read_line)
-                  0000b214    0000012c     libc.a : strtoul.c.obj (.text.strtoul)
-                  0000b340    00000120     app_image_store.o (.text.display_image)
-                  0000b460    00000118     libc.a : e_atan2f.c.obj (.text.atan2f)
-                  0000b578    00000108     app_car_control.o (.text.set_motor_duty)
-                  0000b680    00000104     driverlib.a : dl_timer.o (.text.DL_Timer_initFourCCPWMMode)
-                  0000b784    00000100     bsp_jy61.o (.text.jy61_configure_output)
-                  0000b884    000000f8     ti_msp_dl_config.o (.text.SYSCFG_DL_GPIO_init)
-                  0000b97c    000000e4     app_image_store.o (.text.app_image_store_get_file_by_index)
-                  0000ba60    000000dc     libc.a : s_scalbn.c.obj (.text.scalbn)
-                  0000bb3c    000000d8     libclang_rt.builtins.a : addsf3.S.obj (.text)
-                  0000bc14    000000c4     main.o (.text.SysTick_Handler)
-                  0000bcd8    000000c4     bsp_jy61.o (.text.jy61_read_debug)
-                  0000bd9c    000000bc     libc.a : s_scalbnf.c.obj (.text.scalbnf)
-                  0000be58    000000b0     bsp_jy61.o (.text.jy61_init)
-                  0000bf08    000000ac     hw_lcd.o (.text.LCD_Address_Set)
-                  0000bfb4    000000ac     libc.a : s_cosf.c.obj (.text.__kernel_sindf)
-                  0000c060    000000ac            : s_sinf.c.obj (.text.__kernel_sindf)
-                  0000c10c    000000a8     app_image_store.o (.text.show_image_id)
-                  0000c1b4    000000a4     mid_pid.o (.text.pid_calc)
-                  0000c258    000000a4     hw_openmv_uart.o (.text.uart_openmv_read_line)
-                  0000c2fc    000000a2     libclang_rt.builtins.a : udivmoddi4.S.obj (.text)
-                  0000c39e    00000002                            : aeabi_div0.c.obj (.text.__aeabi_idiv0)
-                  0000c3a0    000000a0     bsp_jy61.o (.text.jy61_zero_yaw)
-                  0000c440    0000009c     libc.a : s_cosf.c.obj (.text.__kernel_cosdf)
-                  0000c4dc    0000009c            : s_sinf.c.obj (.text.__kernel_cosdf)
-                  0000c578    0000009c     app_line_follow.o (.text.line_follow_parse_command)
-                  0000c614    0000009c     app_attitude.o (.text.process_jy61_baud_command)
-                  0000c6b0    0000009c     app_attitude.o (.text.scan_jy61_baudrate)
-                  0000c74c    0000009a     libc.a : memcpy16.S.obj (.text:memcpy)
-                  0000c7e6    00000002     libclang_rt.builtins.a : aeabi_div0.c.obj (.text.__aeabi_ldiv0)
-                  0000c7e8    00000098     app_attitude.o (.text.app_attitude_init)
-                  0000c880    00000094     hw_encoder.o (.text.encoder_handle_gpio_irq)
-                  0000c914    00000090     app_car_control.o (.text.send_motor_ack)
-                  0000c9a4    0000008c     libclang_rt.builtins.a : comparesf2.S.obj (.text)
-                  0000ca30    0000008c                            : mulsf3.S.obj (.text)
-                  0000cabc    00000088     app_image_store.o (.text.app_image_store_show_image)
-                  0000cb44    0000000c     app_image_store.o (.text.app_image_store_is_receiving)
-                  0000cb50    00000088     libc.a : strcmp-armv6m.S.obj (.text:strcmp)
-                  0000cbd8    00000082     libclang_rt.builtins.a : divsf3.S.obj (.text)
-                  0000cc5a    00000002     --HOLE-- [fill = 0]
-                  0000cc5c    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_DEBUG_init)
-                  0000ccd8    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_JY61P_init)
-                  0000cd54    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_OPENMV_init)
-                  0000cdd0    0000007c     bsp_jy61.o (.text.jy61_read_angles)
-                  0000ce4c    0000007c     libc.a : copy_decompress_lzss.c.obj (.text:decompress:lzss)
-                  0000cec8    00000078     app_line_follow.o (.text.line_follow_get_turn_adjust)
-                  0000cf40    00000078     app_image_store.o (.text.sanitize_name)
-                  0000cfb8    00000074     libclang_rt.builtins.a : comparedf2.c.obj (.text.__gedf2)
-                  0000d02c    00000074     libc.a : sscanf.c.obj (.text._chkmbc)
-                  0000d0a0    00000074     libclang_rt.builtins.a : truncdfsf2.S.obj (.text)
-                  0000d114    00000070     ti_msp_dl_config.o (.text.SYSCFG_DL_initPower)
-                  0000d184    00000070     bsp_jy61.o (.text.jy61_poll)
-                  0000d1f4    00000070     hw_uart.o (.text.uart_debug_handle_irq)
-                  0000d264    00000070     hw_openmv_uart.o (.text.uart_openmv_handle_irq)
-                  0000d2d4    0000006c     ti_msp_dl_config.o (.text.SYSCFG_DL_PWM_LEFT_init)
-                  0000d340    0000006c     ti_msp_dl_config.o (.text.SYSCFG_DL_PWM_RIGHT_init)
-                  0000d3ac    0000006c     app_car_control.o (.text.app_car_control_init)
-                  0000d418    0000006c     app_menu.o (.text.app_menu_init)
-                  0000d484    0000006c     bsp_jy61.o (.text.jy61_handle_irq)
-                  0000d4f0    00000068     libclang_rt.builtins.a : comparedf2.c.obj (.text.__ledf2)
-                  0000d558    00000068     bsp_jy61.o (.text.jy61_read_quaternion)
-                  0000d5c0    00000064     bsp_tb6612.o (.text.TB6612_Init)
-                  0000d624    00000062     libc.a : memset16.S.obj (.text:memset)
-                  0000d686    00000002     --HOLE-- [fill = 0]
-                  0000d688    00000060     bsp_tb6612.o (.text.BO_Control)
-                  0000d6e8    0000005a     libclang_rt.builtins.a : aeabi_dcmp.S.obj (.text)
-                  0000d742    00000002     --HOLE-- [fill = 0]
-                  0000d744    0000005a                            : aeabi_fcmp.S.obj (.text)
-                  0000d79e    00000002     --HOLE-- [fill = 0]
-                  0000d7a0    00000058     bsp_tb6612.o (.text.AO_Control)
-                  0000d7f8    00000056     libclang_rt.builtins.a : aeabi_idivmod.S.obj (.text)
-                  0000d84e    00000002     --HOLE-- [fill = 0]
-                  0000d850    00000054     app_motion_control.o (.text.motion_control_init)
-                  0000d8a4    00000054     app_car_control.o (.text.send_pulse_ack)
-                  0000d8f8    0000004c     bsp_tb6612.o (.text.TB6612_Motor_Stop)
-                  0000d944    0000004c     hw_uart.o (.text.uart_debug_service_tx)
-                  0000d990    0000004c     hw_uart.o (.text.uart_debug_write_string)
-                  0000d9dc    0000004a     hw_lcd.o (.text.LCD_ShowString)
-                  0000da26    00000002     --HOLE-- [fill = 0]
-                  0000da28    0000004a     libclang_rt.builtins.a : fixdfsi.S.obj (.text)
-                  0000da72    00000002     --HOLE-- [fill = 0]
-                  0000da74    00000048     driverlib.a : dl_uart.o (.text.DL_UART_init)
-                  0000dabc    00000048     ti_msp_dl_config.o (.text.SYSCFG_DL_SPI_LCD_init)
-                  0000db04    00000048     ti_msp_dl_config.o (.text.SYSCFG_DL_init)
-                  0000db4c    00000048     hw_encoder.o (.text.encoder_init)
-                  0000db94    00000048     libc.a : snprintf.c.obj (.text.snprintf)
-                  0000dbdc    00000044     driverlib.a : dl_spi.o (.text.DL_SPI_init)
-                  0000dc20    00000044     app_car_control.o (.text.app_car_control_send_heartbeat)
-                  0000dc64    00000044     libc.a : atoi.c.obj (.text.atoi)
-                  0000dca8    00000040     ti_msp_dl_config.o (.text.SYSCFG_DL_SYSCTL_init)
-                  0000dce8    00000040     libclang_rt.builtins.a : aeabi_uidivmod.S.obj (.text)
-                  0000dd28    00000040                            : extendsfdf2.S.obj (.text)
-                  0000dd68    0000003c     libc.a : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit)
-                  0000dda4    0000003c     libclang_rt.builtins.a : floatsisf.S.obj (.text)
-                  0000dde0    0000003a                            : muldsi3.S.obj (.text)
-                  0000de1a    00000002     --HOLE-- [fill = 0]
-                  0000de1c    00000038     hw_uart.o (.text.uart_debug_read_byte)
-                  0000de54    00000038     libclang_rt.builtins.a : fixsfsi.S.obj (.text)
-                  0000de8c    00000032     libc.a : snprintf.c.obj (.text._outs)
-                  0000debe    00000002     --HOLE-- [fill = 0]
-                  0000dec0    00000032     libclang_rt.builtins.a : fixunssfsi.S.obj (.text)
-                  0000def2    00000002     --HOLE-- [fill = 0]
-                  0000def4    00000030     driverlib.a : dl_uart.o (.text.DL_UART_transmitDataBlocking)
-                  0000df24    00000030     app_line_follow.o (.text.line_follow_is_valid)
-                  0000df54    00000030     app_car_control.o (.text.send_unknown_command)
-                  0000df84    00000030     libc.a : sscanf.c.obj (.text.sscanf)
-                  0000dfb4    0000002c     app_image_store.o (.text.show_legacy_slot)
-                  0000dfe0    0000002c     libclang_rt.builtins.a : floatsidf.S.obj (.text)
-                  0000e00c    00000028     app_line_follow.o (.text.line_follow_is_active)
-                  0000e034    00000028     hw_uart.o (.text.uart_debug_init)
-                  0000e05c    00000028     hw_openmv_uart.o (.text.uart_openmv_init)
-                  0000e084    00000028     libc.a : boot_cortex_m.c.obj (.text:_c_int00_noargs)
-                  0000e0ac    00000028     libclang_rt.builtins.a : floatunsisf.S.obj (.text)
-                  0000e0d4    00000024     app_attitude.o (.text.app_attitude_read_yaw)
-                  0000e0f8    00000024     app_line_follow.o (.text.line_follow_init)
-                  0000e11c    00000024     hw_w25q64.o (.text.w25q64_is_valid_jedec_id)
-                  0000e140    00000024     libclang_rt.builtins.a : muldi3.S.obj (.text)
-                  0000e164    00000022     libc.a : memccpy.c.obj (.text.memccpy)
-                  0000e186    00000022     app_car_control.o (.text.strlen)
-                  0000e1a8    0000001e     libclang_rt.builtins.a : ashldi3.S.obj (.text)
-                  0000e1c6    00000002     --HOLE-- [fill = 0]
-                  0000e1c8    0000001c     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptCompUpdateMethod)
-                  0000e1e4    0000001c                 : dl_timer.o (.text.DL_Timer_setClockConfig)
-                  0000e200    0000001c                 : dl_uart.o (.text.DL_UART_receiveDataCheck)
-                  0000e21c    0000001c                 : dl_uart.o (.text.DL_UART_transmitDataCheck)
-                  0000e238    0000001c     hw_spi.o (.text.spi_write_bus)
-                  0000e254    0000001c     hw_w25q64.o (.text.w25q64_init)
-                  0000e270    0000001a     libclang_rt.builtins.a : aeabi_memset.S.obj (.text)
-                  0000e28a    00000002     --HOLE-- [fill = 0]
-                  0000e28c    00000018     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptureCompareOutCtl)
-                  0000e2a4    00000018     hw_lcd.o (.text.LCD_WR_DATA8)
-                  0000e2bc    00000018     libc.a : snprintf.c.obj (.text._outc)
-                  0000e2d4    00000018     hw_encoder.o (.text.encoder_get_counts)
-                  0000e2ec    00000018     hw_encoder.o (.text.encoder_reset)
-                  0000e304    00000018     mid_pid.o (.text.pid_init)
-                  0000e31c    00000014     libc.a : k_rem_pio2.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000e330    00000010     libclang_rt.builtins.a : adddf3.S.obj (.tramp.__aeabi_dadd.1)
-                  0000e340    00000014     libc.a : sscanf.c.obj (.text._inpchar)
-                  0000e354    00000014     app_attitude.o (.text.app_attitude_poll)
-                  0000e368    00000014     libclang_rt.builtins.a : aeabi_uldivmod.S.obj (.text)
-                  0000e37c    00000012     driverlib.a : dl_spi.o (.text.DL_SPI_setClockConfig)
-                  0000e38e    00000012                 : dl_uart.o (.text.DL_UART_setClockConfig)
-                  0000e3a0    00000012     libc.a : copy_decompress_none.c.obj (.text:decompress:none)
-                  0000e3b2    00000002     --HOLE-- [fill = 0]
-                  0000e3b4    00000010     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptureCompareValue)
-                  0000e3c4    00000010     app_car_control.o (.text.app_car_control_toggle_status_led)
-                  0000e3d4    00000010     app_motion_control.o (.text.motion_control_get_target_deg_s)
-                  0000e3e4    00000010     app_motion_control.o (.text.motion_control_get_target_mm_s)
-                  0000e3f4    00000010     app_motion_control.o (.text.motion_control_is_active)
-                  0000e404    00000010     libc.a : wcslen.c.obj (.text.wcslen)
-                  0000e414    00000010            : copy_zero_init.c.obj (.text:decompress:ZI)
-                  0000e424    0000000e            : _printfi.c.obj (.text.strlen)
-                  0000e432    00000002     --HOLE-- [fill = 0]
-                  0000e434    0000000c     bsp_jy61.o (.text.jy61_get_baudrate)
-                  0000e440    0000000c     app_line_follow.o (.text.line_follow_get_error)
-                  0000e44c    0000000c     app_motion_control.o (.text.motion_control_get_mode)
-                  0000e458    0000000c     app_motion_control.o (.text.motion_control_is_busy)
-                  0000e464    0000000c     mid_pid.o (.text.pid_reset)
-                  0000e470    0000000c     hw_uart.o (.text.uart_debug_get_rx_dropped_bytes)
-                  0000e47c    0000000c     hw_uart.o (.text.uart_debug_get_tx_dropped_bytes)
-                  0000e488    0000000a     driverlib.a : dl_common.o (.text.DL_Common_delayCycles)
-                  0000e492    0000000a     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000e49c    0000000a            : k_rem_pio2.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000e4a6    0000000a            : s_cosf.c.obj (.text.OUTLINED_FUNCTION_3)
-                  0000e4b0    0000000a            : s_sinf.c.obj (.text.OUTLINED_FUNCTION_3)
-                  0000e4ba    00000008     main.o (.text.GROUP1_IRQHandler)
-                  0000e4c2    00000008     libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000e4ca    00000008            : strtof.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000e4d2    00000008            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000e4da    00000008            : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000e4e2    00000002     --HOLE-- [fill = 0]
-                  0000e4e4    00000010     libclang_rt.builtins.a : aeabi_dcmp.S.obj (.tramp.__aeabi_dcmpeq.1)
-                  0000e4f4    00000008     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_2)
-                  0000e4fc    00000008     main.o (.text.UART0_IRQHandler)
-                  0000e504    00000008     main.o (.text.UART1_IRQHandler)
-                  0000e50c    00000008     main.o (.text.UART2_IRQHandler)
-                  0000e514    00000008     libclang_rt.builtins.a : aeabi_ddiv.c.obj (.text.__aeabi_ddiv_fast)
-                  0000e51c    00000008                            : aeabi_dmul.c.obj (.text.__aeabi_dmul_fast)
-                  0000e524    00000008     libc.a : aeabi_portable.c.obj (.text.__aeabi_errno_addr)
-                  0000e52c    00000008            : sscanf.c.obj (.text._uninpchar)
-                  0000e534    00000008     app_image_store.o (.text.app_image_store_init)
-                  0000e53c    00000008     libclang_rt.builtins.a : aeabi_memcpy.S.obj (.text)
-                  0000e544    00000006     libc.a : e_asinf.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000e54a    00000002     --HOLE-- [fill = 0]
-                  0000e54c    00000010     libclang_rt.builtins.a : mulsf3.S.obj (.tramp.__aeabi_fmul.1)
-                  0000e55c    00000006     libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000e562    00000002     --HOLE-- [fill = 0]
-                  0000e564    00000010     libclang_rt.builtins.a : divsf3.S.obj (.tramp.__aeabi_fdiv.1)
-                  0000e574    00000006     libc.a : s_cosf.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000e57a    00000006            : s_sinf.c.obj (.text.OUTLINED_FUNCTION_0)
-                  0000e580    00000006            : s_cosf.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000e586    00000006            : s_sinf.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000e58c    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_3)
-                  0000e592    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_4)
-                  0000e598    00000006            : exit.c.obj (.text:abort)
-                  0000e59e    00000004     libsysbm.a : hostexit.c.obj (.text.HOSTexit)
-                  0000e5a2    00000004     libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
-                  0000e5a6    00000002     --HOLE-- [fill = 0]
-                  0000e5a8    00000010     libclang_rt.builtins.a : addsf3.S.obj (.tramp.__aeabi_fadd.1)
-                  0000e5b8    00000004     libc.a : s_cosf.c.obj (.text.OUTLINED_FUNCTION_2)
-                  0000e5bc    00000010     libclang_rt.builtins.a : extendsfdf2.S.obj (.tramp.__aeabi_f2d.1)
-                  0000e5cc    00000004     libc.a : s_sinf.c.obj (.text.OUTLINED_FUNCTION_2)
-                  0000e5d0    00000004     startup_mspm0g350x_ticlang.o (.text.Reset_Handler)
-                  0000e5d4    00000004     libc.a : pre_init.c.obj (.text._system_pre_init)
-                  0000e5d8    00000008     --HOLE-- [fill = 0]
+                  00004f0c    000005f4     app_car_control.o (.text.app_car_control_update)
+                  00005500    000004e0     hw_lcd.o (.text.LCD_ShowChar)
+                  000059e0    00000494     hw_lcd.o (.text.LCD_Fill)
+                  00005e74    00000438     hw_w25q64.o (.text.w25q64_read_jedec_id)
+                  000062ac    00000408     app_menu.o (.text.app_menu_update)
+                  000066b4    000003f0     app_motion_control.o (.text.motion_control_parse_command)
+                  00006aa4    000003b0     libc.a : strtod.c.obj (.text.strtod)
+                  00006e54    0000035c     hw_w25q64.o (.text.w25q64_write)
+                  000071b0    00000354     hw_w25q64.o (.text.w25q64_send_address)
+                  00007504    00000350     libc.a : strtof.c.obj (.text.strtof)
+                  00007854    0000031c     app_attitude.o (.text.app_attitude_process_command)
+                  00007b70    0000030c     hw_lcd.o (.text.lcd_init)
+                  00007e7c    000002dc     libc.a : divdf3_fast.c.obj (.text.__divdf3_fast)
+                  00008158    000002cc     app_motion_control.o (.text.motion_control_update)
+                  00008424    000002ac     bsp_jy61.o (.text.jy61_probe_baudrate)
+                  000086d0    00000268     app_car_control.o (.text.app_car_control_send_telemetry)
+                  00008938    00000240     hw_w25q64.o (.text.w25q64_read)
+                  00008b78    00000228     app_car_control.o (.text.update_lturn)
+                  00008da0    00000208     hw_w25q64.o (.text.w25q64_wait_ready)
+                  00008fa8    000001e0     app_image_store.o (.text.rewrite_index_entries)
+                  00009188    000001dc     libc.a : strtoll.c.obj (.text.strtoll)
+                  00009364    000001d8            : muldf3_fast.c.obj (.text.__muldf3_fast)
+                  0000953c    000001d8            : s_cosf.c.obj (.text.cosf)
+                  00009714    000001d8     main.o (.text.main)
+                  000098ec    000001d0     hw_w25q64.o (.text.w25q64_erase_sector)
+                  00009abc    000001cc     libc.a : s_sinf.c.obj (.text.sinf)
+                  00009c88    000001c8            : s_atanf.c.obj (.text.atanf)
+                  00009e50    000001c8     app_car_control.o (.text.send_status)
+                  0000a018    000001b0     app_image_store.o (.text.app_image_store_get_file_count)
+                  0000a1c8    00000192     libclang_rt.builtins.a : adddf3.S.obj (.text)
+                  0000a35a    00000002     startup_mspm0g350x_ticlang.o (.text.Default_Handler)
+                  0000a35c    0000017c     app_image_store.o (.text.ensure_index)
+                  0000a4d8    00000174     libc.a : e_sqrt.c.obj (.text.sqrt)
+                  0000a64c    00000168            : strtoull.c.obj (.text.strtoull)
+                  0000a7b4    00000164     app_image_store.o (.text.delete_image_id)
+                  0000a918    00000160     libc.a : e_asinf.c.obj (.text.asinf)
+                  0000aa78    0000015c     bsp_jy61.o (.text.process_byte)
+                  0000abd4    00000148     libc.a : s_floor.c.obj (.text.floor)
+                  0000ad1c    00000144     app_attitude.o (.text.send_jy61_status)
+                  0000ae60    00000144     libc.a : strtol.c.obj (.text.strtol)
+                  0000afa4    00000138     bsp_jy61.o (.text.jy61_set_baudrate)
+                  0000b0dc    00000134     hw_uart.o (.text.uart_debug_read_line)
+                  0000b210    0000012c     libc.a : strtoul.c.obj (.text.strtoul)
+                  0000b33c    00000120     app_image_store.o (.text.display_image)
+                  0000b45c    00000118     libc.a : e_atan2f.c.obj (.text.atan2f)
+                  0000b574    00000108     app_car_control.o (.text.set_motor_duty)
+                  0000b67c    00000104     driverlib.a : dl_timer.o (.text.DL_Timer_initFourCCPWMMode)
+                  0000b780    00000100     bsp_jy61.o (.text.jy61_configure_output)
+                  0000b880    000000f8     ti_msp_dl_config.o (.text.SYSCFG_DL_GPIO_init)
+                  0000b978    000000e4     app_image_store.o (.text.app_image_store_get_file_by_index)
+                  0000ba5c    000000dc     libc.a : s_scalbn.c.obj (.text.scalbn)
+                  0000bb38    000000d8     libclang_rt.builtins.a : addsf3.S.obj (.text)
+                  0000bc10    000000c4     main.o (.text.SysTick_Handler)
+                  0000bcd4    000000c4     bsp_jy61.o (.text.jy61_read_debug)
+                  0000bd98    000000bc     libc.a : s_scalbnf.c.obj (.text.scalbnf)
+                  0000be54    000000b0     bsp_jy61.o (.text.jy61_init)
+                  0000bf04    000000ac     hw_lcd.o (.text.LCD_Address_Set)
+                  0000bfb0    000000ac     libc.a : s_cosf.c.obj (.text.__kernel_sindf)
+                  0000c05c    000000ac            : s_sinf.c.obj (.text.__kernel_sindf)
+                  0000c108    000000a8     app_image_store.o (.text.show_image_id)
+                  0000c1b0    000000a4     mid_pid.o (.text.pid_calc)
+                  0000c254    000000a4     hw_openmv_uart.o (.text.uart_openmv_read_line)
+                  0000c2f8    000000a2     libclang_rt.builtins.a : udivmoddi4.S.obj (.text)
+                  0000c39a    00000002                            : aeabi_div0.c.obj (.text.__aeabi_idiv0)
+                  0000c39c    000000a0     bsp_jy61.o (.text.jy61_zero_yaw)
+                  0000c43c    0000009c     libc.a : s_cosf.c.obj (.text.__kernel_cosdf)
+                  0000c4d8    0000009c            : s_sinf.c.obj (.text.__kernel_cosdf)
+                  0000c574    0000009c     app_line_follow.o (.text.line_follow_parse_command)
+                  0000c610    0000009c     app_attitude.o (.text.process_jy61_baud_command)
+                  0000c6ac    0000009c     app_attitude.o (.text.scan_jy61_baudrate)
+                  0000c748    0000009a     libc.a : memcpy16.S.obj (.text:memcpy)
+                  0000c7e2    00000002     libclang_rt.builtins.a : aeabi_div0.c.obj (.text.__aeabi_ldiv0)
+                  0000c7e4    00000098     app_attitude.o (.text.app_attitude_init)
+                  0000c87c    00000094     hw_encoder.o (.text.encoder_handle_gpio_irq)
+                  0000c910    00000090     app_car_control.o (.text.send_motor_ack)
+                  0000c9a0    0000008c     libclang_rt.builtins.a : comparesf2.S.obj (.text)
+                  0000ca2c    0000008c                            : mulsf3.S.obj (.text)
+                  0000cab8    00000088     app_image_store.o (.text.app_image_store_show_image)
+                  0000cb40    00000088     libc.a : strcmp-armv6m.S.obj (.text:strcmp)
+                  0000cbc8    00000082     libclang_rt.builtins.a : divsf3.S.obj (.text)
+                  0000cc4a    00000002     --HOLE-- [fill = 0]
+                  0000cc4c    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_DEBUG_init)
+                  0000ccc8    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_JY61P_init)
+                  0000cd44    0000007c     ti_msp_dl_config.o (.text.SYSCFG_DL_UART_OPENMV_init)
+                  0000cdc0    0000007c     bsp_jy61.o (.text.jy61_read_angles)
+                  0000ce3c    0000007c     libc.a : copy_decompress_lzss.c.obj (.text:decompress:lzss)
+                  0000ceb8    00000078     app_line_follow.o (.text.line_follow_get_turn_adjust)
+                  0000cf30    00000078     app_image_store.o (.text.sanitize_name)
+                  0000cfa8    00000074     libclang_rt.builtins.a : comparedf2.c.obj (.text.__gedf2)
+                  0000d01c    00000074     libc.a : sscanf.c.obj (.text._chkmbc)
+                  0000d090    00000074     libclang_rt.builtins.a : truncdfsf2.S.obj (.text)
+                  0000d104    00000070     ti_msp_dl_config.o (.text.SYSCFG_DL_initPower)
+                  0000d174    00000070     bsp_jy61.o (.text.jy61_poll)
+                  0000d1e4    00000070     hw_uart.o (.text.uart_debug_handle_irq)
+                  0000d254    00000070     hw_openmv_uart.o (.text.uart_openmv_handle_irq)
+                  0000d2c4    0000006c     ti_msp_dl_config.o (.text.SYSCFG_DL_PWM_LEFT_init)
+                  0000d330    0000006c     ti_msp_dl_config.o (.text.SYSCFG_DL_PWM_RIGHT_init)
+                  0000d39c    0000006c     app_car_control.o (.text.app_car_control_init)
+                  0000d408    0000006c     app_menu.o (.text.app_menu_init)
+                  0000d474    0000006c     bsp_jy61.o (.text.jy61_handle_irq)
+                  0000d4e0    00000068     libclang_rt.builtins.a : comparedf2.c.obj (.text.__ledf2)
+                  0000d548    00000068     bsp_jy61.o (.text.jy61_read_quaternion)
+                  0000d5b0    00000064     bsp_tb6612.o (.text.TB6612_Init)
+                  0000d614    00000062     libc.a : memset16.S.obj (.text:memset)
+                  0000d676    00000002     --HOLE-- [fill = 0]
+                  0000d678    00000060     bsp_tb6612.o (.text.BO_Control)
+                  0000d6d8    0000005a     libclang_rt.builtins.a : aeabi_dcmp.S.obj (.text)
+                  0000d732    00000002     --HOLE-- [fill = 0]
+                  0000d734    0000005a                            : aeabi_fcmp.S.obj (.text)
+                  0000d78e    00000002     --HOLE-- [fill = 0]
+                  0000d790    00000058     bsp_tb6612.o (.text.AO_Control)
+                  0000d7e8    00000056     libclang_rt.builtins.a : aeabi_idivmod.S.obj (.text)
+                  0000d83e    00000002     --HOLE-- [fill = 0]
+                  0000d840    00000054     app_motion_control.o (.text.motion_control_init)
+                  0000d894    00000054     app_car_control.o (.text.send_pulse_ack)
+                  0000d8e8    0000004c     bsp_tb6612.o (.text.TB6612_Motor_Stop)
+                  0000d934    0000004c     hw_uart.o (.text.uart_debug_service_tx)
+                  0000d980    0000004c     hw_uart.o (.text.uart_debug_write_string)
+                  0000d9cc    0000004a     hw_lcd.o (.text.LCD_ShowString)
+                  0000da16    00000002     --HOLE-- [fill = 0]
+                  0000da18    0000004a     libclang_rt.builtins.a : fixdfsi.S.obj (.text)
+                  0000da62    00000002     --HOLE-- [fill = 0]
+                  0000da64    00000048     driverlib.a : dl_uart.o (.text.DL_UART_init)
+                  0000daac    00000048     ti_msp_dl_config.o (.text.SYSCFG_DL_SPI_LCD_init)
+                  0000daf4    00000048     ti_msp_dl_config.o (.text.SYSCFG_DL_init)
+                  0000db3c    00000048     hw_encoder.o (.text.encoder_init)
+                  0000db84    00000048     libc.a : snprintf.c.obj (.text.snprintf)
+                  0000dbcc    00000044     driverlib.a : dl_spi.o (.text.DL_SPI_init)
+                  0000dc10    00000044     app_car_control.o (.text.app_car_control_send_heartbeat)
+                  0000dc54    00000044     libc.a : atoi.c.obj (.text.atoi)
+                  0000dc98    00000040     ti_msp_dl_config.o (.text.SYSCFG_DL_SYSCTL_init)
+                  0000dcd8    00000040     libclang_rt.builtins.a : aeabi_uidivmod.S.obj (.text)
+                  0000dd18    00000040                            : extendsfdf2.S.obj (.text)
+                  0000dd58    0000003c     libc.a : autoinit.c.obj (.text:__TI_auto_init_nobinit_nopinit)
+                  0000dd94    0000003c     libclang_rt.builtins.a : floatsisf.S.obj (.text)
+                  0000ddd0    0000003a                            : muldsi3.S.obj (.text)
+                  0000de0a    00000002     --HOLE-- [fill = 0]
+                  0000de0c    00000038     hw_uart.o (.text.uart_debug_read_byte)
+                  0000de44    00000038     libclang_rt.builtins.a : fixsfsi.S.obj (.text)
+                  0000de7c    00000032     libc.a : snprintf.c.obj (.text._outs)
+                  0000deae    00000002     --HOLE-- [fill = 0]
+                  0000deb0    00000032     libclang_rt.builtins.a : fixunssfsi.S.obj (.text)
+                  0000dee2    00000002     --HOLE-- [fill = 0]
+                  0000dee4    00000030     driverlib.a : dl_uart.o (.text.DL_UART_transmitDataBlocking)
+                  0000df14    00000030     app_line_follow.o (.text.line_follow_is_valid)
+                  0000df44    00000030     app_car_control.o (.text.send_unknown_command)
+                  0000df74    00000030     libc.a : sscanf.c.obj (.text.sscanf)
+                  0000dfa4    0000002c     app_image_store.o (.text.show_legacy_slot)
+                  0000dfd0    0000002c     libclang_rt.builtins.a : floatsidf.S.obj (.text)
+                  0000dffc    00000028     app_line_follow.o (.text.line_follow_is_active)
+                  0000e024    00000028     hw_uart.o (.text.uart_debug_init)
+                  0000e04c    00000028     hw_openmv_uart.o (.text.uart_openmv_init)
+                  0000e074    00000028     libc.a : boot_cortex_m.c.obj (.text:_c_int00_noargs)
+                  0000e09c    00000028     libclang_rt.builtins.a : floatunsisf.S.obj (.text)
+                  0000e0c4    00000024     app_attitude.o (.text.app_attitude_read_yaw)
+                  0000e0e8    00000024     app_line_follow.o (.text.line_follow_init)
+                  0000e10c    00000024     hw_w25q64.o (.text.w25q64_is_valid_jedec_id)
+                  0000e130    00000024     libclang_rt.builtins.a : muldi3.S.obj (.text)
+                  0000e154    00000022     libc.a : memccpy.c.obj (.text.memccpy)
+                  0000e176    00000022     app_car_control.o (.text.strlen)
+                  0000e198    0000001e     libclang_rt.builtins.a : ashldi3.S.obj (.text)
+                  0000e1b6    00000002     --HOLE-- [fill = 0]
+                  0000e1b8    0000001c     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptCompUpdateMethod)
+                  0000e1d4    0000001c                 : dl_timer.o (.text.DL_Timer_setClockConfig)
+                  0000e1f0    0000001c                 : dl_uart.o (.text.DL_UART_receiveDataCheck)
+                  0000e20c    0000001c                 : dl_uart.o (.text.DL_UART_transmitDataCheck)
+                  0000e228    0000001c     hw_spi.o (.text.spi_write_bus)
+                  0000e244    0000001c     hw_w25q64.o (.text.w25q64_init)
+                  0000e260    0000001a     libclang_rt.builtins.a : aeabi_memset.S.obj (.text)
+                  0000e27a    00000002     --HOLE-- [fill = 0]
+                  0000e27c    00000018     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptureCompareOutCtl)
+                  0000e294    00000018     hw_lcd.o (.text.LCD_WR_DATA8)
+                  0000e2ac    00000018     libc.a : snprintf.c.obj (.text._outc)
+                  0000e2c4    00000018     hw_encoder.o (.text.encoder_get_counts)
+                  0000e2dc    00000018     hw_encoder.o (.text.encoder_reset)
+                  0000e2f4    00000018     mid_pid.o (.text.pid_init)
+                  0000e30c    00000014     libc.a : k_rem_pio2.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000e320    00000010     libclang_rt.builtins.a : adddf3.S.obj (.tramp.__aeabi_dadd.1)
+                  0000e330    00000014     libc.a : sscanf.c.obj (.text._inpchar)
+                  0000e344    00000014     app_attitude.o (.text.app_attitude_poll)
+                  0000e358    00000014     libclang_rt.builtins.a : aeabi_uldivmod.S.obj (.text)
+                  0000e36c    00000012     driverlib.a : dl_spi.o (.text.DL_SPI_setClockConfig)
+                  0000e37e    00000012                 : dl_uart.o (.text.DL_UART_setClockConfig)
+                  0000e390    00000012     libc.a : copy_decompress_none.c.obj (.text:decompress:none)
+                  0000e3a2    00000002     --HOLE-- [fill = 0]
+                  0000e3a4    00000010     driverlib.a : dl_timer.o (.text.DL_Timer_setCaptureCompareValue)
+                  0000e3b4    00000010     app_car_control.o (.text.app_car_control_toggle_status_led)
+                  0000e3c4    00000010     app_motion_control.o (.text.motion_control_get_target_deg_s)
+                  0000e3d4    00000010     app_motion_control.o (.text.motion_control_get_target_mm_s)
+                  0000e3e4    00000010     app_motion_control.o (.text.motion_control_is_active)
+                  0000e3f4    00000010     libc.a : wcslen.c.obj (.text.wcslen)
+                  0000e404    00000010            : copy_zero_init.c.obj (.text:decompress:ZI)
+                  0000e414    0000000e            : _printfi.c.obj (.text.strlen)
+                  0000e422    00000002     --HOLE-- [fill = 0]
+                  0000e424    0000000c     app_image_store.o (.text.app_image_store_is_receiving)
+                  0000e430    0000000c     bsp_jy61.o (.text.jy61_get_baudrate)
+                  0000e43c    0000000c     app_line_follow.o (.text.line_follow_get_error)
+                  0000e448    0000000c     app_motion_control.o (.text.motion_control_get_mode)
+                  0000e454    0000000c     app_motion_control.o (.text.motion_control_is_busy)
+                  0000e460    0000000c     mid_pid.o (.text.pid_reset)
+                  0000e46c    0000000c     hw_uart.o (.text.uart_debug_get_rx_dropped_bytes)
+                  0000e478    0000000c     hw_uart.o (.text.uart_debug_get_tx_dropped_bytes)
+                  0000e484    0000000a     driverlib.a : dl_common.o (.text.DL_Common_delayCycles)
+                  0000e48e    0000000a     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000e498    0000000a            : k_rem_pio2.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000e4a2    0000000a            : s_cosf.c.obj (.text.OUTLINED_FUNCTION_3)
+                  0000e4ac    0000000a            : s_sinf.c.obj (.text.OUTLINED_FUNCTION_3)
+                  0000e4b6    00000008     main.o (.text.GROUP1_IRQHandler)
+                  0000e4be    00000008     libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000e4c6    00000008            : strtof.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000e4ce    00000008            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000e4d6    00000008            : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000e4de    00000002     --HOLE-- [fill = 0]
+                  0000e4e0    00000010     libclang_rt.builtins.a : aeabi_dcmp.S.obj (.tramp.__aeabi_dcmpeq.1)
+                  0000e4f0    00000008     libc.a : _scanfi.c.obj (.text.OUTLINED_FUNCTION_2)
+                  0000e4f8    00000008     main.o (.text.UART0_IRQHandler)
+                  0000e500    00000008     main.o (.text.UART1_IRQHandler)
+                  0000e508    00000008     main.o (.text.UART2_IRQHandler)
+                  0000e510    00000008     libclang_rt.builtins.a : aeabi_ddiv.c.obj (.text.__aeabi_ddiv_fast)
+                  0000e518    00000008                            : aeabi_dmul.c.obj (.text.__aeabi_dmul_fast)
+                  0000e520    00000008     libc.a : aeabi_portable.c.obj (.text.__aeabi_errno_addr)
+                  0000e528    00000008            : sscanf.c.obj (.text._uninpchar)
+                  0000e530    00000008     app_image_store.o (.text.app_image_store_init)
+                  0000e538    00000008     libclang_rt.builtins.a : aeabi_memcpy.S.obj (.text)
+                  0000e540    00000006     libc.a : e_asinf.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000e546    00000002     --HOLE-- [fill = 0]
+                  0000e548    00000010     libclang_rt.builtins.a : mulsf3.S.obj (.tramp.__aeabi_fmul.1)
+                  0000e558    00000006     libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000e55e    00000002     --HOLE-- [fill = 0]
+                  0000e560    00000010     libclang_rt.builtins.a : divsf3.S.obj (.tramp.__aeabi_fdiv.1)
+                  0000e570    00000006     libc.a : s_cosf.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000e576    00000006            : s_sinf.c.obj (.text.OUTLINED_FUNCTION_0)
+                  0000e57c    00000006            : s_cosf.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000e582    00000006            : s_sinf.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000e588    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_3)
+                  0000e58e    00000006            : _scanfi.c.obj (.text.OUTLINED_FUNCTION_4)
+                  0000e594    00000006            : exit.c.obj (.text:abort)
+                  0000e59a    00000004     libsysbm.a : hostexit.c.obj (.text.HOSTexit)
+                  0000e59e    00000004     libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
+                  0000e5a2    00000002     --HOLE-- [fill = 0]
+                  0000e5a4    00000010     libclang_rt.builtins.a : addsf3.S.obj (.tramp.__aeabi_fadd.1)
+                  0000e5b4    00000004     libc.a : s_cosf.c.obj (.text.OUTLINED_FUNCTION_2)
+                  0000e5b8    00000010     libclang_rt.builtins.a : extendsfdf2.S.obj (.tramp.__aeabi_f2d.1)
+                  0000e5c8    00000004     libc.a : s_sinf.c.obj (.text.OUTLINED_FUNCTION_2)
+                  0000e5cc    00000004     startup_mspm0g350x_ticlang.o (.text.Reset_Handler)
+                  0000e5d0    00000004     libc.a : pre_init.c.obj (.text._system_pre_init)
+                  0000e5d4    0000000c     --HOLE-- [fill = 0]
 
 .cinit     0    00012d30    00000038     
                   00012d30    0000000d     (.cinit..data.load) [load image, compression = lzss]
@@ -662,13 +662,13 @@ MODULE SUMMARY
                                                                
     .\app\
        app_image_store.o              8904    2006      6322   
-       app_car_control.o              5714    757       176    
+       app_car_control.o              5710    757       176    
        app_attitude.o                 4460    654       48     
        app_menu.o                     3184    416       51     
        app_motion_control.o           1880    15        31     
        app_line_follow.o              412     6         10     
     +--+------------------------------+-------+---------+---------+
-       Total:                         24554   3854      6638   
+       Total:                         24550   3854      6638   
                                                                
     .\bsp\
        bsp_tb6612.o                   360     0         0      
@@ -784,7 +784,7 @@ MODULE SUMMARY
        Stack:                         0       0         512    
        Linker Generated:              0       49        0      
     +--+------------------------------+-------+---------+---------+
-       Grand Total:                   58612   18492     10984  
+       Grand Total:                   58608   18492     10984  
 
 
 LINKER GENERATED COPY TABLES
@@ -808,21 +808,21 @@ callee name               trampoline name
    callee addr  tramp addr   call addr  call info
 --------------  -----------  ---------  ----------------
 __aeabi_dadd              $Tramp$TT$L$PI$$__aeabi_dadd
-   0000a1d7     0000e330     0000e32e   libc.a : k_rem_pio2.c.obj (.text.OUTLINED_FUNCTION_0)
-                             0000e4a4          : k_rem_pio2.c.obj (.text.OUTLINED_FUNCTION_1)
-                             0000e4ae          : s_cosf.c.obj (.text.OUTLINED_FUNCTION_3)
-                             0000e4b8          : s_sinf.c.obj (.text.OUTLINED_FUNCTION_3)
+   0000a1d3     0000e320     0000e31e   libc.a : k_rem_pio2.c.obj (.text.OUTLINED_FUNCTION_0)
+                             0000e4a0          : k_rem_pio2.c.obj (.text.OUTLINED_FUNCTION_1)
+                             0000e4aa          : s_cosf.c.obj (.text.OUTLINED_FUNCTION_3)
+                             0000e4b4          : s_sinf.c.obj (.text.OUTLINED_FUNCTION_3)
 __aeabi_dcmpeq            $Tramp$TT$L$PI$$__aeabi_dcmpeq
-   0000d6e9     0000e4e4     0000e4e0   libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
+   0000d6d9     0000e4e0     0000e4dc   libc.a : strtod.c.obj (.text.OUTLINED_FUNCTION_1)
 __aeabi_fmul              $Tramp$TT$L$PI$$__aeabi_fmul
-   0000ca31     0000e54c     0000e548   libc.a : e_asinf.c.obj (.text.OUTLINED_FUNCTION_0)
+   0000ca2d     0000e548     0000e544   libc.a : e_asinf.c.obj (.text.OUTLINED_FUNCTION_0)
 __aeabi_fdiv              $Tramp$TT$L$PI$$__aeabi_fdiv
-   0000cbd9     0000e564     0000e560   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
+   0000cbc9     0000e560     0000e55c   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_0)
 __aeabi_fadd              $Tramp$TT$L$PI$$__aeabi_fadd
-   0000bb47     0000e5a8     0000e5a4   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
+   0000bb43     0000e5a4     0000e5a0   libc.a : s_atanf.c.obj (.text.OUTLINED_FUNCTION_1)
 __aeabi_f2d               $Tramp$TT$L$PI$$__aeabi_f2d
-   0000dd29     0000e5bc     0000e5ba   libc.a : s_cosf.c.obj (.text.OUTLINED_FUNCTION_2)
-                             0000e5ce          : s_sinf.c.obj (.text.OUTLINED_FUNCTION_2)
+   0000dd19     0000e5b8     0000e5b6   libc.a : s_cosf.c.obj (.text.OUTLINED_FUNCTION_2)
+                             0000e5ca          : s_sinf.c.obj (.text.OUTLINED_FUNCTION_2)
 
 [6 trampolines]
 [10 trampoline calls]
@@ -832,71 +832,71 @@ GLOBAL SYMBOLS: SORTED ALPHABETICALLY BY Name
 
 address   name                             
 -------   ----                             
-0000a35f  ADC0_IRQHandler                  
-0000a35f  ADC1_IRQHandler                  
-0000a35f  AES_IRQHandler                   
-0000d7a1  AO_Control                       
-0000d689  BO_Control                       
-0000e59e  C$$EXIT                          
-0000a35f  CANFD0_IRQHandler                
-0000a35f  DAC0_IRQHandler                  
-0000e489  DL_Common_delayCycles            
-0000dbdd  DL_SPI_init                      
-0000e37d  DL_SPI_setClockConfig            
-0000b681  DL_Timer_initFourCCPWMMode       
-0000e1c9  DL_Timer_setCaptCompUpdateMethod 
-0000e28d  DL_Timer_setCaptureCompareOutCtl 
-0000e3b5  DL_Timer_setCaptureCompareValue  
-0000e1e5  DL_Timer_setClockConfig          
-0000da75  DL_UART_init                     
-0000e201  DL_UART_receiveDataCheck         
-0000e38f  DL_UART_setClockConfig           
-0000def5  DL_UART_transmitDataBlocking     
-0000e21d  DL_UART_transmitDataCheck        
-0000a35f  DMA_IRQHandler                   
-0000a35f  Default_Handler                  
-0000a35f  GROUP0_IRQHandler                
-0000e4bb  GROUP1_IRQHandler                
-0000e59f  HOSTexit                         
-0000a35f  HardFault_Handler                
-0000a35f  I2C0_IRQHandler                  
-0000a35f  I2C1_IRQHandler                  
-0000bf09  LCD_Address_Set                  
-000059e5  LCD_Fill                         
-00005505  LCD_ShowChar                     
-0000d9dd  LCD_ShowString                   
-0000e2a5  LCD_WR_DATA8                     
-0000a35f  NMI_Handler                      
-0000a35f  PendSV_Handler                   
-0000a35f  RTC_IRQHandler                   
-0000e5d1  Reset_Handler                    
-0000a35f  SPI0_IRQHandler                  
-0000a35f  SPI1_IRQHandler                  
-0000a35f  SVC_Handler                      
-0000b885  SYSCFG_DL_GPIO_init              
-0000d2d5  SYSCFG_DL_PWM_LEFT_init          
-0000d341  SYSCFG_DL_PWM_RIGHT_init         
-0000dabd  SYSCFG_DL_SPI_LCD_init           
-0000dca9  SYSCFG_DL_SYSCTL_init            
-0000cc5d  SYSCFG_DL_UART_DEBUG_init        
-0000ccd9  SYSCFG_DL_UART_JY61P_init        
-0000cd55  SYSCFG_DL_UART_OPENMV_init       
-0000db05  SYSCFG_DL_init                   
-0000d115  SYSCFG_DL_initPower              
-0000bc15  SysTick_Handler                  
-0000d5c1  TB6612_Init                      
-0000d8f9  TB6612_Motor_Stop                
-0000a35f  TIMA0_IRQHandler                 
-0000a35f  TIMA1_IRQHandler                 
-0000a35f  TIMG0_IRQHandler                 
-0000a35f  TIMG12_IRQHandler                
-0000a35f  TIMG6_IRQHandler                 
-0000a35f  TIMG7_IRQHandler                 
-0000a35f  TIMG8_IRQHandler                 
-0000e4fd  UART0_IRQHandler                 
-0000e505  UART1_IRQHandler                 
-0000e50d  UART2_IRQHandler                 
-0000a35f  UART3_IRQHandler                 
+0000a35b  ADC0_IRQHandler                  
+0000a35b  ADC1_IRQHandler                  
+0000a35b  AES_IRQHandler                   
+0000d791  AO_Control                       
+0000d679  BO_Control                       
+0000e59a  C$$EXIT                          
+0000a35b  CANFD0_IRQHandler                
+0000a35b  DAC0_IRQHandler                  
+0000e485  DL_Common_delayCycles            
+0000dbcd  DL_SPI_init                      
+0000e36d  DL_SPI_setClockConfig            
+0000b67d  DL_Timer_initFourCCPWMMode       
+0000e1b9  DL_Timer_setCaptCompUpdateMethod 
+0000e27d  DL_Timer_setCaptureCompareOutCtl 
+0000e3a5  DL_Timer_setCaptureCompareValue  
+0000e1d5  DL_Timer_setClockConfig          
+0000da65  DL_UART_init                     
+0000e1f1  DL_UART_receiveDataCheck         
+0000e37f  DL_UART_setClockConfig           
+0000dee5  DL_UART_transmitDataBlocking     
+0000e20d  DL_UART_transmitDataCheck        
+0000a35b  DMA_IRQHandler                   
+0000a35b  Default_Handler                  
+0000a35b  GROUP0_IRQHandler                
+0000e4b7  GROUP1_IRQHandler                
+0000e59b  HOSTexit                         
+0000a35b  HardFault_Handler                
+0000a35b  I2C0_IRQHandler                  
+0000a35b  I2C1_IRQHandler                  
+0000bf05  LCD_Address_Set                  
+000059e1  LCD_Fill                         
+00005501  LCD_ShowChar                     
+0000d9cd  LCD_ShowString                   
+0000e295  LCD_WR_DATA8                     
+0000a35b  NMI_Handler                      
+0000a35b  PendSV_Handler                   
+0000a35b  RTC_IRQHandler                   
+0000e5cd  Reset_Handler                    
+0000a35b  SPI0_IRQHandler                  
+0000a35b  SPI1_IRQHandler                  
+0000a35b  SVC_Handler                      
+0000b881  SYSCFG_DL_GPIO_init              
+0000d2c5  SYSCFG_DL_PWM_LEFT_init          
+0000d331  SYSCFG_DL_PWM_RIGHT_init         
+0000daad  SYSCFG_DL_SPI_LCD_init           
+0000dc99  SYSCFG_DL_SYSCTL_init            
+0000cc4d  SYSCFG_DL_UART_DEBUG_init        
+0000ccc9  SYSCFG_DL_UART_JY61P_init        
+0000cd45  SYSCFG_DL_UART_OPENMV_init       
+0000daf5  SYSCFG_DL_init                   
+0000d105  SYSCFG_DL_initPower              
+0000bc11  SysTick_Handler                  
+0000d5b1  TB6612_Init                      
+0000d8e9  TB6612_Motor_Stop                
+0000a35b  TIMA0_IRQHandler                 
+0000a35b  TIMA1_IRQHandler                 
+0000a35b  TIMG0_IRQHandler                 
+0000a35b  TIMG12_IRQHandler                
+0000a35b  TIMG6_IRQHandler                 
+0000a35b  TIMG7_IRQHandler                 
+0000a35b  TIMG8_IRQHandler                 
+0000e4f9  UART0_IRQHandler                 
+0000e501  UART1_IRQHandler                 
+0000e509  UART2_IRQHandler                 
+0000a35b  UART3_IRQHandler                 
 20208000  __STACK_END                      
 00000200  __STACK_SIZE                     
 00000000  __TI_ATRegion0_region_sz         
@@ -913,223 +913,223 @@ address   name
 00012d64  __TI_CINIT_Warm                  
 00012d40  __TI_Handler_Table_Base          
 00012d4c  __TI_Handler_Table_Limit         
-0000dd69  __TI_auto_init_nobinit_nopinit   
-0000ce4d  __TI_decompress_lzss             
-0000e3a1  __TI_decompress_none             
+0000dd59  __TI_auto_init_nobinit_nopinit   
+0000ce3d  __TI_decompress_lzss             
+0000e391  __TI_decompress_none             
 ffffffff  __TI_pprof_out_hndl              
 0000248d  __TI_printfi_nofloat             
 ffffffff  __TI_prof_data_size              
 ffffffff  __TI_prof_data_start             
 000000c1  __TI_scanfi                      
 00000000  __TI_static_base__               
-0000e415  __TI_zero_init                   
-0000a1d7  __adddf3                         
-0000bb47  __addsf3                         
+0000e405  __TI_zero_init                   
+0000a1d3  __adddf3                         
+0000bb43  __addsf3                         
 00011ef0  __aeabi_ctype_table_             
 00011ef0  __aeabi_ctype_table_C            
-0000d0a1  __aeabi_d2f                      
-0000da29  __aeabi_d2iz                     
-0000a1d7  __aeabi_dadd                     
-0000d6e9  __aeabi_dcmpeq                   
-0000d71f  __aeabi_dcmpge                   
-0000d731  __aeabi_dcmpgt                   
-0000d70d  __aeabi_dcmple                   
-0000d6fb  __aeabi_dcmplt                   
-0000e515  __aeabi_ddiv_fast                
-0000e51d  __aeabi_dmul_fast                
-0000a1cd  __aeabi_dsub                     
+0000d091  __aeabi_d2f                      
+0000da19  __aeabi_d2iz                     
+0000a1d3  __aeabi_dadd                     
+0000d6d9  __aeabi_dcmpeq                   
+0000d70f  __aeabi_dcmpge                   
+0000d721  __aeabi_dcmpgt                   
+0000d6fd  __aeabi_dcmple                   
+0000d6eb  __aeabi_dcmplt                   
+0000e511  __aeabi_ddiv_fast                
+0000e519  __aeabi_dmul_fast                
+0000a1c9  __aeabi_dsub                     
 202028dc  __aeabi_errno                    
-0000e525  __aeabi_errno_addr               
-0000dd29  __aeabi_f2d                      
-0000de55  __aeabi_f2iz                     
-0000dec1  __aeabi_f2uiz                    
-0000bb47  __aeabi_fadd                     
-0000d745  __aeabi_fcmpeq                   
-0000d77b  __aeabi_fcmpge                   
-0000d78d  __aeabi_fcmpgt                   
-0000d769  __aeabi_fcmple                   
-0000d757  __aeabi_fcmplt                   
-0000ca1b  __aeabi_fcmpun                   
-0000cbd9  __aeabi_fdiv                     
-0000ca31  __aeabi_fmul                     
-0000bb3d  __aeabi_fsub                     
-0000dfe1  __aeabi_i2d                      
-0000dda5  __aeabi_i2f                      
-0000d7f9  __aeabi_idiv                     
-0000c39f  __aeabi_idiv0                    
-0000d7f9  __aeabi_idivmod                  
-0000c7e7  __aeabi_ldiv0                    
-0000e1a9  __aeabi_llsl                     
-0000e141  __aeabi_lmul                     
-0000e27f  __aeabi_memclr                   
-0000e27f  __aeabi_memclr4                  
-0000e27f  __aeabi_memclr8                  
-0000e53d  __aeabi_memcpy                   
-0000e53d  __aeabi_memcpy4                  
-0000e53d  __aeabi_memcpy8                  
-0000e271  __aeabi_memset                   
-0000e271  __aeabi_memset4                  
-0000e271  __aeabi_memset8                  
-0000e0ad  __aeabi_ui2f                     
-0000dce9  __aeabi_uidiv                    
-0000dce9  __aeabi_uidivmod                 
-0000e369  __aeabi_uldivmod                 
-0000e1a9  __ashldi3                        
+0000e521  __aeabi_errno_addr               
+0000dd19  __aeabi_f2d                      
+0000de45  __aeabi_f2iz                     
+0000deb1  __aeabi_f2uiz                    
+0000bb43  __aeabi_fadd                     
+0000d735  __aeabi_fcmpeq                   
+0000d76b  __aeabi_fcmpge                   
+0000d77d  __aeabi_fcmpgt                   
+0000d759  __aeabi_fcmple                   
+0000d747  __aeabi_fcmplt                   
+0000ca17  __aeabi_fcmpun                   
+0000cbc9  __aeabi_fdiv                     
+0000ca2d  __aeabi_fmul                     
+0000bb39  __aeabi_fsub                     
+0000dfd1  __aeabi_i2d                      
+0000dd95  __aeabi_i2f                      
+0000d7e9  __aeabi_idiv                     
+0000c39b  __aeabi_idiv0                    
+0000d7e9  __aeabi_idivmod                  
+0000c7e3  __aeabi_ldiv0                    
+0000e199  __aeabi_llsl                     
+0000e131  __aeabi_lmul                     
+0000e26f  __aeabi_memclr                   
+0000e26f  __aeabi_memclr4                  
+0000e26f  __aeabi_memclr8                  
+0000e539  __aeabi_memcpy                   
+0000e539  __aeabi_memcpy4                  
+0000e539  __aeabi_memcpy8                  
+0000e261  __aeabi_memset                   
+0000e261  __aeabi_memset4                  
+0000e261  __aeabi_memset8                  
+0000e09d  __aeabi_ui2f                     
+0000dcd9  __aeabi_uidiv                    
+0000dcd9  __aeabi_uidivmod                 
+0000e359  __aeabi_uldivmod                 
+0000e199  __ashldi3                        
 ffffffff  __binit__                        
-0000d4f1  __cmpdf2                         
-0000c9a5  __cmpsf2                         
-00007e81  __divdf3_fast                    
-0000cbd9  __divsf3                         
-0000d4f1  __eqdf2                          
-0000c9a5  __eqsf2                          
-0000dd29  __extendsfdf2                    
-0000da29  __fixdfsi                        
-0000de55  __fixsfsi                        
-0000dec1  __fixunssfsi                     
-0000dfe1  __floatsidf                      
-0000dda5  __floatsisf                      
-0000e0ad  __floatunsisf                    
-0000cfb9  __gedf2                          
-0000c9df  __gesf2                          
-0000cfb9  __gtdf2                          
-0000c9df  __gtsf2                          
+0000d4e1  __cmpdf2                         
+0000c9a1  __cmpsf2                         
+00007e7d  __divdf3_fast                    
+0000cbc9  __divsf3                         
+0000d4e1  __eqdf2                          
+0000c9a1  __eqsf2                          
+0000dd19  __extendsfdf2                    
+0000da19  __fixdfsi                        
+0000de45  __fixsfsi                        
+0000deb1  __fixunssfsi                     
+0000dfd1  __floatsidf                      
+0000dd95  __floatsisf                      
+0000e09d  __floatunsisf                    
+0000cfa9  __gedf2                          
+0000c9db  __gesf2                          
+0000cfa9  __gtdf2                          
+0000c9db  __gtsf2                          
 00003c69  __kernel_rem_pio2                
-0000d4f1  __ledf2                          
-0000c9a5  __lesf2                          
-0000d4f1  __ltdf2                          
-0000c9a5  __ltsf2                          
+0000d4e1  __ledf2                          
+0000c9a1  __lesf2                          
+0000d4e1  __ltdf2                          
+0000c9a1  __ltsf2                          
 UNDEFED   __mpu_init                       
-00009369  __muldf3_fast                    
-0000e141  __muldi3                         
-0000dde1  __muldsi3                        
-0000ca31  __mulsf3                         
-0000d4f1  __nedf2                          
-0000c9a5  __nesf2                          
+00009365  __muldf3_fast                    
+0000e131  __muldi3                         
+0000ddd1  __muldsi3                        
+0000ca2d  __mulsf3                         
+0000d4e1  __nedf2                          
+0000c9a1  __nesf2                          
 20207e00  __stack                          
 20200000  __start___llvm_prf_bits          
 20200000  __start___llvm_prf_cnts          
 20200000  __stop___llvm_prf_bits           
 20200000  __stop___llvm_prf_cnts           
-0000a1cd  __subdf3                         
-0000bb3d  __subsf3                         
-0000d0a1  __truncdfsf2                     
-0000c2fd  __udivmoddi4                     
-0000ca1b  __unordsf2                       
-0000e085  _c_int00_noargs                  
+0000a1c9  __subdf3                         
+0000bb39  __subsf3                         
+0000d091  __truncdfsf2                     
+0000c2f9  __udivmoddi4                     
+0000ca17  __unordsf2                       
+0000e075  _c_int00_noargs                  
 UNDEFED   _system_post_cinit               
-0000e5d5  _system_pre_init                 
-0000e599  abort                            
-0000c7e9  app_attitude_init                
-0000e355  app_attitude_poll                
-00007859  app_attitude_process_command     
-0000e0d5  app_attitude_read_yaw            
+0000e5d1  _system_pre_init                 
+0000e595  abort                            
+0000c7e5  app_attitude_init                
+0000e345  app_attitude_poll                
+00007855  app_attitude_process_command     
+0000e0c5  app_attitude_read_yaw            
 00001989  app_attitude_send                
-0000d3ad  app_car_control_init             
+0000d39d  app_car_control_init             
 00003565  app_car_control_process_command  
-0000dc21  app_car_control_send_heartbeat   
-000086d5  app_car_control_send_telemetry   
-0000e3c5  app_car_control_toggle_status_led
+0000dc11  app_car_control_send_heartbeat   
+000086d1  app_car_control_send_telemetry   
+0000e3b5  app_car_control_toggle_status_led
 00004f0d  app_car_control_update           
-0000b97d  app_image_store_get_file_by_index
-0000a01d  app_image_store_get_file_count   
-0000e535  app_image_store_init             
-0000cb45  app_image_store_is_receiving     
+0000b979  app_image_store_get_file_by_index
+0000a019  app_image_store_get_file_count   
+0000e531  app_image_store_init             
+0000e425  app_image_store_is_receiving     
 00000d49  app_image_store_process_command  
 000048fd  app_image_store_service          
-0000cabd  app_image_store_show_image       
-0000d419  app_menu_init                    
-000062b1  app_menu_update                  
+0000cab9  app_image_store_show_image       
+0000d409  app_menu_init                    
+000062ad  app_menu_update                  
 00011560  ascii_1206                       
 00010f70  ascii_1608                       
 0000fda0  ascii_2412                       
 0000e5e0  ascii_3216                       
-0000a91d  asinf                            
-0000b461  atan2f                           
-00009c8d  atanf                            
-0000dc65  atoi                             
+0000a919  asinf                            
+0000b45d  atan2f                           
+00009c89  atanf                            
+0000dc55  atoi                             
 ffffffff  binit                            
-00009541  cosf                             
-0000e2d5  encoder_get_counts               
-0000c881  encoder_handle_gpio_irq          
-0000db4d  encoder_init                     
-0000e2ed  encoder_reset                    
-0000abd9  floor                            
-0000abd9  floorl                           
+0000953d  cosf                             
+0000e2c5  encoder_get_counts               
+0000c87d  encoder_handle_gpio_irq          
+0000db3d  encoder_init                     
+0000e2dd  encoder_reset                    
+0000abd5  floor                            
+0000abd5  floorl                           
 20202480  gPWM_LEFTBackup                  
 2020253c  gPWM_RIGHTBackup                 
 202026b8  gSPI_LCDBackup                   
 00000000  interruptVectors                 
-0000b785  jy61_configure_output            
-0000e435  jy61_get_baudrate                
-0000d485  jy61_handle_irq                  
-0000be59  jy61_init                        
-0000d185  jy61_poll                        
-00008429  jy61_probe_baudrate              
-0000cdd1  jy61_read_angles                 
-0000bcd9  jy61_read_debug                  
-0000d559  jy61_read_quaternion             
-0000afa9  jy61_set_baudrate                
-0000c3a1  jy61_zero_yaw                    
-00007b75  lcd_init                         
-0000ba61  ldexp                            
-0000bd9d  ldexpf                           
-0000ba61  ldexpl                           
-0000e441  line_follow_get_error            
-0000cec9  line_follow_get_turn_adjust      
-0000e0f9  line_follow_init                 
-0000e00d  line_follow_is_active            
-0000df25  line_follow_is_valid             
-0000c579  line_follow_parse_command        
-00009719  main                             
-0000e165  memccpy                          
-0000c74d  memcpy                           
-0000d625  memset                           
-0000e44d  motion_control_get_mode          
-0000e3d5  motion_control_get_target_deg_s  
-0000e3e5  motion_control_get_target_mm_s   
-0000d851  motion_control_init              
-0000e3f5  motion_control_is_active         
-0000e459  motion_control_is_busy           
-000066b9  motion_control_parse_command     
-0000815d  motion_control_update            
-0000c1b5  pid_calc                         
-0000e305  pid_init                         
-0000e465  pid_reset                        
-0000ba61  scalbn                           
-0000bd9d  scalbnf                          
-0000ba61  scalbnl                          
-00009ac1  sinf                             
-0000db95  snprintf                         
-0000e239  spi_write_bus                    
-0000a4dd  sqrt                             
-0000a4dd  sqrtl                            
-0000df85  sscanf                           
-0000cb51  strcmp                           
-00006aa9  strtod                           
-00007509  strtof                           
-0000ae65  strtol                           
-00006aa9  strtold                          
-0000918d  strtoll                          
-0000b215  strtoul                          
-0000a651  strtoull                         
-0000e471  uart_debug_get_rx_dropped_bytes  
-0000e47d  uart_debug_get_tx_dropped_bytes  
-0000d1f5  uart_debug_handle_irq            
-0000e035  uart_debug_init                  
-0000de1d  uart_debug_read_byte             
-0000b0e1  uart_debug_read_line             
-0000d945  uart_debug_service_tx            
-0000d991  uart_debug_write_string          
-0000d265  uart_openmv_handle_irq           
-0000e05d  uart_openmv_init                 
-0000c259  uart_openmv_read_line            
-000098f1  w25q64_erase_sector              
-0000e255  w25q64_init                      
-0000e11d  w25q64_is_valid_jedec_id         
-0000893d  w25q64_read                      
-00005e79  w25q64_read_jedec_id             
-00006e59  w25q64_write                     
-0000e405  wcslen                           
+0000b781  jy61_configure_output            
+0000e431  jy61_get_baudrate                
+0000d475  jy61_handle_irq                  
+0000be55  jy61_init                        
+0000d175  jy61_poll                        
+00008425  jy61_probe_baudrate              
+0000cdc1  jy61_read_angles                 
+0000bcd5  jy61_read_debug                  
+0000d549  jy61_read_quaternion             
+0000afa5  jy61_set_baudrate                
+0000c39d  jy61_zero_yaw                    
+00007b71  lcd_init                         
+0000ba5d  ldexp                            
+0000bd99  ldexpf                           
+0000ba5d  ldexpl                           
+0000e43d  line_follow_get_error            
+0000ceb9  line_follow_get_turn_adjust      
+0000e0e9  line_follow_init                 
+0000dffd  line_follow_is_active            
+0000df15  line_follow_is_valid             
+0000c575  line_follow_parse_command        
+00009715  main                             
+0000e155  memccpy                          
+0000c749  memcpy                           
+0000d615  memset                           
+0000e449  motion_control_get_mode          
+0000e3c5  motion_control_get_target_deg_s  
+0000e3d5  motion_control_get_target_mm_s   
+0000d841  motion_control_init              
+0000e3e5  motion_control_is_active         
+0000e455  motion_control_is_busy           
+000066b5  motion_control_parse_command     
+00008159  motion_control_update            
+0000c1b1  pid_calc                         
+0000e2f5  pid_init                         
+0000e461  pid_reset                        
+0000ba5d  scalbn                           
+0000bd99  scalbnf                          
+0000ba5d  scalbnl                          
+00009abd  sinf                             
+0000db85  snprintf                         
+0000e229  spi_write_bus                    
+0000a4d9  sqrt                             
+0000a4d9  sqrtl                            
+0000df75  sscanf                           
+0000cb41  strcmp                           
+00006aa5  strtod                           
+00007505  strtof                           
+0000ae61  strtol                           
+00006aa5  strtold                          
+00009189  strtoll                          
+0000b211  strtoul                          
+0000a64d  strtoull                         
+0000e46d  uart_debug_get_rx_dropped_bytes  
+0000e479  uart_debug_get_tx_dropped_bytes  
+0000d1e5  uart_debug_handle_irq            
+0000e025  uart_debug_init                  
+0000de0d  uart_debug_read_byte             
+0000b0dd  uart_debug_read_line             
+0000d935  uart_debug_service_tx            
+0000d981  uart_debug_write_string          
+0000d255  uart_openmv_handle_irq           
+0000e04d  uart_openmv_init                 
+0000c255  uart_openmv_read_line            
+000098ed  w25q64_erase_sector              
+0000e245  w25q64_init                      
+0000e10d  w25q64_is_valid_jedec_id         
+00008939  w25q64_read                      
+00005e75  w25q64_read_jedec_id             
+00006e55  w25q64_write                     
+0000e3f5  wcslen                           
 
 
 GLOBAL SYMBOLS: SORTED BY Symbol Address 
@@ -1156,256 +1156,256 @@ address   name
 00003c69  __kernel_rem_pio2                
 000048fd  app_image_store_service          
 00004f0d  app_car_control_update           
-00005505  LCD_ShowChar                     
-000059e5  LCD_Fill                         
-00005e79  w25q64_read_jedec_id             
-000062b1  app_menu_update                  
-000066b9  motion_control_parse_command     
-00006aa9  strtod                           
-00006aa9  strtold                          
-00006e59  w25q64_write                     
-00007509  strtof                           
-00007859  app_attitude_process_command     
-00007b75  lcd_init                         
-00007e81  __divdf3_fast                    
-0000815d  motion_control_update            
-00008429  jy61_probe_baudrate              
-000086d5  app_car_control_send_telemetry   
-0000893d  w25q64_read                      
-0000918d  strtoll                          
-00009369  __muldf3_fast                    
-00009541  cosf                             
-00009719  main                             
-000098f1  w25q64_erase_sector              
-00009ac1  sinf                             
-00009c8d  atanf                            
-0000a01d  app_image_store_get_file_count   
-0000a1cd  __aeabi_dsub                     
-0000a1cd  __subdf3                         
-0000a1d7  __adddf3                         
-0000a1d7  __aeabi_dadd                     
-0000a35f  ADC0_IRQHandler                  
-0000a35f  ADC1_IRQHandler                  
-0000a35f  AES_IRQHandler                   
-0000a35f  CANFD0_IRQHandler                
-0000a35f  DAC0_IRQHandler                  
-0000a35f  DMA_IRQHandler                   
-0000a35f  Default_Handler                  
-0000a35f  GROUP0_IRQHandler                
-0000a35f  HardFault_Handler                
-0000a35f  I2C0_IRQHandler                  
-0000a35f  I2C1_IRQHandler                  
-0000a35f  NMI_Handler                      
-0000a35f  PendSV_Handler                   
-0000a35f  RTC_IRQHandler                   
-0000a35f  SPI0_IRQHandler                  
-0000a35f  SPI1_IRQHandler                  
-0000a35f  SVC_Handler                      
-0000a35f  TIMA0_IRQHandler                 
-0000a35f  TIMA1_IRQHandler                 
-0000a35f  TIMG0_IRQHandler                 
-0000a35f  TIMG12_IRQHandler                
-0000a35f  TIMG6_IRQHandler                 
-0000a35f  TIMG7_IRQHandler                 
-0000a35f  TIMG8_IRQHandler                 
-0000a35f  UART3_IRQHandler                 
-0000a4dd  sqrt                             
-0000a4dd  sqrtl                            
-0000a651  strtoull                         
-0000a91d  asinf                            
-0000abd9  floor                            
-0000abd9  floorl                           
-0000ae65  strtol                           
-0000afa9  jy61_set_baudrate                
-0000b0e1  uart_debug_read_line             
-0000b215  strtoul                          
-0000b461  atan2f                           
-0000b681  DL_Timer_initFourCCPWMMode       
-0000b785  jy61_configure_output            
-0000b885  SYSCFG_DL_GPIO_init              
-0000b97d  app_image_store_get_file_by_index
-0000ba61  ldexp                            
-0000ba61  ldexpl                           
-0000ba61  scalbn                           
-0000ba61  scalbnl                          
-0000bb3d  __aeabi_fsub                     
-0000bb3d  __subsf3                         
-0000bb47  __addsf3                         
-0000bb47  __aeabi_fadd                     
-0000bc15  SysTick_Handler                  
-0000bcd9  jy61_read_debug                  
-0000bd9d  ldexpf                           
-0000bd9d  scalbnf                          
-0000be59  jy61_init                        
-0000bf09  LCD_Address_Set                  
-0000c1b5  pid_calc                         
-0000c259  uart_openmv_read_line            
-0000c2fd  __udivmoddi4                     
-0000c39f  __aeabi_idiv0                    
-0000c3a1  jy61_zero_yaw                    
-0000c579  line_follow_parse_command        
-0000c74d  memcpy                           
-0000c7e7  __aeabi_ldiv0                    
-0000c7e9  app_attitude_init                
-0000c881  encoder_handle_gpio_irq          
-0000c9a5  __cmpsf2                         
-0000c9a5  __eqsf2                          
-0000c9a5  __lesf2                          
-0000c9a5  __ltsf2                          
-0000c9a5  __nesf2                          
-0000c9df  __gesf2                          
-0000c9df  __gtsf2                          
-0000ca1b  __aeabi_fcmpun                   
-0000ca1b  __unordsf2                       
-0000ca31  __aeabi_fmul                     
-0000ca31  __mulsf3                         
-0000cabd  app_image_store_show_image       
-0000cb45  app_image_store_is_receiving     
-0000cb51  strcmp                           
-0000cbd9  __aeabi_fdiv                     
-0000cbd9  __divsf3                         
-0000cc5d  SYSCFG_DL_UART_DEBUG_init        
-0000ccd9  SYSCFG_DL_UART_JY61P_init        
-0000cd55  SYSCFG_DL_UART_OPENMV_init       
-0000cdd1  jy61_read_angles                 
-0000ce4d  __TI_decompress_lzss             
-0000cec9  line_follow_get_turn_adjust      
-0000cfb9  __gedf2                          
-0000cfb9  __gtdf2                          
-0000d0a1  __aeabi_d2f                      
-0000d0a1  __truncdfsf2                     
-0000d115  SYSCFG_DL_initPower              
-0000d185  jy61_poll                        
-0000d1f5  uart_debug_handle_irq            
-0000d265  uart_openmv_handle_irq           
-0000d2d5  SYSCFG_DL_PWM_LEFT_init          
-0000d341  SYSCFG_DL_PWM_RIGHT_init         
-0000d3ad  app_car_control_init             
-0000d419  app_menu_init                    
-0000d485  jy61_handle_irq                  
-0000d4f1  __cmpdf2                         
-0000d4f1  __eqdf2                          
-0000d4f1  __ledf2                          
-0000d4f1  __ltdf2                          
-0000d4f1  __nedf2                          
-0000d559  jy61_read_quaternion             
-0000d5c1  TB6612_Init                      
-0000d625  memset                           
-0000d689  BO_Control                       
-0000d6e9  __aeabi_dcmpeq                   
-0000d6fb  __aeabi_dcmplt                   
-0000d70d  __aeabi_dcmple                   
-0000d71f  __aeabi_dcmpge                   
-0000d731  __aeabi_dcmpgt                   
-0000d745  __aeabi_fcmpeq                   
-0000d757  __aeabi_fcmplt                   
-0000d769  __aeabi_fcmple                   
-0000d77b  __aeabi_fcmpge                   
-0000d78d  __aeabi_fcmpgt                   
-0000d7a1  AO_Control                       
-0000d7f9  __aeabi_idiv                     
-0000d7f9  __aeabi_idivmod                  
-0000d851  motion_control_init              
-0000d8f9  TB6612_Motor_Stop                
-0000d945  uart_debug_service_tx            
-0000d991  uart_debug_write_string          
-0000d9dd  LCD_ShowString                   
-0000da29  __aeabi_d2iz                     
-0000da29  __fixdfsi                        
-0000da75  DL_UART_init                     
-0000dabd  SYSCFG_DL_SPI_LCD_init           
-0000db05  SYSCFG_DL_init                   
-0000db4d  encoder_init                     
-0000db95  snprintf                         
-0000dbdd  DL_SPI_init                      
-0000dc21  app_car_control_send_heartbeat   
-0000dc65  atoi                             
-0000dca9  SYSCFG_DL_SYSCTL_init            
-0000dce9  __aeabi_uidiv                    
-0000dce9  __aeabi_uidivmod                 
-0000dd29  __aeabi_f2d                      
-0000dd29  __extendsfdf2                    
-0000dd69  __TI_auto_init_nobinit_nopinit   
-0000dda5  __aeabi_i2f                      
-0000dda5  __floatsisf                      
-0000dde1  __muldsi3                        
-0000de1d  uart_debug_read_byte             
-0000de55  __aeabi_f2iz                     
-0000de55  __fixsfsi                        
-0000dec1  __aeabi_f2uiz                    
-0000dec1  __fixunssfsi                     
-0000def5  DL_UART_transmitDataBlocking     
-0000df25  line_follow_is_valid             
-0000df85  sscanf                           
-0000dfe1  __aeabi_i2d                      
-0000dfe1  __floatsidf                      
-0000e00d  line_follow_is_active            
-0000e035  uart_debug_init                  
-0000e05d  uart_openmv_init                 
-0000e085  _c_int00_noargs                  
-0000e0ad  __aeabi_ui2f                     
-0000e0ad  __floatunsisf                    
-0000e0d5  app_attitude_read_yaw            
-0000e0f9  line_follow_init                 
-0000e11d  w25q64_is_valid_jedec_id         
-0000e141  __aeabi_lmul                     
-0000e141  __muldi3                         
-0000e165  memccpy                          
-0000e1a9  __aeabi_llsl                     
-0000e1a9  __ashldi3                        
-0000e1c9  DL_Timer_setCaptCompUpdateMethod 
-0000e1e5  DL_Timer_setClockConfig          
-0000e201  DL_UART_receiveDataCheck         
-0000e21d  DL_UART_transmitDataCheck        
-0000e239  spi_write_bus                    
-0000e255  w25q64_init                      
-0000e271  __aeabi_memset                   
-0000e271  __aeabi_memset4                  
-0000e271  __aeabi_memset8                  
-0000e27f  __aeabi_memclr                   
-0000e27f  __aeabi_memclr4                  
-0000e27f  __aeabi_memclr8                  
-0000e28d  DL_Timer_setCaptureCompareOutCtl 
-0000e2a5  LCD_WR_DATA8                     
-0000e2d5  encoder_get_counts               
-0000e2ed  encoder_reset                    
-0000e305  pid_init                         
-0000e355  app_attitude_poll                
-0000e369  __aeabi_uldivmod                 
-0000e37d  DL_SPI_setClockConfig            
-0000e38f  DL_UART_setClockConfig           
-0000e3a1  __TI_decompress_none             
-0000e3b5  DL_Timer_setCaptureCompareValue  
-0000e3c5  app_car_control_toggle_status_led
-0000e3d5  motion_control_get_target_deg_s  
-0000e3e5  motion_control_get_target_mm_s   
-0000e3f5  motion_control_is_active         
-0000e405  wcslen                           
-0000e415  __TI_zero_init                   
-0000e435  jy61_get_baudrate                
-0000e441  line_follow_get_error            
-0000e44d  motion_control_get_mode          
-0000e459  motion_control_is_busy           
-0000e465  pid_reset                        
-0000e471  uart_debug_get_rx_dropped_bytes  
-0000e47d  uart_debug_get_tx_dropped_bytes  
-0000e489  DL_Common_delayCycles            
-0000e4bb  GROUP1_IRQHandler                
-0000e4fd  UART0_IRQHandler                 
-0000e505  UART1_IRQHandler                 
-0000e50d  UART2_IRQHandler                 
-0000e515  __aeabi_ddiv_fast                
-0000e51d  __aeabi_dmul_fast                
-0000e525  __aeabi_errno_addr               
-0000e535  app_image_store_init             
-0000e53d  __aeabi_memcpy                   
-0000e53d  __aeabi_memcpy4                  
-0000e53d  __aeabi_memcpy8                  
-0000e599  abort                            
-0000e59e  C$$EXIT                          
-0000e59f  HOSTexit                         
-0000e5d1  Reset_Handler                    
-0000e5d5  _system_pre_init                 
+00005501  LCD_ShowChar                     
+000059e1  LCD_Fill                         
+00005e75  w25q64_read_jedec_id             
+000062ad  app_menu_update                  
+000066b5  motion_control_parse_command     
+00006aa5  strtod                           
+00006aa5  strtold                          
+00006e55  w25q64_write                     
+00007505  strtof                           
+00007855  app_attitude_process_command     
+00007b71  lcd_init                         
+00007e7d  __divdf3_fast                    
+00008159  motion_control_update            
+00008425  jy61_probe_baudrate              
+000086d1  app_car_control_send_telemetry   
+00008939  w25q64_read                      
+00009189  strtoll                          
+00009365  __muldf3_fast                    
+0000953d  cosf                             
+00009715  main                             
+000098ed  w25q64_erase_sector              
+00009abd  sinf                             
+00009c89  atanf                            
+0000a019  app_image_store_get_file_count   
+0000a1c9  __aeabi_dsub                     
+0000a1c9  __subdf3                         
+0000a1d3  __adddf3                         
+0000a1d3  __aeabi_dadd                     
+0000a35b  ADC0_IRQHandler                  
+0000a35b  ADC1_IRQHandler                  
+0000a35b  AES_IRQHandler                   
+0000a35b  CANFD0_IRQHandler                
+0000a35b  DAC0_IRQHandler                  
+0000a35b  DMA_IRQHandler                   
+0000a35b  Default_Handler                  
+0000a35b  GROUP0_IRQHandler                
+0000a35b  HardFault_Handler                
+0000a35b  I2C0_IRQHandler                  
+0000a35b  I2C1_IRQHandler                  
+0000a35b  NMI_Handler                      
+0000a35b  PendSV_Handler                   
+0000a35b  RTC_IRQHandler                   
+0000a35b  SPI0_IRQHandler                  
+0000a35b  SPI1_IRQHandler                  
+0000a35b  SVC_Handler                      
+0000a35b  TIMA0_IRQHandler                 
+0000a35b  TIMA1_IRQHandler                 
+0000a35b  TIMG0_IRQHandler                 
+0000a35b  TIMG12_IRQHandler                
+0000a35b  TIMG6_IRQHandler                 
+0000a35b  TIMG7_IRQHandler                 
+0000a35b  TIMG8_IRQHandler                 
+0000a35b  UART3_IRQHandler                 
+0000a4d9  sqrt                             
+0000a4d9  sqrtl                            
+0000a64d  strtoull                         
+0000a919  asinf                            
+0000abd5  floor                            
+0000abd5  floorl                           
+0000ae61  strtol                           
+0000afa5  jy61_set_baudrate                
+0000b0dd  uart_debug_read_line             
+0000b211  strtoul                          
+0000b45d  atan2f                           
+0000b67d  DL_Timer_initFourCCPWMMode       
+0000b781  jy61_configure_output            
+0000b881  SYSCFG_DL_GPIO_init              
+0000b979  app_image_store_get_file_by_index
+0000ba5d  ldexp                            
+0000ba5d  ldexpl                           
+0000ba5d  scalbn                           
+0000ba5d  scalbnl                          
+0000bb39  __aeabi_fsub                     
+0000bb39  __subsf3                         
+0000bb43  __addsf3                         
+0000bb43  __aeabi_fadd                     
+0000bc11  SysTick_Handler                  
+0000bcd5  jy61_read_debug                  
+0000bd99  ldexpf                           
+0000bd99  scalbnf                          
+0000be55  jy61_init                        
+0000bf05  LCD_Address_Set                  
+0000c1b1  pid_calc                         
+0000c255  uart_openmv_read_line            
+0000c2f9  __udivmoddi4                     
+0000c39b  __aeabi_idiv0                    
+0000c39d  jy61_zero_yaw                    
+0000c575  line_follow_parse_command        
+0000c749  memcpy                           
+0000c7e3  __aeabi_ldiv0                    
+0000c7e5  app_attitude_init                
+0000c87d  encoder_handle_gpio_irq          
+0000c9a1  __cmpsf2                         
+0000c9a1  __eqsf2                          
+0000c9a1  __lesf2                          
+0000c9a1  __ltsf2                          
+0000c9a1  __nesf2                          
+0000c9db  __gesf2                          
+0000c9db  __gtsf2                          
+0000ca17  __aeabi_fcmpun                   
+0000ca17  __unordsf2                       
+0000ca2d  __aeabi_fmul                     
+0000ca2d  __mulsf3                         
+0000cab9  app_image_store_show_image       
+0000cb41  strcmp                           
+0000cbc9  __aeabi_fdiv                     
+0000cbc9  __divsf3                         
+0000cc4d  SYSCFG_DL_UART_DEBUG_init        
+0000ccc9  SYSCFG_DL_UART_JY61P_init        
+0000cd45  SYSCFG_DL_UART_OPENMV_init       
+0000cdc1  jy61_read_angles                 
+0000ce3d  __TI_decompress_lzss             
+0000ceb9  line_follow_get_turn_adjust      
+0000cfa9  __gedf2                          
+0000cfa9  __gtdf2                          
+0000d091  __aeabi_d2f                      
+0000d091  __truncdfsf2                     
+0000d105  SYSCFG_DL_initPower              
+0000d175  jy61_poll                        
+0000d1e5  uart_debug_handle_irq            
+0000d255  uart_openmv_handle_irq           
+0000d2c5  SYSCFG_DL_PWM_LEFT_init          
+0000d331  SYSCFG_DL_PWM_RIGHT_init         
+0000d39d  app_car_control_init             
+0000d409  app_menu_init                    
+0000d475  jy61_handle_irq                  
+0000d4e1  __cmpdf2                         
+0000d4e1  __eqdf2                          
+0000d4e1  __ledf2                          
+0000d4e1  __ltdf2                          
+0000d4e1  __nedf2                          
+0000d549  jy61_read_quaternion             
+0000d5b1  TB6612_Init                      
+0000d615  memset                           
+0000d679  BO_Control                       
+0000d6d9  __aeabi_dcmpeq                   
+0000d6eb  __aeabi_dcmplt                   
+0000d6fd  __aeabi_dcmple                   
+0000d70f  __aeabi_dcmpge                   
+0000d721  __aeabi_dcmpgt                   
+0000d735  __aeabi_fcmpeq                   
+0000d747  __aeabi_fcmplt                   
+0000d759  __aeabi_fcmple                   
+0000d76b  __aeabi_fcmpge                   
+0000d77d  __aeabi_fcmpgt                   
+0000d791  AO_Control                       
+0000d7e9  __aeabi_idiv                     
+0000d7e9  __aeabi_idivmod                  
+0000d841  motion_control_init              
+0000d8e9  TB6612_Motor_Stop                
+0000d935  uart_debug_service_tx            
+0000d981  uart_debug_write_string          
+0000d9cd  LCD_ShowString                   
+0000da19  __aeabi_d2iz                     
+0000da19  __fixdfsi                        
+0000da65  DL_UART_init                     
+0000daad  SYSCFG_DL_SPI_LCD_init           
+0000daf5  SYSCFG_DL_init                   
+0000db3d  encoder_init                     
+0000db85  snprintf                         
+0000dbcd  DL_SPI_init                      
+0000dc11  app_car_control_send_heartbeat   
+0000dc55  atoi                             
+0000dc99  SYSCFG_DL_SYSCTL_init            
+0000dcd9  __aeabi_uidiv                    
+0000dcd9  __aeabi_uidivmod                 
+0000dd19  __aeabi_f2d                      
+0000dd19  __extendsfdf2                    
+0000dd59  __TI_auto_init_nobinit_nopinit   
+0000dd95  __aeabi_i2f                      
+0000dd95  __floatsisf                      
+0000ddd1  __muldsi3                        
+0000de0d  uart_debug_read_byte             
+0000de45  __aeabi_f2iz                     
+0000de45  __fixsfsi                        
+0000deb1  __aeabi_f2uiz                    
+0000deb1  __fixunssfsi                     
+0000dee5  DL_UART_transmitDataBlocking     
+0000df15  line_follow_is_valid             
+0000df75  sscanf                           
+0000dfd1  __aeabi_i2d                      
+0000dfd1  __floatsidf                      
+0000dffd  line_follow_is_active            
+0000e025  uart_debug_init                  
+0000e04d  uart_openmv_init                 
+0000e075  _c_int00_noargs                  
+0000e09d  __aeabi_ui2f                     
+0000e09d  __floatunsisf                    
+0000e0c5  app_attitude_read_yaw            
+0000e0e9  line_follow_init                 
+0000e10d  w25q64_is_valid_jedec_id         
+0000e131  __aeabi_lmul                     
+0000e131  __muldi3                         
+0000e155  memccpy                          
+0000e199  __aeabi_llsl                     
+0000e199  __ashldi3                        
+0000e1b9  DL_Timer_setCaptCompUpdateMethod 
+0000e1d5  DL_Timer_setClockConfig          
+0000e1f1  DL_UART_receiveDataCheck         
+0000e20d  DL_UART_transmitDataCheck        
+0000e229  spi_write_bus                    
+0000e245  w25q64_init                      
+0000e261  __aeabi_memset                   
+0000e261  __aeabi_memset4                  
+0000e261  __aeabi_memset8                  
+0000e26f  __aeabi_memclr                   
+0000e26f  __aeabi_memclr4                  
+0000e26f  __aeabi_memclr8                  
+0000e27d  DL_Timer_setCaptureCompareOutCtl 
+0000e295  LCD_WR_DATA8                     
+0000e2c5  encoder_get_counts               
+0000e2dd  encoder_reset                    
+0000e2f5  pid_init                         
+0000e345  app_attitude_poll                
+0000e359  __aeabi_uldivmod                 
+0000e36d  DL_SPI_setClockConfig            
+0000e37f  DL_UART_setClockConfig           
+0000e391  __TI_decompress_none             
+0000e3a5  DL_Timer_setCaptureCompareValue  
+0000e3b5  app_car_control_toggle_status_led
+0000e3c5  motion_control_get_target_deg_s  
+0000e3d5  motion_control_get_target_mm_s   
+0000e3e5  motion_control_is_active         
+0000e3f5  wcslen                           
+0000e405  __TI_zero_init                   
+0000e425  app_image_store_is_receiving     
+0000e431  jy61_get_baudrate                
+0000e43d  line_follow_get_error            
+0000e449  motion_control_get_mode          
+0000e455  motion_control_is_busy           
+0000e461  pid_reset                        
+0000e46d  uart_debug_get_rx_dropped_bytes  
+0000e479  uart_debug_get_tx_dropped_bytes  
+0000e485  DL_Common_delayCycles            
+0000e4b7  GROUP1_IRQHandler                
+0000e4f9  UART0_IRQHandler                 
+0000e501  UART1_IRQHandler                 
+0000e509  UART2_IRQHandler                 
+0000e511  __aeabi_ddiv_fast                
+0000e519  __aeabi_dmul_fast                
+0000e521  __aeabi_errno_addr               
+0000e531  app_image_store_init             
+0000e539  __aeabi_memcpy                   
+0000e539  __aeabi_memcpy4                  
+0000e539  __aeabi_memcpy8                  
+0000e595  abort                            
+0000e59a  C$$EXIT                          
+0000e59b  HOSTexit                         
+0000e5cd  Reset_Handler                    
+0000e5d1  _system_pre_init                 
 0000e5e0  ascii_3216                       
 0000fda0  ascii_2412                       
 00010f70  ascii_1608                       
