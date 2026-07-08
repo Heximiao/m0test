@@ -16,7 +16,8 @@
 #define MAX_ANGULAR_SPEED_DEG_S (120.0f) /* 运动命令允许的最大角速度，单位：deg/s */
 #define DIST_DONE_TOLERANCE_COUNTS (8.0f) /* 距离运动到位容差，单位：编码器 counts */
 #define TURN_DONE_TOLERANCE_COUNTS (8.0f) /* 转角运动到位容差，单位：编码器 counts */
-#define TURN_YAW_WEIGHT (0.85f) /* TURN/ANGLE 到位判断中 JY61 yaw 的权重 */
+#define TURN_YAW_WEIGHT (0.35f) /* TURN/ANGLE 到位判断中 JY61 yaw 的权重 */
+#define TURN_YAW_ENCODER_MAX_DIFF_DEG (18.0f) /* yaw 和编码器估算差距过大时放弃 yaw */
 #define TURN_YAW_DONE_TOLERANCE_DEG (2.0f) /* yaw/count 融合后的转角到位容差 */
 
 typedef enum {
@@ -129,8 +130,11 @@ void motion_control_update(EncoderCounts counts, float *leftTargetCounts,
 
         if (gTurnYawValid && app_attitude_read_yaw(&yawDeg)) {
             float yawAngle = app_abs_float(wrap_angle(yawDeg - gStartYawDeg));
-            turnAngle = (yawAngle * TURN_YAW_WEIGHT) +
-                (encoderAngle * (1.0f - TURN_YAW_WEIGHT));
+            if (app_abs_float(yawAngle - encoderAngle) <=
+                TURN_YAW_ENCODER_MAX_DIFF_DEG) {
+                turnAngle = (yawAngle * TURN_YAW_WEIGHT) +
+                    (encoderAngle * (1.0f - TURN_YAW_WEIGHT));
+            }
         }
 
         if (turnAngle >= (gTargetAngleDeg - TURN_YAW_DONE_TOLERANCE_DEG)) {

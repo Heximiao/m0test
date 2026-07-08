@@ -16,6 +16,7 @@
 #define ATTITUDE_PITCH_SIGN (-1.0f)
 #define ATTITUDE_ROLL_SIGN (-1.0f)
 #define ATTITUDE_YAW_SIGN (1.0f)
+#define ATTITUDE_YAW_FILTER_ALPHA (0.45f)
 
 typedef struct {
     float m[3][3];
@@ -26,6 +27,8 @@ static AttitudeMatrix gAttitudeZeroMatrix;
 static bool gAttitudeZeroValid;
 static Jy61Angles gBodyAngles;
 static bool gBodyAnglesValid;
+static float gFilteredYawDeg;
+static bool gFilteredYawValid;
 
 static void retry_jy61_init(void);
 static void send_jy61_status(void);
@@ -86,6 +89,7 @@ bool app_attitude_process_command(const char *command)
         if (jy61_zero_yaw()) {
             gAttitudeZeroValid = false;
             gBodyAnglesValid = false;
+            gFilteredYawValid = false;
             uart_debug_write_string("OK JY61 ZERO\r\n");
         }
         return true;
@@ -139,6 +143,15 @@ void app_attitude_send(uint32_t nowMs)
     zeroTranspose = attitude_matrix_transpose(&gAttitudeZeroMatrix);
     relativeMatrix = attitude_matrix_multiply(&bodyMatrix, &zeroTranspose);
     bodyAngles = attitude_angles_from_matrix(&relativeMatrix);
+    if (!gFilteredYawValid) {
+        gFilteredYawDeg = bodyAngles.yaw;
+        gFilteredYawValid = true;
+    } else {
+        gFilteredYawDeg = wrap_angle(gFilteredYawDeg +
+            (wrap_angle(bodyAngles.yaw - gFilteredYawDeg) *
+                ATTITUDE_YAW_FILTER_ALPHA));
+        bodyAngles.yaw = gFilteredYawDeg;
+    }
     gBodyAngles = bodyAngles;
     gBodyAnglesValid = true;
 
@@ -160,6 +173,7 @@ static void retry_jy61_init(void)
     gJy61Ready = false;
     gAttitudeZeroValid = false;
     gBodyAnglesValid = false;
+    gFilteredYawValid = false;
     attitude_identity_matrix(&gAttitudeZeroMatrix);
 
     if (jy61_init()) {

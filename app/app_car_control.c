@@ -42,7 +42,8 @@
 #define LTURN_DUTY_PERCENT (15.0f) /* Open-loop in-place turn duty. */
 #define LTURN_DONE_TOLERANCE_COUNTS (4.0f) /* Done tolerance, counts. */
 #define LTURN_LINE_REACQUIRE_DELAY_MS (1900U) /* Delay before line-follow resumes after LTURN. */
-#define LTURN_YAW_WEIGHT (0.85f) /* JY61 yaw weight in LTURN stop estimate. */
+#define LTURN_YAW_WEIGHT (0.35f) /* JY61 yaw weight in LTURN stop estimate. */
+#define LTURN_YAW_ENCODER_MAX_DIFF_DEG (18.0f) /* Ignore yaw if it disagrees too much. */
 #define LTURN_YAW_DONE_TOLERANCE_DEG (2.0f) /* Stop tolerance after yaw/count fusion. */
 
 static PID gLeftSpeedPid;
@@ -505,8 +506,11 @@ static bool update_lturn(EncoderCounts counts, float *leftTargetSpeed,
 
     if (gLTurnYawValid && app_attitude_read_yaw(&yawDeg)) {
         float yawAngle = abs_float(wrap_angle(yawDeg - gLTurnStartYawDeg));
-        turnAngle = (yawAngle * LTURN_YAW_WEIGHT) +
-            (encoderAngle * (1.0f - LTURN_YAW_WEIGHT));
+        if (abs_float(yawAngle - encoderAngle) <=
+            LTURN_YAW_ENCODER_MAX_DIFF_DEG) {
+            turnAngle = (yawAngle * LTURN_YAW_WEIGHT) +
+                (encoderAngle * (1.0f - LTURN_YAW_WEIGHT));
+        }
     }
 
     if (turnAngle >= (gLTurnTargetDeg - LTURN_YAW_DONE_TOLERANCE_DEG)) {
