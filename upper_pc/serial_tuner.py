@@ -1,5 +1,6 @@
 import csv
 import binascii
+import json
 import math
 import pathlib
 import queue
@@ -24,20 +25,31 @@ PLOT_KEYS = (
     "KP", "KI", "KD", "PITCH", "ROLL", "YAW",
 )
 KEY_VALUE_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(-?\d+(?:\.\d+)?)")
+SOURCE_RE = re.compile(r"\bSRC\s*=\s*([A-Za-z0-9_]+)")
 SCALE_100_KEYS = {
     "BASE", "LT", "RT", "LD", "RD", "ERR", "OUT", "LO", "RO", "ML", "MR",
-    "SPEED", "TARGET", "PITCH", "ROLL", "YAW",
+    "SPEED", "TARGET", "PITCH", "ROLL", "YAW", "RAWP", "RAWR", "RAWY",
 }
 SCALE_1000_KEYS = {"KP", "KI", "KD"}
 CUBE_PITCH_SIGN = -1.0
 CUBE_ROLL_SIGN = -1.0
 CUBE_YAW_SIGN = 1.0
+SETTINGS_PATH = pathlib.Path(__file__).with_name("serial_tuner_settings.json")
+SENSOR_AXIS_OPTIONS = ("+X", "-X", "+Y", "-Y", "+Z", "-Z")
+SENSOR_AXIS_VECTORS = {
+    "+X": (1.0, 0.0, 0.0),
+    "-X": (-1.0, 0.0, 0.0),
+    "+Y": (0.0, 1.0, 0.0),
+    "-Y": (0.0, -1.0, 0.0),
+    "+Z": (0.0, 0.0, 1.0),
+    "-Z": (0.0, 0.0, -1.0),
+}
 
 
 class SerialTunerApp:
     def __init__(self, root):
         self.root = root
-        self.root.title("Car PID Serial Tuner")
+        self.root.title("小车串口调参上位机")
         self.root.geometry("1080x720")
 
         self.serial_port = None
@@ -61,7 +73,11 @@ class SerialTunerApp:
         self.cube_draw_count = 0
         self.attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
         self.raw_attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
-        self.attitude_zero = None
+        self.mounted_attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
+        self.raw_attitude_matrix = self._identity_matrix()
+        self.mounted_attitude_matrix = self._identity_matrix()
+        self.attitude_matrix = self._identity_matrix()
+        self.attitude_zero_matrix = None
         self.last_attitude_log_time = 0.0
         self.last_debug_time = time.time()
         self.last_debug_rx_count = 0
@@ -85,11 +101,23 @@ class SerialTunerApp:
         self.kp_var = tk.StringVar(value="4.0")
         self.ki_var = tk.StringVar(value="0.2")
         self.kd_var = tk.StringVar(value="0.4")
-        self.status_var = tk.StringVar(value="Disconnected")
+        self.status_var = tk.StringVar(value="未连接")
         self.debug_var = tk.StringVar(value="RX 0/s  UI 0/s  Q 0  Draw 0/s  Last -")
         self.debug_log_enabled_var = tk.BooleanVar(value=False)
+        self.page_var = tk.StringVar(value="monitor")
+        self.mount_forward_var = tk.StringVar(value="-X")
+        self.mount_up_var = tk.StringVar(value="+Y")
+        self.mount_status_var = tk.StringVar(value="")
+        self.raw_attitude_var = tk.StringVar(value="Raw: P 0.0  R 0.0  Y 0.0")
+        self.mounted_attitude_var = tk.StringVar(value="Body: P 0.0  R 0.0  Y 0.0")
+        self.zeroed_attitude_var = tk.StringVar(value="Zeroed: P 0.0  R 0.0  Y 0.0")
+        self.nav_buttons = {}
+        self.monitor_cube_canvas = None
+        self.cal_cube_canvas = None
 
+        self._load_settings()
         self._build_ui()
+        self._update_mount_status()
         self.refresh_ports()
         self.root.after(100, self._draw_cube)
         self.root.after(50, self._poll_rx_queue)
@@ -98,26 +126,89 @@ class SerialTunerApp:
         top = ttk.Frame(self.root, padding=8)
         top.pack(fill=tk.X)
 
-        ttk.Label(top, text="Port").pack(side=tk.LEFT)
+        ttk.Label(top, text="端口").pack(side=tk.LEFT)
         self.port_combo = ttk.Combobox(top, textvariable=self.port_var, width=18)
         self.port_combo.pack(side=tk.LEFT, padx=(4, 10))
-        ttk.Button(top, text="Refresh", command=self.refresh_ports).pack(side=tk.LEFT)
+        ttk.Button(top, text="刷新", command=self.refresh_ports).pack(side=tk.LEFT)
 
-        ttk.Label(top, text="Baud").pack(side=tk.LEFT, padx=(14, 0))
+        ttk.Label(top, text="波特率").pack(side=tk.LEFT, padx=(14, 0))
         ttk.Combobox(top, textvariable=self.baud_var, values=BAUD_RATES, width=10).pack(
             side=tk.LEFT, padx=(4, 10)
         )
 
-        self.connect_button = ttk.Button(top, text="Connect", command=self.toggle_connection)
+        self.connect_button = ttk.Button(top, text="连接", command=self.toggle_connection)
         self.connect_button.pack(side=tk.LEFT)
         ttk.Label(top, textvariable=self.status_var).pack(side=tk.LEFT, padx=14)
         ttk.Checkbutton(
-            top, text="Debug log", variable=self.debug_log_enabled_var
+            top, text="调试日志", variable=self.debug_log_enabled_var
         ).pack(side=tk.LEFT, padx=(0, 8))
         ttk.Label(top, textvariable=self.debug_var).pack(side=tk.LEFT, padx=14)
 
-        controls = ttk.LabelFrame(self.root, text="PID Commands", padding=8)
-        controls.pack(fill=tk.X, padx=8, pady=(0, 8))
+        body = ttk.Frame(self.root)
+        body.pack(fill=tk.BOTH, expand=True)
+
+        sidebar = tk.Frame(body, width=176, bg="#2f3133")
+        sidebar.pack(side=tk.LEFT, fill=tk.Y)
+        sidebar.pack_propagate(False)
+
+        tk.Label(
+            sidebar,
+            text="小车地面站",
+            bg="#373a3c",
+            fg="#f2f5f7",
+            anchor=tk.W,
+            padx=14,
+            pady=14,
+            font=("Segoe UI", 12),
+        ).pack(fill=tk.X)
+        self._add_nav_button(sidebar, "monitor", "PID 监视")
+        self._add_nav_button(sidebar, "accel", "姿态校准")
+
+        self.content_frame = ttk.Frame(body)
+        self.content_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.monitor_page = ttk.Frame(self.content_frame)
+        self.accel_page = ttk.Frame(self.content_frame)
+
+        self._build_monitor_page(self.monitor_page)
+        self._build_accel_page(self.accel_page)
+        self._show_page("monitor")
+
+    def _add_nav_button(self, parent, page, text):
+        button = tk.Button(
+            parent,
+            text=text,
+            anchor=tk.W,
+            padx=18,
+            pady=12,
+            bd=0,
+            relief=tk.FLAT,
+            bg="#2f3133",
+            fg="#c7c9cc",
+            activebackground="#3d4144",
+            activeforeground="#ffffff",
+            command=lambda: self._show_page(page),
+        )
+        button.pack(fill=tk.X)
+        self.nav_buttons[page] = button
+
+    def _show_page(self, page):
+        self.page_var.set(page)
+        for frame in (self.monitor_page, self.accel_page):
+            frame.pack_forget()
+        if page == "accel":
+            self.accel_page.pack(fill=tk.BOTH, expand=True)
+        else:
+            self.monitor_page.pack(fill=tk.BOTH, expand=True)
+        for name, button in self.nav_buttons.items():
+            if name == page:
+                button.config(bg="#454a4e", fg="#ffffff")
+            else:
+                button.config(bg="#2f3133", fg="#c7c9cc")
+        self._draw_cube()
+
+    def _build_monitor_page(self, parent):
+        controls = ttk.LabelFrame(parent, text="PID 指令", padding=8)
+        controls.pack(fill=tk.X, padx=8, pady=(8, 8))
 
         for label, var in (
             ("Base", self.base_var),
@@ -128,28 +219,28 @@ class SerialTunerApp:
             ttk.Label(controls, text=label).pack(side=tk.LEFT)
             ttk.Entry(controls, textvariable=var, width=8).pack(side=tk.LEFT, padx=(4, 12))
 
-        ttk.Button(controls, text="Send PID", command=self.send_pid).pack(side=tk.LEFT, padx=4)
-        ttk.Button(controls, text="Send Base", command=self.send_base).pack(side=tk.LEFT, padx=4)
-        ttk.Button(controls, text="Request Status", command=lambda: self.send_line("GET")).pack(
+        ttk.Button(controls, text="发送 PID", command=self.send_pid).pack(side=tk.LEFT, padx=4)
+        ttk.Button(controls, text="发送基础速度", command=self.send_base).pack(side=tk.LEFT, padx=4)
+        ttk.Button(controls, text="读取状态", command=lambda: self.send_line("GET")).pack(
             side=tk.LEFT, padx=4
         )
-        ttk.Label(controls, text="Image ID").pack(side=tk.LEFT, padx=(16, 0))
+        ttk.Label(controls, text="图片 ID").pack(side=tk.LEFT, padx=(16, 0))
         ttk.Entry(controls, textvariable=self.image_slot_var, width=4).pack(
             side=tk.LEFT, padx=(4, 4)
         )
-        ttk.Button(controls, text="Send Image", command=self.choose_image).pack(
+        ttk.Button(controls, text="发送图片", command=self.choose_image).pack(
             side=tk.LEFT, padx=4
         )
-        ttk.Button(controls, text="Image Files", command=self.open_image_manager).pack(
+        ttk.Button(controls, text="图片文件", command=self.open_image_manager).pack(
             side=tk.LEFT, padx=4
         )
         ttk.Checkbutton(
-            controls, text="Show", variable=self.image_show_after_send_var
+            controls, text="发送后显示", variable=self.image_show_after_send_var
         ).pack(side=tk.LEFT, padx=(0, 8))
-        ttk.Button(controls, text="Save CSV", command=self.save_csv).pack(side=tk.RIGHT, padx=4)
-        ttk.Button(controls, text="Clear", command=self.clear_data).pack(side=tk.RIGHT, padx=4)
+        ttk.Button(controls, text="保存 CSV", command=self.save_csv).pack(side=tk.RIGHT, padx=4)
+        ttk.Button(controls, text="清空", command=self.clear_data).pack(side=tk.RIGHT, padx=4)
 
-        middle = ttk.PanedWindow(self.root, orient=tk.HORIZONTAL)
+        middle = ttk.PanedWindow(parent, orient=tk.HORIZONTAL)
         middle.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
 
         left = ttk.Frame(middle)
@@ -160,7 +251,7 @@ class SerialTunerApp:
         self.canvas = tk.Canvas(left, height=320, bg="#101418", highlightthickness=0)
         self.canvas.pack(fill=tk.BOTH, expand=True)
 
-        table_frame = ttk.LabelFrame(left, text="Latest Values", padding=6)
+        table_frame = ttk.LabelFrame(left, text="最新数据", padding=6)
         table_frame.pack(fill=tk.X, pady=(8, 0))
         self.value_labels = {}
         for key in PLOT_KEYS:
@@ -171,15 +262,17 @@ class SerialTunerApp:
             value.pack()
             self.value_labels[key] = value
 
-        cube_frame = ttk.LabelFrame(right, text="MPU6050 Attitude", padding=6)
+        cube_frame = ttk.LabelFrame(right, text="JY61 车体姿态", padding=6)
         cube_frame.pack(fill=tk.X, pady=(0, 8))
-        ttk.Button(cube_frame, text="Zero MPU", command=self.zero_attitude).pack(
+        ttk.Button(cube_frame, text="姿态置零", command=self.zero_attitude).pack(
             anchor=tk.E, pady=(0, 4)
         )
-        self.cube_canvas = tk.Canvas(cube_frame, height=240, bg="#0b1020", highlightthickness=0)
-        self.cube_canvas.pack(fill=tk.X, expand=False)
+        self.monitor_cube_canvas = tk.Canvas(
+            cube_frame, height=240, bg="#0b1020", highlightthickness=0
+        )
+        self.monitor_cube_canvas.pack(fill=tk.X, expand=False)
 
-        log_frame = ttk.LabelFrame(right, text="Serial Log", padding=6)
+        log_frame = ttk.LabelFrame(right, text="串口日志", padding=6)
         log_frame.pack(fill=tk.BOTH, expand=True)
         self.log_text = tk.Text(log_frame, height=20, wrap=tk.NONE)
         self.log_text.pack(fill=tk.BOTH, expand=True)
@@ -190,12 +283,64 @@ class SerialTunerApp:
         ttk.Entry(cmd_frame, textvariable=self.manual_cmd_var).pack(
             side=tk.LEFT, fill=tk.X, expand=True
         )
-        ttk.Button(cmd_frame, text="Send", command=self.send_manual).pack(side=tk.LEFT, padx=(8, 0))
+        ttk.Button(cmd_frame, text="发送", command=self.send_manual).pack(side=tk.LEFT, padx=(8, 0))
+
+    def _build_accel_page(self, parent):
+        header = ttk.Frame(parent, padding=(18, 16, 18, 8))
+        header.pack(fill=tk.X)
+        ttk.Label(header, text="姿态安装方向校准", font=("Segoe UI", 16)).pack(
+            side=tk.LEFT
+        )
+        ttk.Button(header, text="姿态置零", command=self.zero_attitude).pack(
+            side=tk.RIGHT, padx=(8, 0)
+        )
+        ttk.Button(header, text="恢复默认安装方向", command=self.reset_mount).pack(side=tk.RIGHT)
+
+        body = ttk.Frame(parent, padding=(18, 0, 18, 18))
+        body.pack(fill=tk.BOTH, expand=True)
+
+        controls = ttk.LabelFrame(body, text="传感器安装方向", padding=12)
+        controls.pack(side=tk.LEFT, fill=tk.Y, padx=(0, 12))
+
+        ttk.Label(controls, text="车头对应传感器轴").pack(anchor=tk.W)
+        front_combo = ttk.Combobox(
+            controls,
+            textvariable=self.mount_forward_var,
+            values=SENSOR_AXIS_OPTIONS,
+            width=8,
+            state="readonly",
+        )
+        front_combo.pack(fill=tk.X, pady=(4, 12))
+        front_combo.bind("<<ComboboxSelected>>", lambda _event: self.on_mount_changed())
+
+        ttk.Label(controls, text="车顶对应传感器轴").pack(anchor=tk.W)
+        up_combo = ttk.Combobox(
+            controls,
+            textvariable=self.mount_up_var,
+            values=SENSOR_AXIS_OPTIONS,
+            width=8,
+            state="readonly",
+        )
+        up_combo.pack(fill=tk.X, pady=(4, 12))
+        up_combo.bind("<<ComboboxSelected>>", lambda _event: self.on_mount_changed())
+
+        ttk.Label(controls, textvariable=self.mount_status_var, foreground="#555555").pack(
+            anchor=tk.W, pady=(0, 14)
+        )
+        ttk.Separator(controls).pack(fill=tk.X, pady=(0, 12))
+        ttk.Label(controls, textvariable=self.raw_attitude_var).pack(anchor=tk.W, pady=2)
+        ttk.Label(controls, textvariable=self.mounted_attitude_var).pack(anchor=tk.W, pady=2)
+        ttk.Label(controls, textvariable=self.zeroed_attitude_var).pack(anchor=tk.W, pady=2)
+
+        preview = ttk.LabelFrame(body, text="车体姿态预览", padding=8)
+        preview.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        self.cal_cube_canvas = tk.Canvas(preview, bg="#f8fafc", highlightthickness=0)
+        self.cal_cube_canvas.pack(fill=tk.BOTH, expand=True)
 
     def refresh_ports(self):
         if serial is None:
             self.port_combo["values"] = []
-            self.status_var.set("pyserial is not installed")
+            self.status_var.set("未安装 pyserial")
             return
 
         ports = [port.device for port in serial.tools.list_ports.comports()]
@@ -212,14 +357,14 @@ class SerialTunerApp:
     def connect(self):
         if serial is None:
             messagebox.showerror(
-                "Missing dependency",
-                "Install pyserial first: python -m pip install pyserial",
+                "缺少依赖",
+                "请先安装 pyserial: python -m pip install pyserial",
             )
             return
 
         port = self.port_var.get().strip()
         if not port:
-            messagebox.showwarning("No port", "Choose a COM port first.")
+            messagebox.showwarning("未选择端口", "请先选择 COM 端口。")
             return
 
         try:
@@ -230,14 +375,14 @@ class SerialTunerApp:
                 write_timeout=0.5,
             )
         except Exception as exc:
-            messagebox.showerror("Open failed", str(exc))
+            messagebox.showerror("打开失败", str(exc))
             return
 
         self.stop_event.clear()
         self.reader_thread = threading.Thread(target=self._read_serial, daemon=True)
         self.reader_thread.start()
-        self.connect_button.config(text="Disconnect")
-        self.status_var.set(f"Connected to {port}")
+        self.connect_button.config(text="断开")
+        self.status_var.set(f"已连接 {port}")
 
     def disconnect(self):
         self.stop_event.set()
@@ -246,8 +391,8 @@ class SerialTunerApp:
                 self.serial_port.close()
             except Exception:
                 pass
-        self.connect_button.config(text="Connect")
-        self.status_var.set("Disconnected")
+        self.connect_button.config(text="连接")
+        self.status_var.set("未连接")
 
     def _read_serial(self):
         while not self.stop_event.is_set():
@@ -291,7 +436,7 @@ class SerialTunerApp:
                     self.image_transfer["writing"] = False
             elif kind == "image_error":
                 self._queue_log(f"[IMAGE ERROR] {payload}")
-                self.status_var.set("Image send failed")
+                self.status_var.set("图片发送失败")
                 self.image_transfer = None
             else:
                 self._queue_log(f"[ERROR] {payload}")
@@ -371,7 +516,7 @@ class SerialTunerApp:
                 label.config(text=f"{pairs[key]:.3g}")
 
         if all(key in pairs for key in ("PITCH", "ROLL", "YAW")):
-            self._update_attitude(pairs)
+            self._update_attitude(pairs, self._parse_source(line))
             self._draw_cube()
 
         if not (("LD" in pairs) or ("RD" in pairs)):
@@ -381,22 +526,163 @@ class SerialTunerApp:
         self.last_sample_time = pairs["TIME"]
         return pairs
 
-    def _update_attitude(self, pairs):
+    def _update_attitude(self, pairs, source):
+        if source == "JY61BODY":
+            self.raw_attitude["PITCH"] = pairs.get("RAWP", pairs["PITCH"])
+            self.raw_attitude["ROLL"] = pairs.get("RAWR", pairs["ROLL"])
+            self.raw_attitude["YAW"] = pairs.get("RAWY", pairs["YAW"])
+            self.raw_attitude_matrix = self._euler_to_matrix(
+                self.raw_attitude["PITCH"],
+                self.raw_attitude["ROLL"],
+                self.raw_attitude["YAW"],
+            )
+            self.mounted_attitude["PITCH"] = pairs["PITCH"]
+            self.mounted_attitude["ROLL"] = pairs["ROLL"]
+            self.mounted_attitude["YAW"] = pairs["YAW"]
+            self.mounted_attitude_matrix = self._euler_to_matrix(
+                self.mounted_attitude["PITCH"],
+                self.mounted_attitude["ROLL"],
+                self.mounted_attitude["YAW"],
+            )
+            self.attitude_matrix = self.mounted_attitude_matrix
+            self.attitude = dict(self.mounted_attitude)
+            self.attitude_zero_matrix = self._identity_matrix()
+            self._update_attitude_labels()
+            return
+
         self.raw_attitude["PITCH"] = pairs["PITCH"]
         self.raw_attitude["ROLL"] = pairs["ROLL"]
         self.raw_attitude["YAW"] = pairs["YAW"]
-
-        if self.attitude_zero is None:
-            self.attitude_zero = dict(self.raw_attitude)
-
-        self.attitude["PITCH"] = self._wrap_angle(
-            self.raw_attitude["PITCH"] - self.attitude_zero["PITCH"]
+        self.raw_attitude_matrix = self._euler_to_matrix(
+            self.raw_attitude["PITCH"],
+            self.raw_attitude["ROLL"],
+            self.raw_attitude["YAW"],
         )
-        self.attitude["ROLL"] = self._wrap_angle(
-            self.raw_attitude["ROLL"] - self.attitude_zero["ROLL"]
+        self.mounted_attitude_matrix = self._apply_mount_to_matrix(
+            self.raw_attitude_matrix
         )
-        self.attitude["YAW"] = self._wrap_angle(
-            self.raw_attitude["YAW"] - self.attitude_zero["YAW"]
+        self.mounted_attitude = self._matrix_to_euler(self.mounted_attitude_matrix)
+
+        if self.attitude_zero_matrix is None:
+            self.attitude_zero_matrix = self.mounted_attitude_matrix
+
+        self.attitude_matrix = self._mat_mul(
+            self.mounted_attitude_matrix,
+            self._mat_transpose(self.attitude_zero_matrix),
+        )
+        self.attitude = self._matrix_to_euler(self.attitude_matrix)
+        self._update_attitude_labels()
+
+    def _apply_mount_to_attitude(self, attitude):
+        matrix = self._euler_to_matrix(
+            attitude["PITCH"],
+            attitude["ROLL"],
+            attitude["YAW"],
+        )
+        mount = self._mount_sensor_to_body_matrix()
+        if mount is None:
+            return dict(attitude)
+        body_matrix = self._mat_mul(mount, matrix)
+        return self._matrix_to_euler(body_matrix)
+
+    def _apply_mount_to_matrix(self, matrix):
+        mount = self._mount_sensor_to_body_matrix()
+        if mount is None:
+            return matrix
+        return self._mat_mul(mount, matrix)
+
+    def _mount_sensor_to_body_matrix(self):
+        forward = SENSOR_AXIS_VECTORS.get(self.mount_forward_var.get())
+        up = SENSOR_AXIS_VECTORS.get(self.mount_up_var.get())
+        if forward is None or up is None:
+            return None
+        if abs(self._dot(forward, up)) > 0.001:
+            return None
+        right = self._cross(up, forward)
+        if self._norm(right) < 0.001:
+            return None
+        right = self._normalize(right)
+        up = self._normalize(up)
+        forward = self._normalize(forward)
+        return (
+            (right[0], right[1], right[2]),
+            (up[0], up[1], up[2]),
+            (forward[0], forward[1], forward[2]),
+        )
+
+    def _euler_to_matrix(self, pitch_deg, roll_deg, yaw_deg):
+        pitch = math.radians(pitch_deg * CUBE_PITCH_SIGN)
+        roll = math.radians(roll_deg * CUBE_ROLL_SIGN)
+        yaw = math.radians(yaw_deg * CUBE_YAW_SIGN)
+        cp, sp = math.cos(pitch), math.sin(pitch)
+        cr, sr = math.cos(roll), math.sin(roll)
+        cy, sy = math.cos(yaw), math.sin(yaw)
+
+        pitch_m = ((1.0, 0.0, 0.0), (0.0, cp, -sp), (0.0, sp, cp))
+        yaw_m = ((cy, 0.0, sy), (0.0, 1.0, 0.0), (-sy, 0.0, cy))
+        roll_m = ((cr, -sr, 0.0), (sr, cr, 0.0), (0.0, 0.0, 1.0))
+        return self._mat_mul(roll_m, self._mat_mul(yaw_m, pitch_m))
+
+    def _identity_matrix(self):
+        return ((1.0, 0.0, 0.0), (0.0, 1.0, 0.0), (0.0, 0.0, 1.0))
+
+    def _matrix_to_euler(self, matrix):
+        pitch = math.asin(max(-1.0, min(1.0, matrix[2][1])))
+        cp = math.cos(pitch)
+        if abs(cp) > 0.0001:
+            yaw = math.atan2(-matrix[2][0], matrix[2][2])
+            roll = math.atan2(-matrix[0][1], matrix[1][1])
+        else:
+            yaw = math.atan2(matrix[0][2], matrix[0][0])
+            roll = 0.0
+        return {
+            "PITCH": self._wrap_angle(math.degrees(pitch) / CUBE_PITCH_SIGN),
+            "ROLL": self._wrap_angle(math.degrees(roll) / CUBE_ROLL_SIGN),
+            "YAW": self._wrap_angle(math.degrees(yaw) / CUBE_YAW_SIGN),
+        }
+
+    def _mat_mul(self, left, right):
+        return tuple(
+            tuple(
+                sum(left[row][idx] * right[idx][col] for idx in range(3))
+                for col in range(3)
+            )
+            for row in range(3)
+        )
+
+    def _mat_transpose(self, matrix):
+        return tuple(tuple(matrix[row][col] for row in range(3)) for col in range(3))
+
+    def _dot(self, left, right):
+        return sum(left[idx] * right[idx] for idx in range(3))
+
+    def _cross(self, left, right):
+        return (
+            left[1] * right[2] - left[2] * right[1],
+            left[2] * right[0] - left[0] * right[2],
+            left[0] * right[1] - left[1] * right[0],
+        )
+
+    def _norm(self, vector):
+        return math.sqrt(self._dot(vector, vector))
+
+    def _normalize(self, vector):
+        length = self._norm(vector)
+        if length <= 0.0:
+            return vector
+        return tuple(value / length for value in vector)
+
+    def _update_attitude_labels(self):
+        self.raw_attitude_var.set(
+            "Raw: P {PITCH:.1f}  R {ROLL:.1f}  Y {YAW:.1f}".format(**self.raw_attitude)
+        )
+        self.mounted_attitude_var.set(
+            "Body: P {PITCH:.1f}  R {ROLL:.1f}  Y {YAW:.1f}".format(
+                **self.mounted_attitude
+            )
+        )
+        self.zeroed_attitude_var.set(
+            "Zeroed: P {PITCH:.1f}  R {ROLL:.1f}  Y {YAW:.1f}".format(**self.attitude)
         )
 
     def _wrap_angle(self, value):
@@ -450,6 +736,12 @@ class SerialTunerApp:
 
         return pairs
 
+    def _parse_source(self, line):
+        match = SOURCE_RE.search(line)
+        if match:
+            return match.group(1).upper()
+        return ""
+
     def _draw_plot(self):
         self.draw_count += 1
         self.canvas.delete("all")
@@ -473,7 +765,7 @@ class SerialTunerApp:
 
         if not values:
             self.canvas.create_text(
-                width // 2, height // 2, fill="#d0d7de", text="Waiting for serial data"
+                width // 2, height // 2, fill="#d0d7de", text="等待串口数据"
             )
             return
 
@@ -503,7 +795,13 @@ class SerialTunerApp:
 
     def _draw_cube(self):
         self.cube_draw_count += 1
-        canvas = self.cube_canvas
+        canvases = [
+            canvas for canvas in (self.monitor_cube_canvas, self.cal_cube_canvas) if canvas
+        ]
+        for canvas in canvases:
+            self._draw_attitude_cube(canvas)
+
+    def _draw_attitude_cube(self, canvas):
         canvas.delete("all")
         width = max(canvas.winfo_width(), 2)
         height = max(canvas.winfo_height(), 2)
@@ -512,9 +810,7 @@ class SerialTunerApp:
         size = min(width, height) * 0.34
         distance = 4.0
 
-        pitch = math.radians(self.attitude["PITCH"] * CUBE_PITCH_SIGN)
-        roll = math.radians(self.attitude["ROLL"] * CUBE_ROLL_SIGN)
-        yaw = math.radians(self.attitude["YAW"] * CUBE_YAW_SIGN)
+        attitude_matrix = self.attitude_matrix
 
         corners = [
             (-1, -1, -1), (1, -1, -1), (1, 1, -1), (-1, 1, -1),
@@ -537,17 +833,21 @@ class SerialTunerApp:
         projected = []
         rotated = []
         for x, y, z in corners:
-            x1 = x
-            y1 = (y * math.cos(pitch)) - (z * math.sin(pitch))
-            z1 = (y * math.sin(pitch)) + (z * math.cos(pitch))
-
-            x2 = (x1 * math.cos(yaw)) + (z1 * math.sin(yaw))
-            y2 = y1
-            z2 = (-x1 * math.sin(yaw)) + (z1 * math.cos(yaw))
-
-            x3 = (x2 * math.cos(roll)) - (y2 * math.sin(roll))
-            y3 = (x2 * math.sin(roll)) + (y2 * math.cos(roll))
-            z3 = z2
+            x3 = (
+                attitude_matrix[0][0] * x +
+                attitude_matrix[0][1] * y +
+                attitude_matrix[0][2] * z
+            )
+            y3 = (
+                attitude_matrix[1][0] * x +
+                attitude_matrix[1][1] * y +
+                attitude_matrix[1][2] * z
+            )
+            z3 = (
+                attitude_matrix[2][0] * x +
+                attitude_matrix[2][1] * y +
+                attitude_matrix[2][2] * z
+            )
             rotated.append((x3, y3, z3))
 
             perspective = distance / (distance - z3)
@@ -588,18 +888,18 @@ class SerialTunerApp:
 
     def choose_image(self):
         if not self.serial_port or not self.serial_port.is_open:
-            messagebox.showwarning("Not connected", "Connect to a COM port first.")
+            messagebox.showwarning("未连接", "请先连接 COM 端口。")
             return
         if self.image_transfer is not None:
-            messagebox.showinfo("Busy", "An image transfer is already running.")
+            messagebox.showinfo("正在忙", "已有图片正在传输。")
             return
 
         path = filedialog.askopenfilename(
-            title="Choose image",
+            title="选择图片",
             filetypes=(
-                ("Images", "*.png;*.jpg;*.jpeg;*.bmp"),
-                ("Raw RGB565", "*.bin"),
-                ("All files", "*.*"),
+                ("图片", "*.png;*.jpg;*.jpeg;*.bmp"),
+                ("原始 RGB565", "*.bin"),
+                ("所有文件", "*.*"),
             ),
         )
         if not path:
@@ -615,20 +915,20 @@ class SerialTunerApp:
             else:
                 width, height, payload = image_to_rgb565(path, 320, 170)
         except Exception as exc:
-            messagebox.showerror("Image conversion failed", str(exc))
+            messagebox.showerror("图片转换失败", str(exc))
             return
 
         crc = binascii.crc32(payload) & 0xFFFFFFFF
         size_kb = len(payload) / 1024.0
         confirmed = messagebox.askokcancel(
-            "Send image",
+            "发送图片",
             (
-                f"File: {path}\n"
-                f"Image ID: {'auto' if slot < 0 else slot}\n"
-                f"Size: {width} x {height}\n"
-                f"RGB565 bytes: {len(payload)} ({size_kb:.1f} KB)\n"
+                f"文件: {path}\n"
+                f"图片 ID: {'自动' if slot < 0 else slot}\n"
+                f"尺寸: {width} x {height}\n"
+                f"RGB565 字节数: {len(payload)} ({size_kb:.1f} KB)\n"
                 f"CRC32: {crc:08X}\n\n"
-                "Send to W25Q64 now?"
+                "现在写入 W25Q64 吗？"
             ),
         )
         if not confirmed:
@@ -648,7 +948,7 @@ class SerialTunerApp:
         }
         self.image_page_ack.clear()
         self.image_list_active = False
-        self.status_var.set("Preparing image send")
+        self.status_var.set("准备发送图片")
         if slot >= 0:
             self.send_line(f"IMG_WRITE {slot} {width} {height} {len(payload)} {crc:08X}")
         else:
@@ -685,23 +985,23 @@ class SerialTunerApp:
             slot = self.image_transfer["slot"]
             show_after_send = self.image_transfer["show_after_send"]
             self.image_transfer = None
-            self.status_var.set("Image sent")
+            self.status_var.set("图片已发送")
             if show_after_send:
                 image_id = self._image_id_from_done_line(line, slot)
                 self.send_line(f"IMG_SHOW {image_id}")
             if self.image_manager:
                 self.request_image_list()
-            messagebox.showinfo("Image sent", "Image written successfully.")
+            messagebox.showinfo("图片已发送", "图片写入成功。")
             return
 
         if line.startswith("ERR IMG") or line.startswith("ERR FLASH"):
             self.image_transfer = None
-            self.status_var.set("Image send failed")
-            messagebox.showerror("Image send failed", line)
+            self.status_var.set("图片发送失败")
+            messagebox.showerror("图片发送失败", line)
 
     def open_image_manager(self):
         if not self.serial_port or not self.serial_port.is_open:
-            messagebox.showwarning("Not connected", "Connect to a COM port first.")
+            messagebox.showwarning("未连接", "请先连接 COM 端口。")
             return
 
         if self.image_manager and self.image_manager["window"].winfo_exists():
@@ -710,34 +1010,34 @@ class SerialTunerApp:
             return
 
         window = tk.Toplevel(self.root)
-        window.title("Image File Manager")
+        window.title("图片文件管理")
         window.geometry("760x420")
 
         toolbar = ttk.Frame(window, padding=8)
         toolbar.pack(fill=tk.X)
-        ttk.Button(toolbar, text="Refresh", command=self.request_image_list).pack(
+        ttk.Button(toolbar, text="刷新", command=self.request_image_list).pack(
             side=tk.LEFT, padx=(0, 6)
         )
-        ttk.Button(toolbar, text="Upload", command=self.choose_image).pack(
+        ttk.Button(toolbar, text="上传", command=self.choose_image).pack(
             side=tk.LEFT, padx=6
         )
-        ttk.Button(toolbar, text="Show", command=self.show_selected_image).pack(
+        ttk.Button(toolbar, text="显示", command=self.show_selected_image).pack(
             side=tk.LEFT, padx=6
         )
-        ttk.Button(toolbar, text="Delete", command=self.delete_selected_image).pack(
+        ttk.Button(toolbar, text="删除", command=self.delete_selected_image).pack(
             side=tk.LEFT, padx=6
         )
-        info_var = tk.StringVar(value="No storage info yet")
+        info_var = tk.StringVar(value="暂无存储信息")
         ttk.Label(toolbar, textvariable=info_var).pack(side=tk.RIGHT)
 
         columns = ("id", "name", "size", "resolution", "crc", "address")
         tree = ttk.Treeview(window, columns=columns, show="headings", selectmode="browse")
         tree.heading("id", text="ID")
-        tree.heading("name", text="Name")
-        tree.heading("size", text="Size")
-        tree.heading("resolution", text="Resolution")
+        tree.heading("name", text="名称")
+        tree.heading("size", text="大小")
+        tree.heading("resolution", text="分辨率")
         tree.heading("crc", text="CRC32")
-        tree.heading("address", text="Address")
+        tree.heading("address", text="地址")
         tree.column("id", width=54, anchor=tk.CENTER)
         tree.column("name", width=160)
         tree.column("size", width=96, anchor=tk.E)
@@ -747,7 +1047,7 @@ class SerialTunerApp:
         tree.pack(fill=tk.BOTH, expand=True, padx=8, pady=(0, 8))
         tree.bind("<Double-1>", lambda _event: self.show_selected_image())
 
-        status_var = tk.StringVar(value="Ready")
+        status_var = tk.StringVar(value="就绪")
         ttk.Label(window, textvariable=status_var, padding=(8, 0, 8, 8)).pack(
             fill=tk.X
         )
@@ -772,29 +1072,29 @@ class SerialTunerApp:
             return
         self.image_list_rows = []
         self.image_list_active = True
-        self.image_manager["status"].set("Refreshing image list...")
+        self.image_manager["status"].set("正在刷新图片列表...")
         self.send_line("IMG_INFO")
         self.send_line("IMG_LIST")
 
     def show_selected_image(self):
         image_id = self._selected_image_id()
         if image_id is None:
-            messagebox.showinfo("No selection", "Choose an image first.")
+            messagebox.showinfo("未选择", "请先选择一张图片。")
             return
         self.send_line(f"IMG_SHOW {image_id}")
         if self.image_manager:
-            self.image_manager["status"].set(f"Showing image {image_id}")
+            self.image_manager["status"].set(f"正在显示图片 {image_id}")
 
     def delete_selected_image(self):
         image_id = self._selected_image_id()
         if image_id is None:
-            messagebox.showinfo("No selection", "Choose an image first.")
+            messagebox.showinfo("未选择", "请先选择一张图片。")
             return
-        if not messagebox.askokcancel("Delete image", f"Delete image {image_id}?"):
+        if not messagebox.askokcancel("删除图片", f"删除图片 {image_id}？"):
             return
         self.send_line(f"IMG_DELETE {image_id}")
         if self.image_manager:
-            self.image_manager["status"].set(f"Deleting image {image_id}")
+            self.image_manager["status"].set(f"正在删除图片 {image_id}")
 
     def _selected_image_id(self):
         if not self.image_manager:
@@ -842,7 +1142,7 @@ class SerialTunerApp:
 
         if line.startswith("OK IMG_SHOW"):
             if self.image_manager:
-                self.image_manager["status"].set("Image shown on LCD")
+                self.image_manager["status"].set("图片已显示到 LCD")
             return False
 
         if line.startswith("ERR IMG") and self.image_manager:
@@ -971,7 +1271,7 @@ class SerialTunerApp:
 
     def send_line(self, line):
         if not self.serial_port or not self.serial_port.is_open:
-            messagebox.showwarning("Not connected", "Connect to a COM port first.")
+            messagebox.showwarning("未连接", "请先连接 COM 端口。")
             return
 
         try:
@@ -979,16 +1279,16 @@ class SerialTunerApp:
             self._queue_log(f"> {line.strip()}")
             self._flush_log()
         except Exception as exc:
-            messagebox.showerror("Send failed", str(exc))
+            messagebox.showerror("发送失败", str(exc))
 
     def save_csv(self):
         if not self.samples:
-            messagebox.showinfo("No data", "No parsed samples to save.")
+            messagebox.showinfo("没有数据", "暂无可保存的解析数据。")
             return
 
         path = filedialog.asksaveasfilename(
             defaultextension=".csv",
-            filetypes=(("CSV files", "*.csv"), ("All files", "*.*")),
+            filetypes=(("CSV 文件", "*.csv"), ("所有文件", "*.*")),
         )
         if not path:
             return
@@ -1009,17 +1309,74 @@ class SerialTunerApp:
             label.config(text="-")
         self.attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
         self.raw_attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
-        self.attitude_zero = None
+        self.mounted_attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
+        self.raw_attitude_matrix = self._identity_matrix()
+        self.mounted_attitude_matrix = self._identity_matrix()
+        self.attitude_matrix = self._identity_matrix()
+        self.attitude_zero_matrix = None
         self.last_attitude_log_time = 0.0
+        self._update_attitude_labels()
         self._draw_plot()
         self._draw_cube()
 
     def zero_attitude(self):
-        self.attitude_zero = dict(self.raw_attitude)
+        self.attitude_zero_matrix = self.mounted_attitude_matrix
         self.attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
+        self.attitude_matrix = self._identity_matrix()
+        self._update_attitude_labels()
         self._draw_cube()
         if self.serial_port and self.serial_port.is_open:
             self.send_line("MPUZERO")
+
+    def reset_mount(self):
+        self.mount_forward_var.set("-X")
+        self.mount_up_var.set("+Y")
+        self.on_mount_changed()
+
+    def on_mount_changed(self):
+        self.mounted_attitude_matrix = self._apply_mount_to_matrix(
+            self.raw_attitude_matrix
+        )
+        self.mounted_attitude = self._matrix_to_euler(self.mounted_attitude_matrix)
+        self.attitude_zero_matrix = self.mounted_attitude_matrix
+        self.attitude = {"PITCH": 0.0, "ROLL": 0.0, "YAW": 0.0}
+        self.attitude_matrix = self._identity_matrix()
+        self._update_mount_status()
+        self._update_attitude_labels()
+        self._save_settings()
+        self._draw_cube()
+
+    def _update_mount_status(self):
+        if self._mount_sensor_to_body_matrix() is None:
+            self.mount_status_var.set("车头轴和车顶轴不能相同。")
+        else:
+            self.mount_status_var.set(
+                f"车头 {self.mount_forward_var.get()}  车顶 {self.mount_up_var.get()}"
+            )
+
+    def _load_settings(self):
+        try:
+            with open(SETTINGS_PATH, "r", encoding="utf-8") as file:
+                settings = json.load(file)
+        except (OSError, ValueError):
+            return
+        forward = settings.get("mount_forward")
+        up = settings.get("mount_up")
+        if forward in SENSOR_AXIS_OPTIONS:
+            self.mount_forward_var.set(forward)
+        if up in SENSOR_AXIS_OPTIONS:
+            self.mount_up_var.set(up)
+
+    def _save_settings(self):
+        settings = {
+            "mount_forward": self.mount_forward_var.get(),
+            "mount_up": self.mount_up_var.get(),
+        }
+        try:
+            with open(SETTINGS_PATH, "w", encoding="utf-8") as file:
+                json.dump(settings, file, indent=2)
+        except OSError:
+            pass
 
 
 def main():
