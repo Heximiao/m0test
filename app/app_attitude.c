@@ -24,6 +24,8 @@ typedef struct {
 static bool gJy61Ready;
 static AttitudeMatrix gAttitudeZeroMatrix;
 static bool gAttitudeZeroValid;
+static Jy61Angles gBodyAngles;
+static bool gBodyAnglesValid;
 
 static void retry_jy61_init(void);
 static void send_jy61_status(void);
@@ -83,6 +85,7 @@ bool app_attitude_process_command(const char *command)
     if ((strcmp(command, "JYZERO") == 0) || (strcmp(command, "MPUZERO") == 0)) {
         if (jy61_zero_yaw()) {
             gAttitudeZeroValid = false;
+            gBodyAnglesValid = false;
             uart_debug_write_string("OK JY61 ZERO\r\n");
         }
         return true;
@@ -95,6 +98,16 @@ void app_attitude_poll(void)
     if (gJy61Ready) {
         jy61_poll();
     }
+}
+
+bool app_attitude_read_yaw(float *yawDeg)
+{
+    if ((yawDeg == NULL) || !gBodyAnglesValid) {
+        return false;
+    }
+
+    *yawDeg = gBodyAngles.yaw;
+    return true;
 }
 
 void app_attitude_send(uint32_t nowMs)
@@ -126,6 +139,8 @@ void app_attitude_send(uint32_t nowMs)
     zeroTranspose = attitude_matrix_transpose(&gAttitudeZeroMatrix);
     relativeMatrix = attitude_matrix_multiply(&bodyMatrix, &zeroTranspose);
     bodyAngles = attitude_angles_from_matrix(&relativeMatrix);
+    gBodyAngles = bodyAngles;
+    gBodyAnglesValid = true;
 
     length = snprintf(message, sizeof(message),
         "ATT SRC=JY61BODY PITCH=%ld ROLL=%ld YAW=%ld RAWP=%ld RAWR=%ld RAWY=%ld\r\n",
@@ -144,6 +159,7 @@ static void retry_jy61_init(void)
 {
     gJy61Ready = false;
     gAttitudeZeroValid = false;
+    gBodyAnglesValid = false;
     attitude_identity_matrix(&gAttitudeZeroMatrix);
 
     if (jy61_init()) {

@@ -1,4 +1,5 @@
 #include "app_car_control.h"
+#include "app_attitude.h"
 #include "app_line_follow.h"
 #include "app_motion_control.h"
 #include "app_util.h"
@@ -41,6 +42,8 @@
 #define LTURN_DUTY_PERCENT (15.0f) /* Open-loop in-place turn duty. */
 #define LTURN_DONE_TOLERANCE_COUNTS (4.0f) /* Done tolerance, counts. */
 #define LTURN_LINE_REACQUIRE_DELAY_MS (1900U) /* Delay before line-follow resumes after LTURN. */
+#define LTURN_YAW_WEIGHT (0.85f) /* JY61 yaw weight in LTURN stop estimate. */
+#define LTURN_YAW_DONE_TOLERANCE_DEG (2.0f) /* Stop tolerance after yaw/count fusion. */
 
 static PID gLeftSpeedPid;
 static PID gRightSpeedPid;
@@ -68,6 +71,9 @@ static float gFilteredRightSpeed;
 static bool gLTurnActive;
 static int32_t gLTurnDirection;
 static float gLTurnTargetCounts;
+static float gLTurnTargetDeg;
+static float gLTurnStartYawDeg;
+static bool gLTurnYawValid;
 static int32_t gLTurnStartLeftCount;
 static int32_t gLTurnStartRightCount;
 static uint32_t gLineFollowResumeMs;
@@ -86,6 +92,7 @@ static float apply_speed_loop_start_duty(float pidOutput, float targetSpeed,
     float feedForwardScale);
 static float lowpass_filter(float previous, float current);
 static float ramp_toward(float current, float target, float step);
+static float wrap_angle(float value);
 static void send_status(void);
 static void send_command_ack(const char *command, float firstValue,
     float secondValue);
@@ -468,8 +475,10 @@ static bool parse_lturn_command(const char *command)
     gLTurnActive = true;
     gLineFollowResumeMs = gLastUpdateMs + LTURN_LINE_REACQUIRE_DELAY_MS;
     gLTurnDirection = (angleDeg >= 0.0f) ? 1 : -1;
+    gLTurnTargetDeg = abs_float(angleDeg);
     gLTurnTargetCounts = (abs_float(angleDeg) / 90.0f) *
         LTURN_TARGET_COUNTS_90;
+    gLTurnYawValid = app_attitude_read_yaw(&gLTurnStartYawDeg);
     gLTurnStartLeftCount = counts.left_count;
     gLTurnStartRightCount = counts.right_count;
     pid_reset(&gLeftSpeedPid);
@@ -490,8 +499,17 @@ static bool update_lturn(EncoderCounts counts, float *leftTargetSpeed,
     float rightTravel = abs_float((float) (counts.right_count -
         gLTurnStartRightCount));
     float travel = (leftTravel + rightTravel) * 0.5f;
+    float encoderAngle = (travel * 90.0f) / LTURN_TARGET_COUNTS_90;
+    float turnAngle = encoderAngle;
+    float yawDeg;
 
-    if (travel >= (gLTurnTargetCounts - LTURN_DONE_TOLERANCE_COUNTS)) {
+    if (gLTurnYawValid && app_attitude_read_yaw(&yawDeg)) {
+        float yawAngle = abs_float(wrap_angle(yawDeg - gLTurnStartYawDeg));
+        turnAngle = (yawAngle * LTURN_YAW_WEIGHT) +
+            (encoderAngle * (1.0f - LTURN_YAW_WEIGHT));
+    }
+
+    if (turnAngle >= (gLTurnTargetDeg - LTURN_YAW_DONE_TOLERANCE_DEG)) {
         gLTurnActive = false;
         gLineFollowResumeMs = gLastUpdateMs + LTURN_LINE_REACQUIRE_DELAY_MS;
         *leftTargetSpeed = 0.0f;
@@ -732,6 +750,17 @@ static void send_unknown_command(const char *command)
     } else {
         uart_debug_write_string("ERR CMD RX_TOO_LONG\r\n");
     }
+}
+
+static float wrap_angle(float value)
+{
+    while (value > 180.0f) {
+        value -= 360.0f;
+    }
+    while (value < -180.0f) {
+        value += 360.0f;
+    }
+    return value;
 }
 
 static float abs_float(float value)

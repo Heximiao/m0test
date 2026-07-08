@@ -1027,6 +1027,9 @@ class SerialTunerApp:
         ttk.Button(toolbar, text="删除", command=self.delete_selected_image).pack(
             side=tk.LEFT, padx=6
         )
+        ttk.Button(toolbar, text="Defrag", command=self.defrag_images).pack(
+            side=tk.LEFT, padx=6
+        )
         info_var = tk.StringVar(value="暂无存储信息")
         ttk.Label(toolbar, textvariable=info_var).pack(side=tk.RIGHT)
 
@@ -1096,6 +1099,20 @@ class SerialTunerApp:
         if self.image_manager:
             self.image_manager["status"].set(f"正在删除图片 {image_id}")
 
+    def defrag_images(self):
+        if self.image_transfer is not None:
+            messagebox.showinfo("正在忙", "已有图片正在传输。")
+            return
+        if not messagebox.askokcancel(
+            "整理图片存储",
+            "现在整理图片存储空间？整理期间请保持供电，不要复位设备。",
+        ):
+            return
+        self.image_list_active = False
+        self.send_line("IMG_DEFRAG")
+        if self.image_manager:
+            self.image_manager["status"].set("正在整理图片存储...")
+
     def _selected_image_id(self):
         if not self.image_manager:
             return None
@@ -1136,6 +1153,17 @@ class SerialTunerApp:
 
         if line.startswith("OK IMG_DELETE"):
             if self.image_manager and self.image_transfer is None:
+                self.image_manager["status"].set(line)
+                self.request_image_list()
+            return True
+
+        if line.startswith("OK IMG_DEFRAG_BEGIN"):
+            if self.image_manager:
+                self.image_manager["status"].set("正在整理图片存储...")
+            return True
+
+        if line.startswith("OK IMG_DEFRAG"):
+            if self.image_manager:
                 self.image_manager["status"].set(line)
                 self.request_image_list()
             return True

@@ -93,6 +93,7 @@ static void show_image_id(uint8_t id);
 static void show_legacy_slot(uint8_t slot);
 static void list_images(void);
 static void delete_image_id(uint8_t id);
+static void defrag_images(void);
 static void send_storage_info(void);
 static bool read_index_header(ImageIndexHeader *header);
 static bool write_index_header(uint32_t sequence);
@@ -103,6 +104,9 @@ static bool find_entry_by_id(uint8_t id, ImageIndexEntry *entry,
     uint8_t *entryIndex);
 static bool find_free_entry(uint8_t *entryIndex);
 static bool compact_index(void);
+static bool rewrite_index_entries(const ImageIndexEntry *entries, uint8_t count);
+static bool copy_image_record(uint32_t source, uint32_t destination,
+    uint32_t length);
 static bool find_free_file_id(uint8_t *id);
 static uint32_t next_sequence(void);
 static uint32_t align_up_sector(uint32_t value);
@@ -141,6 +145,11 @@ bool app_image_store_process_command(const char *command)
 
     if (strcmp(command, "IMG_INFO") == 0) {
         send_storage_info();
+        return true;
+    }
+
+    if (strcmp(command, "IMG_DEFRAG") == 0) {
+        defrag_images();
         return true;
     }
 
@@ -575,6 +584,78 @@ static void delete_image_id(uint8_t id)
     uart_debug_write_string(message);
 }
 
+static void defrag_images(void)
+{
+    char message[96];
+    ImageIndexEntry entry;
+    uint8_t count = 0U;
+    uint8_t moved = 0U;
+    uint32_t cursor = IMAGE_DATA_BASE;
+
+    if (gReceiving) {
+        uart_debug_write_string("ERR IMG_BUSY\r\n");
+        return;
+    }
+
+    if (!check_flash_ready() || !ensure_index()) {
+        return;
+    }
+
+    for (uint8_t i = 0U; i < IMAGE_MAX_FILES; i++) {
+        if (!read_index_entry(i, &entry)) {
+            uart_debug_write_string("ERR IMG_INDEX_READ\r\n");
+            return;
+        }
+        if (is_valid_entry(&entry)) {
+            gIndexCompactEntries[count++] = entry;
+        }
+    }
+
+    for (uint8_t i = 0U; i < count; i++) {
+        for (uint8_t j = (uint8_t) (i + 1U); j < count; j++) {
+            if (gIndexCompactEntries[j].address <
+                gIndexCompactEntries[i].address) {
+                ImageIndexEntry temp = gIndexCompactEntries[i];
+                gIndexCompactEntries[i] = gIndexCompactEntries[j];
+                gIndexCompactEntries[j] = temp;
+            }
+        }
+    }
+
+    uart_debug_write_string("OK IMG_DEFRAG_BEGIN\r\n");
+    for (uint8_t i = 0U; i < count; i++) {
+        uint32_t length = (uint32_t) sizeof(ImageHeader) +
+            gIndexCompactEntries[i].data_size;
+        uint32_t alignedLength = align_up_sector(length);
+
+        if (cursor != gIndexCompactEntries[i].address) {
+            if (!copy_image_record(gIndexCompactEntries[i].address, cursor,
+                    length)) {
+                uart_debug_write_string("ERR IMG_DEFRAG_COPY\r\n");
+                return;
+            }
+            gIndexCompactEntries[i].address = cursor;
+            moved++;
+        }
+
+        cursor += alignedLength;
+        if (cursor > IMAGE_INDEX_BASE) {
+            uart_debug_write_string("ERR IMG_DEFRAG_SPACE\r\n");
+            return;
+        }
+    }
+
+    if (!rewrite_index_entries(gIndexCompactEntries, count)) {
+        uart_debug_write_string("ERR IMG_INDEX\r\n");
+        return;
+    }
+
+    snprintf(message, sizeof(message),
+        "OK IMG_DEFRAG MOVED=%u COUNT=%u END=%06lX\r\n", moved, count,
+        (unsigned long) cursor);
+    uart_debug_write_string(message);
+}
+
 static void send_storage_info(void)
 {
     char message[96];
@@ -744,6 +825,20 @@ static bool compact_index(void)
         }
     }
 
+    if (rewrite_index_entries(gIndexCompactEntries, count)) {
+        uart_debug_write_string("OK IMG_INDEX_COMPACT\r\n");
+        return true;
+    }
+
+    return false;
+}
+
+static bool rewrite_index_entries(const ImageIndexEntry *entries, uint8_t count)
+{
+    if ((entries == NULL) && (count > 0U)) {
+        return false;
+    }
+
     for (uint32_t i = 0U; i < IMAGE_INDEX_SECTOR_COUNT; i++) {
         if (!w25q64_erase_sector(IMAGE_INDEX_BASE +
                 (i * W25Q64_SECTOR_SIZE_BYTES))) {
@@ -756,12 +851,48 @@ static bool compact_index(void)
     }
 
     for (uint8_t i = 0U; i < count; i++) {
-        if (!write_index_entry(i, &gIndexCompactEntries[i])) {
+        if (!write_index_entry(i, &entries[i])) {
             return false;
         }
     }
 
-    uart_debug_write_string("OK IMG_INDEX_COMPACT\r\n");
+    return true;
+}
+
+static bool copy_image_record(uint32_t source, uint32_t destination,
+    uint32_t length)
+{
+    uint32_t copied = 0UL;
+
+    if ((source == destination) || (length == 0UL)) {
+        return true;
+    }
+
+    if ((source < IMAGE_DATA_BASE) || (destination < IMAGE_DATA_BASE) ||
+        ((source + length) > IMAGE_INDEX_BASE) ||
+        ((destination + length) > IMAGE_INDEX_BASE)) {
+        return false;
+    }
+
+    if (!erase_range(destination, length)) {
+        return false;
+    }
+
+    while (copied < length) {
+        size_t chunk = sizeof(gDisplayBuffer);
+        if (chunk > (length - copied)) {
+            chunk = (size_t) (length - copied);
+        }
+
+        if (!w25q64_read(source + copied, gDisplayBuffer, chunk)) {
+            return false;
+        }
+        if (!w25q64_write(destination + copied, gDisplayBuffer, chunk)) {
+            return false;
+        }
+        copied += (uint32_t) chunk;
+    }
+
     return true;
 }
 

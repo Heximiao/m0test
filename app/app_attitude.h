@@ -8,5 +8,6 @@ void app_attitude_init(void);
 bool app_attitude_process_command(const char *command);
 void app_attitude_send(uint32_t nowMs);
 void app_attitude_poll(void);
+bool app_attitude_read_yaw(float *yawDeg);
 
 #endif

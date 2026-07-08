@@ -1,4 +1,5 @@
 #include "app_motion_control.h"
+#include "app_attitude.h"
 #include "app_util.h"
 #include <stdio.h>
 #include <string.h>
@@ -15,6 +16,8 @@
 #define MAX_ANGULAR_SPEED_DEG_S (120.0f) /* 运动命令允许的最大角速度，单位：deg/s */
 #define DIST_DONE_TOLERANCE_COUNTS (8.0f) /* 距离运动到位容差，单位：编码器 counts */
 #define TURN_DONE_TOLERANCE_COUNTS (8.0f) /* 转角运动到位容差，单位：编码器 counts */
+#define TURN_YAW_WEIGHT (0.85f) /* TURN/ANGLE 到位判断中 JY61 yaw 的权重 */
+#define TURN_YAW_DONE_TOLERANCE_DEG (2.0f) /* yaw/count 融合后的转角到位容差 */
 
 typedef enum {
     MOTION_MODE_IDLE = 0,
@@ -27,6 +30,9 @@ static MotionMode gMode;
 static float gLinearSpeedMmS;
 static float gAngularSpeedDegS;
 static float gTargetCounts;
+static float gTargetAngleDeg;
+static float gStartYawDeg;
+static bool gTurnYawValid;
 static int32_t gStartLeftCount;
 static int32_t gStartRightCount;
 static bool gBusy;
@@ -42,6 +48,7 @@ static void start_distance(float distanceMm, float speedMmS,
 static void start_turn(float angleDeg, float angularSpeedDegS,
     EncoderCounts counts);
 static void stop_motion(void);
+static float wrap_angle(float value);
 
 void motion_control_init(void)
 {
@@ -115,7 +122,18 @@ void motion_control_update(EncoderCounts counts, float *leftTargetCounts,
         float rightTravel = (float) abs_i32_local(counts.right_count -
             gStartRightCount);
         float travel = (leftTravel + rightTravel) * 0.5f;
-        if (travel >= (gTargetCounts - TURN_DONE_TOLERANCE_COUNTS)) {
+        float encoderAngle = (travel * 180.0f) /
+            (PI_F * (WHEEL_BASE_MM * 0.5f) * counts_per_mm());
+        float turnAngle = encoderAngle;
+        float yawDeg;
+
+        if (gTurnYawValid && app_attitude_read_yaw(&yawDeg)) {
+            float yawAngle = app_abs_float(wrap_angle(yawDeg - gStartYawDeg));
+            turnAngle = (yawAngle * TURN_YAW_WEIGHT) +
+                (encoderAngle * (1.0f - TURN_YAW_WEIGHT));
+        }
+
+        if (turnAngle >= (gTargetAngleDeg - TURN_YAW_DONE_TOLERANCE_DEG)) {
             stop_motion();
             *leftTargetCounts = 0.0f;
             *rightTargetCounts = 0.0f;
@@ -193,8 +211,10 @@ static void start_turn(float angleDeg, float angularSpeedDegS,
     gLinearSpeedMmS = 0.0f;
     gAngularSpeedDegS = direction * app_clamp_float(speed, 1.0f,
         MAX_ANGULAR_SPEED_DEG_S);
+    gTargetAngleDeg = app_abs_float(angleDeg);
     gTargetCounts = (wheelTravelMm * counts_per_mm()) +
         TURN_DONE_TOLERANCE_COUNTS;
+    gTurnYawValid = app_attitude_read_yaw(&gStartYawDeg);
     gStartLeftCount = counts.left_count;
     gStartRightCount = counts.right_count;
     gBusy = true;
@@ -206,6 +226,9 @@ static void stop_motion(void)
     gLinearSpeedMmS = 0.0f;
     gAngularSpeedDegS = 0.0f;
     gTargetCounts = 0.0f;
+    gTargetAngleDeg = 0.0f;
+    gStartYawDeg = 0.0f;
+    gTurnYawValid = false;
     gStartLeftCount = 0;
     gStartRightCount = 0;
     gBusy = false;
@@ -240,4 +263,15 @@ static float counts_per_mm(void)
 static int32_t abs_i32_local(int32_t value)
 {
     return (value < 0) ? -value : value;
+}
+
+static float wrap_angle(float value)
+{
+    while (value > 180.0f) {
+        value -= 360.0f;
+    }
+    while (value < -180.0f) {
+        value += 360.0f;
+    }
+    return value;
 }

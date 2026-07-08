@@ -163,9 +163,10 @@ IMG_INFO
 IMG_SHOW <id>
 IMG_SLOT_SHOW <slot>
 IMG_DELETE <id>
+IMG_DEFRAG
 ```
 
-图片数据通过 UART0 发送，格式为 RGB565 原始像素流。`IMG_SAVE` 自动分配图片 ID，名称最长 15 个非空白字符；`IMG_WRITE` 覆盖指定 ID，`id` 范围为 `0..254`；`IMG_SHOW` 从索引中按 ID 显示图片；`IMG_SLOT_SHOW` 兼容旧版固定槽位地址；`IMG_INFO` 输出容量、已用空间、剩余空间和图片数量；`IMG_LIST` 输出所有索引项。推荐使用 `upper_pc/image_sender.py` 或上位机工具发送图片，不手工敲二进制数据。
+图片数据通过 UART0 发送，格式为 RGB565 原始像素流。`IMG_SAVE` 自动分配图片 ID，名称最长 15 个非空白字符；`IMG_WRITE` 覆盖指定 ID，`id` 范围为 `0..254`；`IMG_SHOW` 从索引中按 ID 显示图片；`IMG_SLOT_SHOW` 兼容旧版固定槽位地址；`IMG_INFO` 输出容量、已用空间、剩余空间和图片数量；`IMG_LIST` 输出所有索引项；`IMG_DEFRAG` 会把有效图片向前整理，回收删除图片留下的碎片空间。推荐使用 `upper_pc/image_sender.py` 或上位机工具发送图片，不手工敲二进制数据。
 
 ## 遥测格式
 
@@ -239,7 +240,7 @@ python serial_tuner.py
 python upper_pc/image_sender.py path\to\image.png --port COMx --show
 ```
 
-脚本会把 PNG/JPG 转成 `320x170` RGB565，先发送 `IMG_SAVE` 命令自动分配图片 ID，再通过 UART0 发送二进制像素数据。需要覆盖指定 ID 时可加 `--slot 3`。固件端支持 `FLASHID`、`IMG_SAVE <name> <width> <height> <size> <crc32>`、`IMG_WRITE <id> <width> <height> <size> <crc32>`、`IMG_LIST`、`IMG_INFO`、`IMG_DELETE <id>` 和 `IMG_SHOW <id>`。
+脚本会把 PNG/JPG 转成 `320x170` RGB565，先发送 `IMG_SAVE` 命令自动分配图片 ID，再通过 UART0 发送二进制像素数据。需要覆盖指定 ID 时可加 `--slot 3`。固件端支持 `FLASHID`、`IMG_SAVE <name> <width> <height> <size> <crc32>`、`IMG_WRITE <id> <width> <height> <size> <crc32>`、`IMG_LIST`、`IMG_INFO`、`IMG_DELETE <id>`、`IMG_DEFRAG` 和 `IMG_SHOW <id>`。
 
 上位机主要用于连接 COM 口、下发 `PID`/`BASE`/`GET`、绘制 `TARGET`、`LD`、`RD`、`ERR` 曲线并保存 CSV。更详细说明见 `upper_pc/README.md`。
 
