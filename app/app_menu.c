@@ -40,10 +40,10 @@ static void handle_down(void);
 static void handle_back(void);
 static void handle_confirm(void);
 static void render_menu(uint32_t nowMs);
-static void render_root(void);
-static void render_files(void);
-static void render_status(void);
-static void render_control(void);
+static void render_menu_step(void);
+static void draw_page_header(MenuPage page);
+static void draw_page_row(MenuPage page, uint8_t row);
+static void draw_page_footer(MenuPage page);
 static void draw_header(const char *title);
 static void draw_line(uint16_t row, const char *text, bool selected);
 static void draw_footer(const char *text);
@@ -80,6 +80,9 @@ static uint32_t gLastStatusRefreshMs;
 static MenuKeyState gBackOkKey;
 static char gMessage[32];
 static MenuPage gRenderedPage = MENU_PAGE_IMAGE_VIEW;
+static MenuPage gRenderPage = MENU_PAGE_ROOT;
+static uint8_t gRenderStep;
+static bool gRenderActive;
 
 void app_menu_init(uint32_t nowMs)
 {
@@ -93,6 +96,9 @@ void app_menu_init(uint32_t nowMs)
     gBackOkKey.longSent = false;
     gBackOkKey.pressStartMs = 0U;
     gRenderedPage = MENU_PAGE_IMAGE_VIEW;
+    gRenderPage = MENU_PAGE_ROOT;
+    gRenderStep = 0U;
+    gRenderActive = false;
     gMessage[0] = '\0';
     gDirty = true;
     render_menu(nowMs);
@@ -124,7 +130,7 @@ void app_menu_update(uint32_t nowMs)
         gDirty = true;
     }
 
-    if (gDirty) {
+    if (gDirty || gRenderActive) {
         render_menu(nowMs);
     }
 }
@@ -202,57 +208,85 @@ static void render_menu(uint32_t nowMs)
 
     if (gPage == MENU_PAGE_IMAGE_VIEW) {
         gRenderedPage = MENU_PAGE_IMAGE_VIEW;
+        gRenderActive = false;
         gDirty = false;
         return;
     }
 
-    if (gPage == MENU_PAGE_ROOT) {
-        render_root();
-    } else if (gPage == MENU_PAGE_FILES) {
-        render_files();
-    } else if (gPage == MENU_PAGE_STATUS) {
-        render_status();
+    if (gDirty) {
+        gRenderPage = gPage;
+        gRenderStep = 0U;
+        gRenderActive = true;
+        gDirty = false;
+    }
+
+    if (gRenderActive) {
+        render_menu_step();
+    }
+}
+
+static void render_menu_step(void)
+{
+    if (gRenderStep == 0U) {
+        draw_page_header(gRenderPage);
+    } else if (gRenderStep <= MENU_VISIBLE_ROWS) {
+        draw_page_row(gRenderPage, (uint8_t) (gRenderStep - 1U));
     } else {
-        render_control();
+        draw_page_footer(gRenderPage);
     }
 
-    gRenderedPage = gPage;
-    gDirty = false;
-}
-
-static void render_root(void)
-{
-    draw_header("CAR MENU");
-    for (uint8_t i = 0U; i < (sizeof(gRootItems) / sizeof(gRootItems[0]));
-         i++) {
-        draw_line(i, gRootItems[i], i == gRootSelected);
+    gRenderStep++;
+    if (gRenderStep > (MENU_VISIBLE_ROWS + 1U)) {
+        gRenderedPage = gRenderPage;
+        gRenderActive = false;
     }
-    draw_footer("UP/DOWN  HOLD=OK");
 }
 
-static void render_files(void)
+static void draw_page_header(MenuPage page)
 {
-    uint8_t count = app_image_store_get_file_count();
-    uint8_t first = 0U;
+    if (page == MENU_PAGE_ROOT) {
+        draw_header("CAR MENU");
+    } else if (page == MENU_PAGE_FILES) {
+        draw_header("FILES");
+    } else if (page == MENU_PAGE_STATUS) {
+        draw_header("STATUS");
+    } else {
+        draw_header("CONTROL");
+    }
+}
+
+static void draw_page_row(MenuPage page, uint8_t row)
+{
     char line[40];
 
-    draw_header("FILES");
+    if (page == MENU_PAGE_ROOT) {
+        if (row < (sizeof(gRootItems) / sizeof(gRootItems[0]))) {
+            draw_line(row, gRootItems[row], row == gRootSelected);
+        } else {
+            draw_line(row, "", false);
+        }
+    } else if (page == MENU_PAGE_FILES) {
+        uint8_t count = app_image_store_get_file_count();
+        uint8_t first = 0U;
 
-    if (count == 0U) {
-        draw_line(0U, "No images", false);
-        draw_line(1U, "Send with upper_pc", false);
-        draw_footer("BACK");
-        return;
-    }
+        if (count == 0U) {
+            if (row == 0U) {
+                draw_line(row, "No images", false);
+            } else if (row == 1U) {
+                draw_line(row, "Send with upper_pc", false);
+            } else {
+                draw_line(row, "", false);
+            }
+            return;
+        }
 
-    if (gFileSelected >= count) {
-        gFileSelected = count - 1U;
-    }
-    if (gFileSelected >= MENU_VISIBLE_ROWS) {
-        first = gFileSelected - MENU_VISIBLE_ROWS + 1U;
-    }
+        if (gFileSelected >= count) {
+            gFileSelected = count - 1U;
+        }
+        if (gFileSelected >= MENU_VISIBLE_ROWS) {
+            first = gFileSelected - MENU_VISIBLE_ROWS + 1U;
+        }
 
-    for (uint8_t row = 0U; row < MENU_VISIBLE_ROWS; row++) {
         AppImageFileInfo info;
         uint8_t index = first + row;
 
@@ -265,48 +299,39 @@ static void render_files(void)
         } else {
             draw_line(row, "", false);
         }
-    }
+    } else if (page == MENU_PAGE_STATUS) {
+        EncoderCounts counts = encoder_get_counts();
 
-    draw_footer("BACK  HOLD=SHOW");
-}
+        if (row == 0U) {
+            snprintf(line, sizeof(line), "L:%ld R:%ld",
+                (long) counts.left_count, (long) counts.right_count);
+            draw_line(row, line, false);
+        } else if (row == 1U) {
+            snprintf(line, sizeof(line), "Mode:%ld Busy:%d",
+                (long) motion_control_get_mode(),
+                motion_control_is_busy() ? 1 : 0);
+            draw_line(row, line, false);
+        } else if (row == 2U) {
+            snprintf(line, sizeof(line), "MM/s:%ld Deg/s:%ld",
+                (long) motion_control_get_target_mm_s(),
+                (long) motion_control_get_target_deg_s());
+            draw_line(row, line, false);
+        } else if (row == 3U) {
+            draw_line(row, "PWM L:PA8 R:PB4", false);
+        } else {
+            draw_line(row, "LCD SCLK:PB9", false);
+        }
+    } else {
+        uint8_t count =
+            (uint8_t) (sizeof(gControlActions) / sizeof(gControlActions[0]));
+        uint8_t first = 0U;
 
-static void render_status(void)
-{
-    EncoderCounts counts = encoder_get_counts();
-    char line[40];
-
-    if (gRenderedPage != MENU_PAGE_STATUS) {
-        draw_header("STATUS");
-    }
-    snprintf(line, sizeof(line), "L:%ld R:%ld", (long) counts.left_count,
-        (long) counts.right_count);
-    draw_line(0U, line, false);
-    snprintf(line, sizeof(line), "Mode:%ld Busy:%d",
-        (long) motion_control_get_mode(), motion_control_is_busy() ? 1 : 0);
-    draw_line(1U, line, false);
-    snprintf(line, sizeof(line), "MM/s:%ld Deg/s:%ld",
-        (long) motion_control_get_target_mm_s(),
-        (long) motion_control_get_target_deg_s());
-    draw_line(2U, line, false);
-    draw_line(3U, "PWM L:PA8 R:PB4", false);
-    draw_line(4U, "LCD SCLK:PB9", false);
-    draw_footer("BACK");
-}
-
-static void render_control(void)
-{
-    uint8_t count =
-        (uint8_t) (sizeof(gControlActions) / sizeof(gControlActions[0]));
-    uint8_t first = 0U;
-
-    draw_header("CONTROL");
-    if (gControlSelected >= count) {
-        gControlSelected = count - 1U;
-    }
-    if (gControlSelected >= MENU_VISIBLE_ROWS) {
-        first = gControlSelected - MENU_VISIBLE_ROWS + 1U;
-    }
-    for (uint8_t row = 0U; row < MENU_VISIBLE_ROWS; row++) {
+        if (gControlSelected >= count) {
+            gControlSelected = count - 1U;
+        }
+        if (gControlSelected >= MENU_VISIBLE_ROWS) {
+            first = gControlSelected - MENU_VISIBLE_ROWS + 1U;
+        }
         uint8_t index = first + row;
 
         if (index < count) {
@@ -316,13 +341,24 @@ static void render_control(void)
             draw_line(row, "", false);
         }
     }
-    draw_footer((gMessage[0] != '\0') ? gMessage : "BACK  HOLD=RUN");
+}
+
+static void draw_page_footer(MenuPage page)
+{
+    if (page == MENU_PAGE_ROOT) {
+        draw_footer("UP/DOWN  HOLD=OK");
+    } else if (page == MENU_PAGE_FILES) {
+        draw_footer("BACK  HOLD=SHOW");
+    } else if (page == MENU_PAGE_STATUS) {
+        draw_footer("BACK");
+    } else {
+        draw_footer((gMessage[0] != '\0') ? gMessage : "BACK  HOLD=RUN");
+    }
 }
 
 static void draw_header(const char *title)
 {
-    LCD_Fill(0U, 0U, LCD_W, LCD_H, BLACK);
-    LCD_Fill(0U, 0U, LCD_W, 26U, DARKBLUE);
+    LCD_Fill(0U, 0U, LCD_W, 32U, DARKBLUE);
     LCD_ShowString(8U, 4U, (const unsigned char *) title, WHITE, DARKBLUE,
         16U, 0U);
 }

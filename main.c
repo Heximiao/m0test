@@ -133,6 +133,7 @@ int main(void)
 
         if (app_image_store_is_receiving()) {
             app_image_store_service();
+            lcd_service();
             uart_debug_service_tx();
             continue;
         }
@@ -182,6 +183,7 @@ int main(void)
         }
 
         uart_debug_service_tx();
+        lcd_service();
         __WFI();
     }
 }

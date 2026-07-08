@@ -21,6 +21,7 @@
 void LCD_WR_DATA(unsigned int dat);
 void LCD_WR_DATA8(unsigned char dat);
 void lcd_init(void);
+void lcd_service(void);
 void LCD_Address_Set(unsigned int x1, unsigned int y1, unsigned int x2,
     unsigned int y2);
 void LCD_Fill(unsigned int xsta, unsigned int ysta, unsigned int xend,

@@ -1,769 +1,622 @@
 #include "hw_lcd.h"
-#include "lcdfont.h"
 #include "hw_spi.h"
+#include "lcdfont.h"
 #include "ti/driverlib/m0p/dl_core.h"
+#include <stdbool.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <string.h>
 
-#define 	delay_ms(X) 	delay_cycles( ( 80000 * (X) ) )
+#define delay_ms(X) delay_cycles((80000 * (X)))
 
-void LCD_Writ_Bus(unsigned char dat) 
-{	
-	LCD_CS_Clr();
-	spi_write_bus(dat);
-  	LCD_CS_Set();	
+#define LCD_QUEUE_SIZE (48U)
+#define LCD_TEXT_MAX (39U)
+#define LCD_SERVICE_BYTE_BUDGET (512U)
+
+typedef enum {
+    LCD_TASK_FILL = 0,
+    LCD_TASK_STRING,
+} LcdTaskType;
+
+typedef struct {
+    LcdTaskType type;
+    uint16_t x;
+    uint16_t y;
+    uint16_t x2;
+    uint16_t y2;
+    uint16_t fc;
+    uint16_t bc;
+    uint8_t sizey;
+    uint8_t mode;
+    char text[LCD_TEXT_MAX + 1U];
+} LcdTask;
+
+typedef struct {
+    LcdTask task;
+    bool active;
+    bool addressSet;
+    uint32_t pixelsRemaining;
+    uint8_t textIndex;
+    uint16_t charX;
+    uint8_t charWidth;
+    uint16_t charPixelsSent;
+    uint16_t glyphByteIndex;
+    uint8_t glyphBitIndex;
+    uint8_t glyphByteCount;
+    unsigned char currentChar;
+} LcdDrawState;
+
+static LcdTask gQueue[LCD_QUEUE_SIZE];
+static volatile uint8_t gQueueHead;
+static volatile uint8_t gQueueTail;
+static LcdDrawState gDraw;
+
+static void lcd_write_bus_sync(unsigned char dat);
+static void lcd_write_reg_sync(unsigned char dat);
+static void lcd_write_data8_sync(unsigned char dat);
+static void lcd_write_data16_sync(unsigned int dat);
+static void lcd_address_set_sync(unsigned int x1, unsigned int y1,
+    unsigned int x2, unsigned int y2);
+static bool lcd_enqueue(const LcdTask *task);
+static bool lcd_dequeue(LcdTask *task);
+static bool lcd_service_fill(uint16_t *budgetBytes);
+static bool lcd_service_string(uint16_t *budgetBytes);
+static bool lcd_start_next_char(void);
+static uint8_t lcd_glyph_byte(unsigned char ch, uint8_t sizey,
+    uint16_t glyphByteIndex);
+static uint8_t lcd_glyph_byte_count(uint8_t sizey);
+static uint8_t lcd_char_width(uint8_t sizey);
+static void lcd_write_pixel_budgeted(uint16_t color, uint16_t *budgetBytes);
+
+static void lcd_write_bus_sync(unsigned char dat)
+{
+    LCD_CS_Clr();
+    spi_write_bus(dat);
+    LCD_CS_Set();
 }
+
 void LCD_WR_DATA8(unsigned char dat)
 {
-	LCD_Writ_Bus(dat);
+    lcd_write_bus_sync(dat);
 }
+
 void LCD_WR_DATA(unsigned int dat)
 {
-	LCD_Writ_Bus(dat>>8);
-	LCD_Writ_Bus(dat);
+    lcd_write_data16_sync(dat);
 }
+
+static void lcd_write_data8_sync(unsigned char dat)
+{
+    lcd_write_bus_sync(dat);
+}
+
+static void lcd_write_data16_sync(unsigned int dat)
+{
+    lcd_write_bus_sync((unsigned char) (dat >> 8));
+    lcd_write_bus_sync((unsigned char) dat);
+}
+
+static void lcd_write_reg_sync(unsigned char dat)
+{
+    LCD_DC_Clr();
+    lcd_write_bus_sync(dat);
+    LCD_DC_Set();
+}
+
 void LCD_WR_REG(unsigned char dat)
 {
-	LCD_DC_Clr();//写命令
-	LCD_Writ_Bus(dat);
-	LCD_DC_Set();//写数据
+    lcd_write_reg_sync(dat);
 }
-void LCD_Address_Set(unsigned int x1,unsigned int y1,unsigned int x2,unsigned int y2)
+
+void LCD_Address_Set(unsigned int x1, unsigned int y1, unsigned int x2,
+    unsigned int y2)
 {
-	LCD_WR_REG(0x2a);//列地址设置
-	LCD_WR_DATA(x1);
-	LCD_WR_DATA(x2);
-	LCD_WR_REG(0x2b);//行地址设置
-	LCD_WR_DATA(y1+35);
-	LCD_WR_DATA(y2+35);
-	LCD_WR_REG(0x2c);//储存器写
+    lcd_address_set_sync(x1, y1, x2, y2);
 }
+
+static void lcd_address_set_sync(unsigned int x1, unsigned int y1,
+    unsigned int x2, unsigned int y2)
+{
+    lcd_write_reg_sync(0x2a);
+    lcd_write_data16_sync(x1);
+    lcd_write_data16_sync(x2);
+    lcd_write_reg_sync(0x2b);
+    lcd_write_data16_sync(y1 + 35U);
+    lcd_write_data16_sync(y2 + 35U);
+    lcd_write_reg_sync(0x2c);
+}
+
 void lcd_init(void)
 {
-	/* GPIO已在图形化工具中初始化 */
+    gQueueHead = 0U;
+    gQueueTail = 0U;
+    memset(&gDraw, 0, sizeof(gDraw));
 
-	LCD_RES_Clr();//复位
-	delay_ms(30);
-	LCD_RES_Set();
-	delay_ms(100);
-	// LCD_BLK_Set();//打开背光
-	// delay_ms(100);
-	LCD_WR_REG(0x11); 
+    LCD_RES_Clr();
+    delay_ms(30);
+    LCD_RES_Set();
+    delay_ms(100);
 
-	LCD_WR_REG(0x36); 
-	LCD_WR_DATA8(0x70);
+    lcd_write_reg_sync(0x11);
 
-	LCD_WR_REG(0x3A);
-	LCD_WR_DATA8(0x05);
+    lcd_write_reg_sync(0x36);
+    lcd_write_data8_sync(0x70);
 
-	LCD_WR_REG(0xB2);
-	LCD_WR_DATA8(0x0C);
-	LCD_WR_DATA8(0x0C);
-	LCD_WR_DATA8(0x00);
-	LCD_WR_DATA8(0x33);
-	LCD_WR_DATA8(0x33); 
+    lcd_write_reg_sync(0x3A);
+    lcd_write_data8_sync(0x05);
 
-	LCD_WR_REG(0xB7); 
-	LCD_WR_DATA8(0x35);  
+    lcd_write_reg_sync(0xB2);
+    lcd_write_data8_sync(0x0C);
+    lcd_write_data8_sync(0x0C);
+    lcd_write_data8_sync(0x00);
+    lcd_write_data8_sync(0x33);
+    lcd_write_data8_sync(0x33);
 
-	LCD_WR_REG(0xBB);
-	LCD_WR_DATA8(0x1A);
+    lcd_write_reg_sync(0xB7);
+    lcd_write_data8_sync(0x35);
 
-	LCD_WR_REG(0xC0);
-	LCD_WR_DATA8(0x2C);
+    lcd_write_reg_sync(0xBB);
+    lcd_write_data8_sync(0x1A);
 
-	LCD_WR_REG(0xC2);
-	LCD_WR_DATA8(0x01);
+    lcd_write_reg_sync(0xC0);
+    lcd_write_data8_sync(0x2C);
 
-	LCD_WR_REG(0xC3);
-	LCD_WR_DATA8(0x0B);   
+    lcd_write_reg_sync(0xC2);
+    lcd_write_data8_sync(0x01);
 
-	LCD_WR_REG(0xC4);
-	LCD_WR_DATA8(0x20);  
+    lcd_write_reg_sync(0xC3);
+    lcd_write_data8_sync(0x0B);
 
-	LCD_WR_REG(0xC6); 
-	LCD_WR_DATA8(0x0F);    
+    lcd_write_reg_sync(0xC4);
+    lcd_write_data8_sync(0x20);
 
-	LCD_WR_REG(0xD0); 
-	LCD_WR_DATA8(0xA4);
-	LCD_WR_DATA8(0xA1);
+    lcd_write_reg_sync(0xC6);
+    lcd_write_data8_sync(0x0F);
 
-	LCD_WR_REG(0x21); 
-	LCD_WR_REG(0xE0);
-	LCD_WR_DATA8(0xF0);
-	LCD_WR_DATA8(0x00);
-	LCD_WR_DATA8(0x04);
-	LCD_WR_DATA8(0x04);
-	LCD_WR_DATA8(0x04);
-	LCD_WR_DATA8(0x05);
-	LCD_WR_DATA8(0x29);
-	LCD_WR_DATA8(0x33);
-	LCD_WR_DATA8(0x3E);
-	LCD_WR_DATA8(0x38);
-	LCD_WR_DATA8(0x12);
-	LCD_WR_DATA8(0x12);
-	LCD_WR_DATA8(0x28);
-	LCD_WR_DATA8(0x30);
+    lcd_write_reg_sync(0xD0);
+    lcd_write_data8_sync(0xA4);
+    lcd_write_data8_sync(0xA1);
 
-	LCD_WR_REG(0xE1);
-	LCD_WR_DATA8(0xF0);
-	LCD_WR_DATA8(0x07);
-	LCD_WR_DATA8(0x0A);
-	LCD_WR_DATA8(0x0D);
-	LCD_WR_DATA8(0x0B);
-	LCD_WR_DATA8(0x07);
-	LCD_WR_DATA8(0x28);
-	LCD_WR_DATA8(0x33);
-	LCD_WR_DATA8(0x3E);
-	LCD_WR_DATA8(0x36);
-	LCD_WR_DATA8(0x14);
-	LCD_WR_DATA8(0x14);
-	LCD_WR_DATA8(0x29);
-	LCD_WR_DATA8(0x32);
-	
-	LCD_WR_REG(0x11);
-	delay_ms(120);	
-	LCD_WR_REG(0x29); 
+    lcd_write_reg_sync(0x21);
+    lcd_write_reg_sync(0xE0);
+    lcd_write_data8_sync(0xF0);
+    lcd_write_data8_sync(0x00);
+    lcd_write_data8_sync(0x04);
+    lcd_write_data8_sync(0x04);
+    lcd_write_data8_sync(0x04);
+    lcd_write_data8_sync(0x05);
+    lcd_write_data8_sync(0x29);
+    lcd_write_data8_sync(0x33);
+    lcd_write_data8_sync(0x3E);
+    lcd_write_data8_sync(0x38);
+    lcd_write_data8_sync(0x12);
+    lcd_write_data8_sync(0x12);
+    lcd_write_data8_sync(0x28);
+    lcd_write_data8_sync(0x30);
+
+    lcd_write_reg_sync(0xE1);
+    lcd_write_data8_sync(0xF0);
+    lcd_write_data8_sync(0x07);
+    lcd_write_data8_sync(0x0A);
+    lcd_write_data8_sync(0x0D);
+    lcd_write_data8_sync(0x0B);
+    lcd_write_data8_sync(0x07);
+    lcd_write_data8_sync(0x28);
+    lcd_write_data8_sync(0x33);
+    lcd_write_data8_sync(0x3E);
+    lcd_write_data8_sync(0x36);
+    lcd_write_data8_sync(0x14);
+    lcd_write_data8_sync(0x14);
+    lcd_write_data8_sync(0x29);
+    lcd_write_data8_sync(0x32);
+
+    lcd_write_reg_sync(0x11);
+    delay_ms(120);
+    lcd_write_reg_sync(0x29);
 }
 
-
-
-
-/******************************************************************************
-      函数说明：在指定区域填充颜色
-      入口数据：xsta,ysta   起始坐标
-                xend,yend   终止坐标
-								color       要填充的颜色
-      返回值：  无
-******************************************************************************/
-void LCD_Fill(unsigned int xsta,unsigned int ysta,unsigned int xend,unsigned int yend,unsigned int color)
-{          
-	unsigned int i,j; 
-	LCD_Address_Set(xsta,ysta,xend-1,yend-1);//设置显示范围
-	for(i=ysta;i<yend;i++)
-	{													   	 	
-		for(j=xsta;j<xend;j++)
-		{
-			LCD_WR_DATA(color);
-		}
-	} 					  	    
-}
-
-/******************************************************************************
-      函数说明：在指定位置画点
-      入口数据：x,y 画点坐标
-                color 点的颜色
-      返回值：  无
-******************************************************************************/
-void LCD_DrawPoint(unsigned int x,unsigned int y,unsigned int color)
+void lcd_service(void)
 {
-	LCD_Address_Set(x,y,x,y);//设置光标位置 
-	LCD_WR_DATA(color);
-} 
+    uint16_t budgetBytes = LCD_SERVICE_BYTE_BUDGET;
 
+    while (budgetBytes > 0U) {
+        if (!gDraw.active) {
+            if (!lcd_dequeue(&gDraw.task)) {
+                return;
+            }
+            gDraw.active = true;
+            gDraw.addressSet = false;
+            gDraw.pixelsRemaining = 0U;
+            gDraw.textIndex = 0U;
+            gDraw.charX = gDraw.task.x;
+            gDraw.charPixelsSent = 0U;
+            gDraw.glyphByteIndex = 0U;
+            gDraw.glyphBitIndex = 0U;
+            gDraw.currentChar = '\0';
+        }
 
-/******************************************************************************
-      函数说明：画线
-      入口数据：x1,y1   起始坐标
-                x2,y2   终止坐标
-                color   线的颜色
-      返回值：  无
-******************************************************************************/
-void LCD_DrawLine(unsigned int x1,unsigned int y1,unsigned int x2,unsigned int y2,unsigned int color)
-{
-	unsigned int t; 
-	int xerr=0,yerr=0,delta_x,delta_y,distance;
-	int incx,incy,uRow,uCol;
-	delta_x=x2-x1; //计算坐标增量 
-	delta_y=y2-y1;
-	uRow=x1;//画线起点坐标
-	uCol=y1;
-	if(delta_x>0)incx=1; //设置单步方向 
-	else if (delta_x==0)incx=0;//垂直线 
-	else {incx=-1;delta_x=-delta_x;}
-	if(delta_y>0)incy=1;
-	else if (delta_y==0)incy=0;//水平线 
-	else {incy=-1;delta_y=-delta_y;}
-	if(delta_x>delta_y)distance=delta_x; //选取基本增量坐标轴 
-	else distance=delta_y;
-	for(t=0;t<distance+1;t++)
-	{
-		LCD_DrawPoint(uRow,uCol,color);//画点
-		xerr+=delta_x;
-		yerr+=delta_y;
-		if(xerr>distance)
-		{
-			xerr-=distance;
-			uRow+=incx;
-		}
-		if(yerr>distance)
-		{
-			yerr-=distance;
-			uCol+=incy;
-		}
-	}
+        if (gDraw.task.type == LCD_TASK_FILL) {
+            if (!lcd_service_fill(&budgetBytes)) {
+                return;
+            }
+        } else {
+            if (!lcd_service_string(&budgetBytes)) {
+                return;
+            }
+        }
+    }
 }
 
-//绘制垂直线
+void LCD_Fill(unsigned int xsta, unsigned int ysta, unsigned int xend,
+    unsigned int yend, unsigned int color)
+{
+    LcdTask task;
+
+    if ((xsta >= xend) || (ysta >= yend)) {
+        return;
+    }
+
+    memset(&task, 0, sizeof(task));
+    task.type = LCD_TASK_FILL;
+    task.x = (uint16_t) xsta;
+    task.y = (uint16_t) ysta;
+    task.x2 = (uint16_t) (xend - 1U);
+    task.y2 = (uint16_t) (yend - 1U);
+    task.fc = (uint16_t) color;
+    (void) lcd_enqueue(&task);
+}
+
+void LCD_ShowString(unsigned int x, unsigned int y, const unsigned char *p,
+    unsigned int fc, unsigned int bc, unsigned char sizey, unsigned char mode)
+{
+    LcdTask task;
+
+    if ((p == NULL) || (*p == '\0')) {
+        return;
+    }
+
+    memset(&task, 0, sizeof(task));
+    task.type = LCD_TASK_STRING;
+    task.x = (uint16_t) x;
+    task.y = (uint16_t) y;
+    task.fc = (uint16_t) fc;
+    task.bc = (uint16_t) bc;
+    task.sizey = sizey;
+    task.mode = mode;
+    strncpy(task.text, (const char *) p, LCD_TEXT_MAX);
+    task.text[LCD_TEXT_MAX] = '\0';
+    (void) lcd_enqueue(&task);
+}
+
+void LCD_ShowChar(unsigned int x, unsigned int y, unsigned char num,
+    unsigned int fc, unsigned int bc, unsigned char sizey, unsigned char mode)
+{
+    unsigned char text[2];
+
+    text[0] = num;
+    text[1] = '\0';
+    LCD_ShowString(x, y, text, fc, bc, sizey, mode);
+}
+
+static bool lcd_enqueue(const LcdTask *task)
+{
+    uint8_t next = (uint8_t) ((gQueueHead + 1U) % LCD_QUEUE_SIZE);
+
+    if (next == gQueueTail) {
+        return false;
+    }
+
+    gQueue[gQueueHead] = *task;
+    gQueueHead = next;
+    return true;
+}
+
+static bool lcd_dequeue(LcdTask *task)
+{
+    if (gQueueTail == gQueueHead) {
+        return false;
+    }
+
+    *task = gQueue[gQueueTail];
+    gQueueTail = (uint8_t) ((gQueueTail + 1U) % LCD_QUEUE_SIZE);
+    return true;
+}
+
+static bool lcd_service_fill(uint16_t *budgetBytes)
+{
+    if (!gDraw.addressSet) {
+        uint32_t width = (uint32_t) gDraw.task.x2 - gDraw.task.x + 1U;
+        uint32_t height = (uint32_t) gDraw.task.y2 - gDraw.task.y + 1U;
+
+        lcd_address_set_sync(gDraw.task.x, gDraw.task.y, gDraw.task.x2,
+            gDraw.task.y2);
+        gDraw.pixelsRemaining = width * height;
+        gDraw.addressSet = true;
+    }
+
+    while ((gDraw.pixelsRemaining > 0U) && (*budgetBytes >= 2U)) {
+        lcd_write_pixel_budgeted(gDraw.task.fc, budgetBytes);
+        gDraw.pixelsRemaining--;
+    }
+
+    if (gDraw.pixelsRemaining == 0U) {
+        gDraw.active = false;
+        return true;
+    }
+
+    return false;
+}
+
+static bool lcd_service_string(uint16_t *budgetBytes)
+{
+    while (*budgetBytes >= 2U) {
+        if (gDraw.currentChar == '\0') {
+            if (!lcd_start_next_char()) {
+                gDraw.active = false;
+                return true;
+            }
+        }
+
+        uint8_t glyph = lcd_glyph_byte(gDraw.currentChar, gDraw.task.sizey,
+            gDraw.glyphByteIndex);
+        uint16_t color =
+            ((glyph & (uint8_t) (0x01U << gDraw.glyphBitIndex)) != 0U) ?
+            gDraw.task.fc : gDraw.task.bc;
+
+        lcd_write_pixel_budgeted(color, budgetBytes);
+        gDraw.charPixelsSent++;
+
+        if ((gDraw.charPixelsSent % gDraw.charWidth) == 0U) {
+            gDraw.glyphByteIndex++;
+            gDraw.glyphBitIndex = 0U;
+        } else {
+            gDraw.glyphBitIndex++;
+            if (gDraw.glyphBitIndex >= 8U) {
+                gDraw.glyphBitIndex = 0U;
+                gDraw.glyphByteIndex++;
+            }
+        }
+
+        if (gDraw.glyphByteIndex >= gDraw.glyphByteCount) {
+            gDraw.charX = (uint16_t) (gDraw.charX + gDraw.charWidth);
+            gDraw.currentChar = '\0';
+        }
+    }
+
+    return false;
+}
+
+static bool lcd_start_next_char(void)
+{
+    unsigned char ch = (unsigned char) gDraw.task.text[gDraw.textIndex];
+
+    if (ch == '\0') {
+        return false;
+    }
+
+    if ((ch < ' ') || (ch > '~')) {
+        ch = ' ';
+    }
+
+    gDraw.currentChar = (unsigned char) (ch - ' ');
+    gDraw.charWidth = lcd_char_width(gDraw.task.sizey);
+    gDraw.glyphByteCount = lcd_glyph_byte_count(gDraw.task.sizey);
+    gDraw.charPixelsSent = 0U;
+    gDraw.glyphByteIndex = 0U;
+    gDraw.glyphBitIndex = 0U;
+    lcd_address_set_sync(gDraw.charX, gDraw.task.y,
+        (uint16_t) (gDraw.charX + gDraw.charWidth - 1U),
+        (uint16_t) (gDraw.task.y + gDraw.task.sizey - 1U));
+    gDraw.textIndex++;
+    return true;
+}
+
+static uint8_t lcd_glyph_byte(unsigned char ch, uint8_t sizey,
+    uint16_t glyphByteIndex)
+{
+    if (sizey == 12U) {
+        return ascii_1206[ch][glyphByteIndex];
+    }
+    if (sizey == 16U) {
+        return ascii_1608[ch][glyphByteIndex];
+    }
+    if (sizey == 24U) {
+        return ascii_2412[ch][glyphByteIndex];
+    }
+    if (sizey == 32U) {
+        return ascii_3216[ch][glyphByteIndex];
+    }
+
+    return 0U;
+}
+
+static uint8_t lcd_glyph_byte_count(uint8_t sizey)
+{
+    uint8_t sizex = lcd_char_width(sizey);
+
+    return (uint8_t) (((sizex / 8U) + ((sizex % 8U) ? 1U : 0U)) * sizey);
+}
+
+static uint8_t lcd_char_width(uint8_t sizey)
+{
+    if ((sizey == 12U) || (sizey == 16U) ||
+        (sizey == 24U) || (sizey == 32U)) {
+        return (uint8_t) (sizey / 2U);
+    }
+
+    return 8U;
+}
+
+static void lcd_write_pixel_budgeted(uint16_t color, uint16_t *budgetBytes)
+{
+    lcd_write_data16_sync(color);
+    *budgetBytes = (uint16_t) (*budgetBytes - 2U);
+}
+
+void LCD_DrawPoint(unsigned int x, unsigned int y, unsigned int color)
+{
+    LCD_Fill(x, y, x + 1U, y + 1U, color);
+}
+
+void LCD_DrawLine(unsigned int x1, unsigned int y1, unsigned int x2,
+    unsigned int y2, unsigned int color)
+{
+    int xerr = 0;
+    int yerr = 0;
+    int delta_x = (int) x2 - (int) x1;
+    int delta_y = (int) y2 - (int) y1;
+    int incx;
+    int incy;
+    int distance;
+    int uRow = (int) x1;
+    int uCol = (int) y1;
+
+    if (delta_x > 0) {
+        incx = 1;
+    } else if (delta_x == 0) {
+        incx = 0;
+    } else {
+        incx = -1;
+        delta_x = -delta_x;
+    }
+
+    if (delta_y > 0) {
+        incy = 1;
+    } else if (delta_y == 0) {
+        incy = 0;
+    } else {
+        incy = -1;
+        delta_y = -delta_y;
+    }
+
+    distance = (delta_x > delta_y) ? delta_x : delta_y;
+    for (int t = 0; t < distance + 1; t++) {
+        LCD_DrawPoint((unsigned int) uRow, (unsigned int) uCol, color);
+        xerr += delta_x;
+        yerr += delta_y;
+        if (xerr > distance) {
+            xerr -= distance;
+            uRow += incx;
+        }
+        if (yerr > distance) {
+            yerr -= distance;
+            uCol += incy;
+        }
+    }
+}
+
+void LCD_DrawRectangle(unsigned int x1, unsigned int y1, unsigned int x2,
+    unsigned int y2, unsigned int color)
+{
+    LCD_DrawLine(x1, y1, x2, y1, color);
+    LCD_DrawLine(x1, y1, x1, y2, color);
+    LCD_DrawLine(x1, y2, x2, y2, color);
+    LCD_DrawLine(x2, y1, x2, y2, color);
+}
+
 void LCD_DrawVerrticalLine(int x, int y1, int y2, unsigned int color)
 {
-	int i;
-	LCD_Address_Set(x, y1, x, y1 + y2);
-	for(i=y1; i <= y1 + y2; i++)
-	{
-		LCD_WR_DATA(color);
-	}	
-
-}
-/******************************************************************************
-      函数说明：画矩形
-      入口数据：x1,y1   起始坐标
-                x2,y2   终止坐标
-                color   矩形的颜色
-      返回值：  无
-******************************************************************************/
-void LCD_DrawRectangle(unsigned int x1, unsigned int y1, unsigned int x2, unsigned int y2,unsigned int color)
-{
-	LCD_DrawLine(x1,y1,x2,y1,color);
-	LCD_DrawLine(x1,y1,x1,y2,color);
-	LCD_DrawLine(x1,y2,x2,y2,color);
-	LCD_DrawLine(x2,y1,x2,y2,color);
+    LCD_Fill((unsigned int) x, (unsigned int) y1, (unsigned int) (x + 1),
+        (unsigned int) (y1 + y2 + 1), color);
 }
 
-
-/******************************************************************************
-      函数说明：画圆
-      入口数据：x0,y0   圆心坐标
-                r       半径
-                color   圆的颜色
-      返回值：  无
-******************************************************************************/
-void Draw_Circle(unsigned int x0,unsigned int y0,unsigned char r,unsigned int color)
+void Draw_Circle(unsigned int x0, unsigned int y0, unsigned char r,
+    unsigned int color)
 {
-	int a,b;
-	a=0;b=r;	  
-	while(a<=b)
-	{
-		LCD_DrawPoint(x0-b,y0-a,color);             //3           
-		LCD_DrawPoint(x0+b,y0-a,color);             //0           
-		LCD_DrawPoint(x0-a,y0+b,color);             //1                
-		LCD_DrawPoint(x0-a,y0-b,color);             //2             
-		LCD_DrawPoint(x0+b,y0+a,color);             //4               
-		LCD_DrawPoint(x0+a,y0-b,color);             //5
-		LCD_DrawPoint(x0+a,y0+b,color);             //6 
-		LCD_DrawPoint(x0-b,y0+a,color);             //7
-		a++;
-		if((a*a+b*b)>(r*r))//判断要画的点是否过远
-		{
-			b--;
-		}
-	}
-}
+    int a = 0;
+    int b = r;
 
-void Drawarc(int x,int y,int a,int b,unsigned int r,unsigned int c)
-{
-    int x_tp, y_tp;
-    int d; // Decision variable
-
-    // Start with the top and bottom rows of the circle
-    for (x_tp = 0; x_tp <= r; x_tp++) {
-        // Calculate the corresponding y values
-        y_tp = (int)sqrt(r * r - x_tp * x_tp);
-
-        // Draw the horizontal lines from the circle edge to the center
-        for (int i = x_tp; i >= -x_tp; i--) {
-            LCD_DrawPoint(x + i, y - y_tp, c);
-            LCD_DrawPoint(x + i, y + y_tp, c);
-        }
-    }
-
-    // Now fill the rest of the circle
-    d = 3 - 2 * r;
-    while (x_tp > y_tp) {
-        if (d < 0) {
-            d += 4 * x_tp + 6;
-        } else {
-            d += 4 * (x_tp - y_tp) + 10;
-            y_tp++;
-        }
-        x_tp--;
-
-        // Draw the horizontal lines from the circle edge to the center
-        for (int i = -x_tp; i <= x_tp; i++) {
-            LCD_DrawPoint(x + i, y - y_tp, c);
-            LCD_DrawPoint(x + i, y + y_tp, c);
-        }
-
-        // Draw the vertical lines from the circle edge to the center
-        for (int i = -y_tp; i <= y_tp; i++) {
-            LCD_DrawPoint(x + x_tp, y + i, c);
-            LCD_DrawPoint(x - x_tp, y + i, c);
+    while (a <= b) {
+        LCD_DrawPoint(x0 - b, y0 - a, color);
+        LCD_DrawPoint(x0 + b, y0 - a, color);
+        LCD_DrawPoint(x0 - a, y0 + b, color);
+        LCD_DrawPoint(x0 - a, y0 - b, color);
+        LCD_DrawPoint(x0 + b, y0 + a, color);
+        LCD_DrawPoint(x0 + a, y0 - b, color);
+        LCD_DrawPoint(x0 + a, y0 + b, color);
+        LCD_DrawPoint(x0 - b, y0 + a, color);
+        a++;
+        if (((a * a) + (b * b)) > ((int) r * (int) r)) {
+            b--;
         }
     }
 }
 
-void LCD_ArcRect(unsigned int xsta,unsigned int ysta,unsigned int xend,unsigned int yend,unsigned int color)
-{          
-
-    int r = 4;
-    //画四条边
-    LCD_DrawLine(xsta+r,ysta,xend-r,ysta,color);
-    LCD_DrawLine(xsta,ysta+r,xsta,yend-r,color);
-    LCD_DrawLine(xsta+r,yend,xend-r,yend,color);
-    LCD_DrawLine(xend,ysta+r,xend,yend-r,color);    	  	    
-
-    //再画四个圆角
-	Drawarc(xsta+r,ysta+r,90,180,r,color);//左上
-	Drawarc(xend-r,ysta+r,0,90,r,color);//右上
-	Drawarc(xsta+r,yend-r,180,270,r,color);//左下
-	Drawarc(xend-r,yend-r,270,360,r,color);//右下
-
-
-
-    //画五个实心矩形
-    LCD_Fill(xsta+r,ysta,xend-r,ysta+r,color);//上
-    LCD_Fill(xend-r,ysta+r,xend,yend-r,color);//右
-    LCD_Fill(xsta+r,yend-r,xend-r,yend,color);//下
-    LCD_Fill(xsta,ysta+r,xsta+r,yend-r,color);//左
-    LCD_Fill(xsta+r,ysta+r,xend-r,yend-r,color);//中
-    
+void LCD_ArcRect(unsigned int xsta, unsigned int ysta, unsigned int xend,
+    unsigned int yend, unsigned int color)
+{
+    LCD_DrawRectangle(xsta, ysta, xend, yend, color);
 }
 
-
-/******************************************************************************
-      函数说明：显示中英文字符串
-      入口数据：x,y显示坐标
-                *s 要显示的汉字串
-                fc 字的颜色
-                bc 字的背景色
-                sizey 字号 可选 16 24 32
-                mode:  0非叠加模式  1叠加模式
-      返回值：  无
-******************************************************************************/
-void LCD_ShowChinese(unsigned int x,unsigned int y,unsigned char *s,unsigned int fc,unsigned int bc,unsigned char sizey,unsigned char mode)
+void LCD_ShowChinese(unsigned int x, unsigned int y, unsigned char *s,
+    unsigned int fc, unsigned int bc, unsigned char sizey, unsigned char mode)
 {
-	while(*s!=0)
-	{
-		if(*s >= 128)
-		{
-			if(sizey==12) LCD_ShowChinese12x12(x,y,s,fc,bc,sizey,mode);
-			else if(sizey==16) LCD_ShowChinese16x16(x,y,s,fc,bc,sizey,mode);
-			else if(sizey==24) LCD_ShowChinese24x24(x,y,s,fc,bc,sizey,mode);
-			else if(sizey==32) LCD_ShowChinese32x32(x,y,s,fc,bc,sizey,mode);
-			else return;
-			s+=3;
-			x+=sizey;
-		}
-		else 
-		{
-			LCD_ShowChar(x,y,*s,fc,bc,sizey,mode);
-			s+=1;
-			x+=(sizey/2);
-		}
-	}
+    LCD_ShowString(x, y, s, fc, bc, sizey, mode);
 }
 
-/******************************************************************************
-      函数说明：显示单个12x12汉字
-      入口数据：x,y显示坐标
-                *s 要显示的汉字
-                fc 字的颜色
-                bc 字的背景色
-                sizey 字号
-                mode:  0非叠加模式  1叠加模式
-      返回值：  无
-******************************************************************************/
-void LCD_ShowChinese12x12(unsigned int x,unsigned int y,unsigned char *s,unsigned int fc,unsigned int bc,unsigned char sizey,unsigned char mode)
+void LCD_ShowChinese12x12(unsigned int x, unsigned int y, unsigned char *s,
+    unsigned int fc, unsigned int bc, unsigned char sizey, unsigned char mode)
 {
-	unsigned char i,j,m=0;
-	unsigned int k;
-	unsigned int HZnum;//汉字数目
-	unsigned int TypefaceNum;//一个字符所占字节大小
-	unsigned int x0=x;
-	TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;
-	                         
-	HZnum=sizeof(tfont12)/sizeof(typFNT_GB12);	//统计汉字数目
-	for(k=0;k<HZnum;k++) 
-	{
-		if((tfont12[k].Index[0]==*(s))&&(tfont12[k].Index[1]==*(s+1)))
-		{ 	
-			LCD_Address_Set(x,y,x+sizey-1,y+sizey-1);
-			for(i=0;i<TypefaceNum;i++)
-			{
-				for(j=0;j<8;j++)
-				{	
-					if(!mode)//非叠加方式
-					{
-						if(tfont12[k].Msk[i]&(0x01<<j))LCD_WR_DATA(fc);
-						else LCD_WR_DATA(bc);
-						m++;
-						if(m%sizey==0)
-						{
-							m=0;
-							break;
-						}
-					}
-					else//叠加方式
-					{
-						if(tfont12[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//画一个点
-						x++;
-						if((x-x0)==sizey)
-						{
-							x=x0;
-							y++;
-							break;
-						}
-					}
-				}
-			}
-		}				  	
-		continue;  //查找到对应点阵字库立即退出，防止多个汉字重复取模带来影响
-	}
-} 
-
-/******************************************************************************
-      函数说明：显示单个16x16汉字
-      入口数据：x,y显示坐标
-                *s 要显示的汉字
-                fc 字的颜色
-                bc 字的背景色
-                sizey 字号
-                mode:  0非叠加模式  1叠加模式
-      返回值：  无
-******************************************************************************/
-void LCD_ShowChinese16x16(unsigned int x,unsigned int y,unsigned char *s,unsigned int fc,unsigned int bc,unsigned char sizey,unsigned char mode)
-{
-	unsigned char i,j,m=0;
-	unsigned int k;
-	unsigned int HZnum;//汉字数目
-	unsigned int TypefaceNum;//一个字符所占字节大小
-	unsigned int x0=x;
-  TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;//32
-	HZnum=sizeof(tfont16)/sizeof(typFNT_GB16);	//统计汉字数目
-	for(k=0;k<HZnum;k++) 
-	{
-		if ((tfont16[k].Index[0]==*(s))&&(tfont16[k].Index[1]==*(s+1)) && (tfont16[k].Index[2]==*(s+2)))
-		{ 	
-			LCD_Address_Set(x,y,x+sizey-1,y+sizey-1);
-			for(i=0;i<TypefaceNum;i++)
-			{
-				for(j=0;j<8;j++)
-				{	
-					if(!mode)//非叠加方式
-					{
-						if(tfont16[k].Msk[i]&(0x01<<j))LCD_WR_DATA(fc);
-						else LCD_WR_DATA(bc);
-						m++;
-						if(m%sizey==0)
-						{
-							m=0;
-							break;
-						}
-					}
-					else//叠加方式
-					{
-						if(tfont16[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//画一个点
-						x++;
-						if((x-x0)==sizey)
-						{
-							x=x0;
-							y++;
-							break;
-						}
-					}
-				}
-			}
-		}				  	
-		continue;  //查找到对应点阵字库立即退出，防止多个汉字重复取模带来影响
-	}
-} 
-
-
-/******************************************************************************
-      函数说明：显示单个24x24汉字
-      入口数据：x,y显示坐标
-                *s 要显示的汉字
-                fc 字的颜色
-                bc 字的背景色
-                sizey 字号
-                mode:  0非叠加模式  1叠加模式
-      返回值：  无
-******************************************************************************/
-void LCD_ShowChinese24x24(unsigned int x,unsigned int y,unsigned char *s,unsigned int fc,unsigned int bc,unsigned char sizey,unsigned char mode)
-{
-	unsigned char i,j,m=0;
-	unsigned int k;
-	unsigned int HZnum;//汉字数目
-	unsigned int TypefaceNum;//一个字符所占字节大小
-	unsigned int x0=x;
-	TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;
-	HZnum=sizeof(tfont24)/sizeof(typFNT_GB24);	//统计汉字数目
-	for(k=0;k<HZnum;k++) 
-	{
-		if ((tfont24[k].Index[0]==*(s))&&(tfont24[k].Index[1]==*(s+1)))
-		{ 	
-			LCD_Address_Set(x,y,x+sizey-1,y+sizey-1);
-			for(i=0;i<TypefaceNum;i++)
-			{
-				for(j=0;j<8;j++)
-				{	
-					if(!mode)//非叠加方式
-					{
-						if(tfont24[k].Msk[i]&(0x01<<j))LCD_WR_DATA(fc);
-						else LCD_WR_DATA(bc);
-						m++;
-						if(m%sizey==0)
-						{
-							m=0;
-							break;
-						}
-					}
-					else//叠加方式
-					{
-						if(tfont24[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//画一个点
-						x++;
-						if((x-x0)==sizey)
-						{
-							x=x0;
-							y++;
-							break;
-						}
-					}
-				}
-			}
-		}				  	
-		continue;  //查找到对应点阵字库立即退出，防止多个汉字重复取模带来影响
-	}
-} 
-
-/******************************************************************************
-      函数说明：显示单个32x32汉字
-      入口数据：x,y显示坐标
-                *s 要显示的汉字
-                fc 字的颜色
-                bc 字的背景色
-                sizey 字号
-                mode:  0非叠加模式  1叠加模式
-      返回值：  无
-******************************************************************************/
-void LCD_ShowChinese32x32(unsigned int x,unsigned int y,unsigned char *s,unsigned int fc,unsigned int bc,unsigned char sizey,unsigned char mode)
-{
-	unsigned char i,j,m=0;
-	unsigned int k;
-	unsigned int HZnum;//汉字数目
-	unsigned int TypefaceNum;//一个字符所占字节大小
-	unsigned int x0=x;
-	TypefaceNum=(sizey/8+((sizey%8)?1:0))*sizey;
-	HZnum=sizeof(tfont32)/sizeof(typFNT_GB32);	//统计汉字数目
-	for(k=0;k<HZnum;k++) 
-	{
-		if ((tfont32[k].Index[0]==*(s))&&(tfont32[k].Index[1]==*(s+1)))
-		{ 	
-			LCD_Address_Set(x,y,x+sizey-1,y+sizey-1);
-			for(i=0;i<TypefaceNum;i++)
-			{
-				for(j=0;j<8;j++)
-				{	
-					if(!mode)//非叠加方式
-					{
-						if(tfont32[k].Msk[i]&(0x01<<j))LCD_WR_DATA(fc);
-						else LCD_WR_DATA(bc);
-						m++;
-						if(m%sizey==0)
-						{
-							m=0;
-							break;
-						}
-					}
-					else//叠加方式
-					{
-						if(tfont32[k].Msk[i]&(0x01<<j))	LCD_DrawPoint(x,y,fc);//画一个点
-						x++;
-						if((x-x0)==sizey)
-						{
-							x=x0;
-							y++;
-							break;
-						}
-					}
-				}
-			}
-		}				  	
-		continue;  //查找到对应点阵字库立即退出，防止多个汉字重复取模带来影响
-	}
+    LCD_ShowString(x, y, s, fc, bc, sizey, mode);
 }
 
-
-/******************************************************************************
-      函数说明：显示单个字符
-      入口数据：x,y显示坐标
-                num 要显示的字符
-                fc 字的颜色
-                bc 字的背景色
-                sizey 字号
-                mode:  0非叠加模式  1叠加模式
-      返回值：  无
-******************************************************************************/
-void LCD_ShowChar(unsigned int x,unsigned int y,unsigned char num,unsigned int fc,unsigned int bc,unsigned char sizey,unsigned char mode)
+void LCD_ShowChinese16x16(unsigned int x, unsigned int y, unsigned char *s,
+    unsigned int fc, unsigned int bc, unsigned char sizey, unsigned char mode)
 {
-	unsigned char temp,sizex,t,m=0;
-	unsigned int i,TypefaceNum;//一个字符所占字节大小
-	unsigned int x0=x;
-	sizex=sizey/2;
-	TypefaceNum=(sizex/8+((sizex%8)?1:0))*sizey;
-	num=num-' ';    //得到偏移后的值
-	LCD_Address_Set(x,y,x+sizex-1,y+sizey-1);  //设置光标位置 
-	for(i=0;i<TypefaceNum;i++)
-	{ 
-		if(sizey==12)temp=ascii_1206[num][i];		       //调用6x12字体
-		else if(sizey==16)temp=ascii_1608[num][i];		 //调用8x16字体
-		else if(sizey==24)temp=ascii_2412[num][i];		 //调用12x24字体
-		else if(sizey==32)temp=ascii_3216[num][i];		 //调用16x32字体
-		else return;
-		for(t=0;t<8;t++)
-		{
-			if(!mode)//非叠加模式
-			{
-				if(temp&(0x01<<t))LCD_WR_DATA(fc);
-				else LCD_WR_DATA(bc);
-				m++;
-				if(m%sizex==0)
-				{
-					m=0;
-					break;
-				}
-			}
-			else//叠加模式
-			{
-				if(temp&(0x01<<t))LCD_DrawPoint(x,y,fc);//画一个点
-				x++;
-				if((x-x0)==sizex)
-				{
-					x=x0;
-					y++;
-					break;
-				}
-			}
-		}
-	}   	 	  
+    LCD_ShowString(x, y, s, fc, bc, sizey, mode);
 }
 
-
-/******************************************************************************
-      函数说明：显示字符串
-      入口数据：x,y显示坐标
-                *p 要显示的字符串
-                fc 字的颜色
-                bc 字的背景色
-                sizey 字号
-                mode:  0非叠加模式  1叠加模式
-      返回值：  无
-******************************************************************************/
-void LCD_ShowString(unsigned int x,unsigned int y,const unsigned char *p,unsigned int fc,unsigned int bc,unsigned char sizey,unsigned char mode)
-{         
-	while(*p!='\0')
-	{       
-		LCD_ShowChar(x,y,*p,fc,bc,sizey,mode);
-		x+=sizey/2;
-		p++;
-	}  
-}
-
-
-/******************************************************************************
-      函数说明：显示数字
-      入口数据：m底数，n指数
-      返回值：  无
-******************************************************************************/
-unsigned int mypow(unsigned char m,unsigned char n)
+void LCD_ShowChinese24x24(unsigned int x, unsigned int y, unsigned char *s,
+    unsigned int fc, unsigned int bc, unsigned char sizey, unsigned char mode)
 {
-	unsigned int result=1;	 
-	while(n--)result*=m;
-	return result;
+    LCD_ShowString(x, y, s, fc, bc, sizey, mode);
 }
 
-
-/******************************************************************************
-      函数说明：显示整数变量
-      入口数据：x,y显示坐标
-                num 要显示整数变量
-                len 要显示的位数
-                fc 字的颜色
-                bc 字的背景色
-                sizey 字号
-      返回值：  无
-******************************************************************************/
-void LCD_ShowIntNum(unsigned int x,unsigned int y,unsigned int num,unsigned char len,unsigned int fc,unsigned int bc,unsigned char sizey)
-{         	
-	unsigned char t,temp;
-	unsigned char enshow=0;
-	unsigned char sizex=sizey/2;
-	for(t=0;t<len;t++)
-	{
-		temp=(num/mypow(10,len-t-1))%10;
-		if(enshow==0&&t<(len-1))
-		{
-			if(temp==0)
-			{
-				LCD_ShowChar(x+t*sizex,y,' ',fc,bc,sizey,0);
-				continue;
-			}else enshow=1; 
-		 	 
-		}
-	 	LCD_ShowChar(x+t*sizex,y,temp+48,fc,bc,sizey,0);
-	}
-} 
-
-
-/******************************************************************************
-      函数说明：显示两位小数变量
-      入口数据：x,y显示坐标
-                num 要显示小数变量
-                len 要显示的位数
-                fc 字的颜色
-                bc 字的背景色
-                sizey 字号
-      返回值：  无
-******************************************************************************/
-void LCD_ShowFloatNum1(unsigned int x,unsigned int y,float num,unsigned char len,unsigned int fc,unsigned int bc,unsigned char sizey)
-{         	
-	unsigned char t,temp,sizex;
-	unsigned int num1;
-	sizex=sizey/2;
-	num1=num*100;
-	for(t=0;t<len;t++)
-	{
-		temp=(num1/mypow(10,len-t-1))%10;
-		if(t==(len-2))
-		{
-			LCD_ShowChar(x+(len-2)*sizex,y,'.',fc,bc,sizey,0);
-			t++;
-			len+=1;
-		}
-	 	LCD_ShowChar(x+t*sizex,y,temp+48,fc,bc,sizey,0);
-	}
-}
-
-
-/******************************************************************************
-      函数说明：显示图片
-      入口数据：x,y起点坐标
-                length 图片长度
-                width  图片宽度
-                pic[]  图片数组    
-      返回值：  无
-******************************************************************************/
-void LCD_ShowPicture(unsigned int x,unsigned int y,unsigned int length,unsigned int width,const unsigned char pic[])
+void LCD_ShowChinese32x32(unsigned int x, unsigned int y, unsigned char *s,
+    unsigned int fc, unsigned int bc, unsigned char sizey, unsigned char mode)
 {
-	unsigned int i,j;
-	uint32_t k=0;
-	LCD_Address_Set(x,y,x+length-1,y+width-1);
-	for(i=0;i<length;i++)
-	{
-		for(j=0;j<width;j++)
-		{
-			LCD_WR_DATA8(pic[k*2]);
-			LCD_WR_DATA8(pic[k*2+1]);
-			k++;
-		}
-	}			
+    LCD_ShowString(x, y, s, fc, bc, sizey, mode);
 }
 
+unsigned int mypow(unsigned char m, unsigned char n)
+{
+    unsigned int result = 1U;
+
+    while (n--) {
+        result *= m;
+    }
+    return result;
+}
+
+void LCD_ShowIntNum(unsigned int x, unsigned int y, unsigned int num,
+    unsigned char len, unsigned int fc, unsigned int bc, unsigned char sizey)
+{
+    char text[12];
+
+    (void) len;
+    snprintf(text, sizeof(text), "%u", num);
+    LCD_ShowString(x, y, (const unsigned char *) text, fc, bc, sizey, 0U);
+}
+
+void LCD_ShowFloatNum1(unsigned int x, unsigned int y, float num,
+    unsigned char len, unsigned int fc, unsigned int bc, unsigned char sizey)
+{
+    char text[16];
+
+    (void) len;
+    snprintf(text, sizeof(text), "%ld", (long) (num * 100.0f));
+    LCD_ShowString(x, y, (const unsigned char *) text, fc, bc, sizey, 0U);
+}
+
+void LCD_ShowPicture(unsigned int x, unsigned int y, unsigned int length,
+    unsigned int width, const unsigned char pic[])
+{
+    uint32_t pixels = (uint32_t) length * (uint32_t) width;
+    uint32_t k = 0U;
+
+    lcd_address_set_sync(x, y, x + length - 1U, y + width - 1U);
+    while (pixels-- > 0U) {
+        lcd_write_data8_sync(pic[k++]);
+        lcd_write_data8_sync(pic[k++]);
+    }
+}
