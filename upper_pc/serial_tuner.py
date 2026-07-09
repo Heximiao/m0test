@@ -11,6 +11,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from image_sender import image_to_rgb565, load_raw_rgb565
+from lidar_page import HEADER as LIDAR_HEADER, LidarPage
 
 try:
     import serial
@@ -19,7 +20,7 @@ except ImportError:
     serial = None
 
 
-BAUD_RATES = ("9600", "19200", "38400", "57600", "115200", "230400", "460800")
+BAUD_RATES = ("9600", "19200", "38400", "57600", "115200", "150000", "230400", "460800")
 PLOT_KEYS = (
     "L", "R", "TARGET", "LT", "RT", "LD", "RD", "ERR", "OUT", "LO", "RO",
     "KP", "KI", "KD", "PITCH", "ROLL", "YAW",
@@ -56,6 +57,8 @@ class SerialTunerApp:
         self.reader_thread = None
         self.stop_event = threading.Event()
         self.rx_queue = queue.Queue()
+        self.rx_queue_batch_size = 48
+        self.serial_text_buffer = bytearray()
         self.samples = []
         self.max_samples = 240
         self.max_log_lines = 400
@@ -84,6 +87,7 @@ class SerialTunerApp:
         self.last_debug_ui_count = 0
         self.last_debug_sample_count = 0
         self.last_debug_draw_count = 0
+        self.last_debug_lidar_draw_count = 0
         self.draw_pending = False
         self.image_transfer = None
         self.image_writer_thread = None
@@ -163,14 +167,21 @@ class SerialTunerApp:
         ).pack(fill=tk.X)
         self._add_nav_button(sidebar, "monitor", "PID 监视")
         self._add_nav_button(sidebar, "accel", "姿态校准")
+        self._add_nav_button(sidebar, "lidar", "雷达显示")
 
         self.content_frame = ttk.Frame(body)
         self.content_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.monitor_page = ttk.Frame(self.content_frame)
         self.accel_page = ttk.Frame(self.content_frame)
+        self.lidar_page = LidarPage(
+            self.content_frame,
+            send_line=self.send_line,
+            send_bytes=self.send_bytes,
+        )
 
         self._build_monitor_page(self.monitor_page)
         self._build_accel_page(self.accel_page)
+        self.lidar_page.pack_forget()
         self._show_page("monitor")
 
     def _add_nav_button(self, parent, page, text):
@@ -193,10 +204,12 @@ class SerialTunerApp:
 
     def _show_page(self, page):
         self.page_var.set(page)
-        for frame in (self.monitor_page, self.accel_page):
+        for frame in (self.monitor_page, self.accel_page, self.lidar_page):
             frame.pack_forget()
         if page == "accel":
             self.accel_page.pack(fill=tk.BOTH, expand=True)
+        elif page == "lidar":
+            self.lidar_page.pack(fill=tk.BOTH, expand=True)
         else:
             self.monitor_page.pack(fill=tk.BOTH, expand=True)
         for name, button in self.nav_buttons.items():
@@ -371,13 +384,16 @@ class SerialTunerApp:
             self.serial_port = serial.Serial(
                 port=port,
                 baudrate=int(self.baud_var.get()),
-                timeout=0.1,
+                timeout=0.02,
                 write_timeout=0.5,
             )
+            self.serial_port.reset_input_buffer()
         except Exception as exc:
             messagebox.showerror("打开失败", str(exc))
             return
 
+        self.serial_text_buffer.clear()
+        self.lidar_page.clear()
         self.stop_event.clear()
         self.reader_thread = threading.Thread(target=self._read_serial, daemon=True)
         self.reader_thread.start()
@@ -397,33 +413,38 @@ class SerialTunerApp:
     def _read_serial(self):
         while not self.stop_event.is_set():
             try:
-                raw = self.serial_port.readline()
+                waiting = getattr(self.serial_port, "in_waiting", 0)
+                read_size = min(max(waiting, 256), 4096)
+                raw = self.serial_port.read(read_size)
             except Exception as exc:
                 self.rx_queue.put(("error", str(exc)))
                 break
 
             if raw:
-                line = raw.decode("utf-8", errors="replace").strip()
                 self.rx_line_count += 1
                 self.last_rx_time = time.time()
-                self.rx_queue.put(("line", line))
+                self.rx_queue.put(("raw", raw))
 
     def _poll_rx_queue(self):
         latest_sample = None
         should_draw = False
+        processed = 0
 
-        while True:
+        while processed < self.rx_queue_batch_size:
             try:
                 kind, payload = self.rx_queue.get_nowait()
             except queue.Empty:
                 break
+            processed += 1
 
-            if kind == "line":
+            if kind == "raw":
                 self.ui_line_count += 1
-                self._handle_image_transfer_line(payload)
-                if self._should_log_line(payload):
-                    self._queue_log(payload)
-                sample = self._parse_sample(payload)
+                for sample in self._handle_serial_bytes(payload):
+                    latest_sample = sample
+                    should_draw = True
+            elif kind == "line":
+                self.ui_line_count += 1
+                sample = self._handle_serial_line(payload)
                 if sample is not None:
                     latest_sample = sample
                     should_draw = True
@@ -450,7 +471,100 @@ class SerialTunerApp:
             self._request_draw_plot()
         self._update_debug_status()
 
-        self.root.after(50, self._poll_rx_queue)
+        delay_ms = 1 if not self.rx_queue.empty() else 50
+        self.root.after(delay_ms, self._poll_rx_queue)
+
+    def _handle_serial_bytes(self, payload):
+        payload = self._strip_lidar_frames(payload)
+        samples = []
+
+        if not payload:
+            return samples
+
+        self.serial_text_buffer.extend(payload)
+        while True:
+            newline_at = self.serial_text_buffer.find(b"\n")
+            if newline_at < 0:
+                break
+
+            raw_line = bytes(self.serial_text_buffer[:newline_at]).strip(b"\r")
+            del self.serial_text_buffer[: newline_at + 1]
+            if not self._looks_like_text_line(raw_line):
+                continue
+
+            line = raw_line.decode("utf-8", errors="replace").strip()
+            if not line:
+                continue
+            sample = self._handle_serial_line(line)
+            if sample is not None:
+                samples.append(sample)
+
+        if len(self.serial_text_buffer) > 4096:
+            if self._looks_like_text_line(self.serial_text_buffer[-256:]):
+                self.serial_text_buffer = self.serial_text_buffer[-256:]
+            else:
+                self.serial_text_buffer.clear()
+
+        return samples
+
+    def _strip_lidar_frames(self, payload):
+        if self.lidar_page.has_pending_frame():
+            self.lidar_page.handle_serial_bytes(payload)
+            return b""
+
+        output = bytearray()
+        index = 0
+        length = len(payload)
+
+        while index < length:
+            start = payload.find(LIDAR_HEADER, index)
+            if start < 0:
+                output.extend(payload[index:])
+                break
+
+            output.extend(payload[index:start])
+            if start + 4 > length:
+                self.lidar_page.handle_serial_bytes(payload[start:])
+                break
+
+            lsn = payload[start + 3]
+            if lsn == 0 or lsn > 120:
+                output.append(payload[start])
+                index = start + 1
+                continue
+
+            frame = self._select_lidar_frame(payload, start, lsn)
+            if frame is None:
+                self.lidar_page.handle_serial_bytes(payload[start:])
+                break
+
+            end, frame_data = frame
+            self.lidar_page.handle_serial_bytes(frame_data)
+            index = end
+
+        return bytes(output)
+
+    def _select_lidar_frame(self, payload, start, lsn):
+        end = start + self.lidar_page.frame_length_for_lsn(lsn)
+        if end > len(payload):
+            return None
+        return end, payload[start:end]
+
+    def _handle_serial_line(self, line):
+        self._handle_image_transfer_line(line)
+        self.lidar_page.handle_serial_line(line)
+        if self._should_log_line(line):
+            self._queue_log(line)
+        return self._parse_sample(line)
+
+    def _looks_like_text_line(self, raw):
+        if not raw:
+            return False
+        printable = 0
+        for byte in raw:
+            if byte in (9, 10, 13) or 32 <= byte <= 126:
+                printable += 1
+        return (printable / len(raw)) >= 0.85
 
     def _update_debug_status(self):
         now = time.time()
@@ -462,13 +576,15 @@ class SerialTunerApp:
         ui_rate = (self.ui_line_count - self.last_debug_ui_count) / elapsed
         sample_rate = (self.sample_count - self.last_debug_sample_count) / elapsed
         draw_rate = (self.draw_count - self.last_debug_draw_count) / elapsed
+        lidar_draw_count = getattr(self.lidar_page, "draw_count", 0)
+        lidar_draw_rate = (lidar_draw_count - self.last_debug_lidar_draw_count) / elapsed
         queue_size = self.rx_queue.qsize()
         last_age = (now - self.last_rx_time) if self.last_rx_time > 0.0 else -1.0
         last_text = f"{last_age:.1f}s" if last_age >= 0.0 else "-"
 
         debug_text = (
             f"RX {rx_rate:.0f}/s  UI {ui_rate:.0f}/s  S {sample_rate:.0f}/s  "
-            f"Q {queue_size}  Draw {draw_rate:.0f}/s  Last {last_text}"
+            f"Q {queue_size}  Draw {draw_rate:.0f}/s  LDraw {lidar_draw_rate:.0f}/s  Last {last_text}"
         )
         self.debug_var.set(debug_text)
         if self.debug_log_enabled_var.get():
@@ -480,6 +596,7 @@ class SerialTunerApp:
         self.last_debug_ui_count = self.ui_line_count
         self.last_debug_sample_count = self.sample_count
         self.last_debug_draw_count = self.draw_count
+        self.last_debug_lidar_draw_count = lidar_draw_count
 
     def _queue_log(self, line):
         timestamp = time.strftime("%H:%M:%S")
@@ -1309,6 +1426,19 @@ class SerialTunerApp:
         except Exception as exc:
             messagebox.showerror("发送失败", str(exc))
 
+    def send_bytes(self, data, label=None):
+        if not self.serial_port or not self.serial_port.is_open:
+            messagebox.showwarning("未连接", "请先连接 COM 端口。")
+            return
+
+        try:
+            self.serial_port.write(data)
+            name = label or "RAW"
+            self._queue_log(f"> {name} {data.hex(' ').upper()}")
+            self._flush_log()
+        except Exception as exc:
+            messagebox.showerror("发送失败", str(exc))
+
     def save_csv(self):
         if not self.samples:
             messagebox.showinfo("没有数据", "暂无可保存的解析数据。")
@@ -1344,6 +1474,7 @@ class SerialTunerApp:
         self.attitude_zero_matrix = None
         self.last_attitude_log_time = 0.0
         self._update_attitude_labels()
+        self.lidar_page.clear()
         self._draw_plot()
         self._draw_cube()
 
