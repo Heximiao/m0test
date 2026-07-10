@@ -7,15 +7,17 @@ __pycache__/
 .DS_Store
 Thumbs.db
 Desktop.ini
+.codex/
+.codex_*/
 .idea/
 .vscode/
+.settings/
+.ti_appdata/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
 
 # Build and generated outputs
-Debug/
-Debug/.clangd/
 Release/
 build/
 dist/
