@@ -1,0 +1,35 @@
+# Python cache and bytecode
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Common hidden clutter
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Build and generated outputs
+Debug/
+Debug/.clangd/
+Release/
+build/
+dist/
+*.map
+*.hex
+*.elf
+*.obj
+*.o
+*.out
+*.bin
+
+# Temporary and local-only files
+*.tmp
+*.log
+*.swp
+*.swo
+known_hosts_tmp
