@@ -26,6 +26,8 @@ Kd = 0.4
 - LCD 二级菜单，支持文件列表、车辆状态和车辆控制。
 - Python 上位机曲线显示、PID/BASE 下发和 CSV 保存。
 - 树莓派/OpenCV 版本巡线脚本，可通过串口向 MCU 发送同样的视觉命令。
+- 树莓派 ROS2 Jazzy 激光雷达建图：雷达发布 `/scan`，MCU UART2 发送 `ODO`
+  里程计，树莓派发布 `/odom` 和 TF，`slam_toolbox` 发布 `/map`。
 
 ## 运行节拍
 
@@ -35,6 +37,7 @@ Kd = 0.4
 | 20 ms | 速度控制更新 |
 | 20 ms | MPU6050 姿态输出尝试 |
 | 100 ms | 小车状态遥测 |
+| 500 ms | UART2 里程计 `ODO` 输出 |
 | 500 ms | LaunchPad 状态 LED 翻转 |
 | 30 s | 心跳 `RUN` 输出 |
 
@@ -123,7 +126,7 @@ MSTOP
 
 运动换算参数在 `app/app_motion_control.c`：
 
-- 车轮直径：`48.0 mm`
+- 车轮直径：`40.3 mm`
 - 轮距：`129.0 mm`
 - 电机编码器：`11 PPR`
 - 减速比：`20:1`
@@ -188,6 +191,17 @@ ATT SRC=DMP PITCH=12 ROLL=-34 YAW=9000
 RUN ms=30000 L=1234 R=1230 RXDROP=0 TXDROP=0 LED=PB22
 ```
 
+UART2 会给树莓派 ROS2 里程计节点发送低频里程计行：
+
+```text
+ODO L=1234 R=1230 LD=0 RD=0
+```
+
+当前固件已打开 UART2 RX，所以同一组 UART2 也可以接收视觉寻迹脚本发来的
+`LINE` / `LTURN`。如果只跑建图，至少需要 MCU PA23 -> 树莓派 RX 和 GND；
+如果只跑视觉寻迹，还需要树莓派 TX -> MCU PA24。当前不建议建图节点和视觉脚本
+同时抢同一个树莓派串口。
+
 ## 引脚连接
 
 | 功能 | 引脚 | 代码/SysConfig 名称 |
@@ -203,8 +217,8 @@ RUN ms=30000 L=1234 R=1230 RXDROP=0 TXDROP=0 LED=PB22
 | OpenMV UART2 TX, RX | PA23, PA24 | `UART_OPENMV` |
 | OpenMV P4 TX -> MCU RX | PA24 | 接 MCU `UART2 RX` |
 | OpenMV P5 RX <- MCU TX | PA23 | 接 MCU `UART2 TX` |
-| 树莓派 GPIO14 TX -> MCU RX | PA24 | 可替代 OpenMV TX |
-| 树莓派 GPIO15 RX <- MCU TX | PA23 | 可替代 OpenMV RX |
+| 树莓派 GPIO14 TX -> MCU RX | PA24 | 视觉寻迹 `LINE`/`LTURN` 命令输入 |
+| 树莓派 GPIO15 RX <- MCU TX | PA23 | ROS2 里程计 `ODO` 输出 |
 | MPU6050 SCL, SDA | PA1, PA0 | 软件 I2C，开漏上拉 |
 | LCD SPI MOSI, SCLK | PB8, PB9 | `SPI_LCD`，16 MHz |
 | LCD RES, DC, CS, BLK | PB10, PB11, PB14, PB26 | `GPIO_LCD` |
@@ -244,6 +258,12 @@ python upper_pc/image_sender.py path\to\image.png --port COMx --show
 
 上位机主要用于连接 COM 口、下发 `PID`/`BASE`/`GET`、绘制 `TARGET`、`LD`、`RD`、`ERR` 曲线并保存 CSV。更详细说明见 `upper_pc/README.md`。
 
+如果只想确认 MCU UART2 有没有发送里程计，可用：
+
+```powershell
+python upper_pc/uart_raw_dump.py --port COMx --baudrate 115200 --seconds 10
+```
+
 ## 视觉脚本
 
 OpenMV 脚本：
@@ -261,6 +281,27 @@ python opencv/line_follow_opencv.py --serial COMx --baudrate 115200
 ```
 
 Linux/树莓派上默认摄像头为 `/dev/video0`，串口为 `/dev/ttyAMA0`。调试时可加 `--dry-run` 只看识别结果，不打开串口；加 `--no-show` 关闭窗口显示。
+
+## ROS2 激光雷达建图
+
+树莓派上的工作区路径：
+
+```bash
+/home/heximiao/hexi/ros2/slam/lidar
+```
+
+启动建图：
+
+```bash
+cd /home/heximiao/hexi/ros2/slam/lidar
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 launch lidar_py_pkg mapping.launch.py
+```
+
+这个 launch 会同时启动激光雷达、里程计、TF、`slam_toolbox` 和 RViz。
+真实建图时需要树莓派和雷达跟着车一起移动；只让轮子空转只能验证 `/odom`
+和串口，不能得到可靠地图。详细说明见 `ros2/lidar/README_LIDAR_ROS2.md`。
 
 ## 文件结构
 
@@ -299,9 +340,12 @@ gpio_toggle_output/
 │   └── xunjitest1.py            OpenMV 巡线和路口识别脚本
 ├── opencv/
 │   └── line_follow_opencv.py    树莓派/OpenCV 巡线脚本
+├── ros2/
+│   └── lidar/                   ROS2 Jazzy 雷达、里程计和 slam_toolbox 建图工作区
 ├── upper_pc/
 │   ├── image_sender.py          图片转 RGB565 并通过 UART 写入 W25Q64
 │   ├── serial_tuner.py          PC 串口调参和曲线工具
+│   ├── uart_raw_dump.py         原始串口接收检查工具
 │   ├── requirements.txt         Python 依赖
 │   └── README.md                上位机说明
 ├── targetConfigs/               CCS 调试/烧录目标配置

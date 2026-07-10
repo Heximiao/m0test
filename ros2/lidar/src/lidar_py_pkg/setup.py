@@ -24,6 +24,8 @@ setup(
     entry_points={
         "console_scripts": [
             "lidar_py_node = lidar_py_pkg.lidar_py_node:main",
+            "uart_raw_dump = lidar_py_pkg.uart_raw_dump:main",
+            "wheel_odom_node = lidar_py_pkg.wheel_odom_node:main",
         ],
     },
 )

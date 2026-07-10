@@ -22,6 +22,7 @@
 #define CONTROL_PERIOD_MS (20U)
 #define ATTITUDE_PERIOD_MS (20U)
 #define TELEMETRY_PERIOD_MS (100U)
+#define ODOMETRY_PERIOD_MS (500U)
 #define HEARTBEAT_PERIOD_MS (30000U)
 #define STATUS_LED_PERIOD_MS (500U)
 #define MENU_PERIOD_MS (50U)
@@ -29,6 +30,7 @@
 static volatile bool gControlUpdatePending;
 static volatile bool gAttitudeUpdatePending;
 static volatile bool gTelemetryUpdatePending;
+static volatile bool gOdometryUpdatePending;
 static volatile bool gHeartbeatUpdatePending;
 static volatile bool gStatusLedUpdatePending;
 static volatile bool gMenuUpdatePending;
@@ -70,14 +72,14 @@ int main(void)
      *   PA11 -> UART0 RX, MCU receives tuning commands from PC
      *   Baud rate: 115200, 8N1
      *
-     * OpenMV vision UART:
-     *   PA23 -> UART2 TX, optional MCU-to-OpenMV line
-     *   PA24 -> UART2 RX, connect to OpenMV TX       openmv的4和5脚
+     * OpenMV / Raspberry Pi UART2:
+     *   PA23 -> UART2 TX, MCU sends odometry to Raspberry Pi/OpenMV RX
+     *   PA24 -> UART2 RX, MCU receives LINE/LTURN from Raspberry Pi/OpenMV TX
      *   Baud rate: 115200, 8N1
      *   OpenMV P4 TX -> PA24 RX
      *   OpenMV P5 RX <- PA23 TX
-     *   树莓派 GPIO 14 TX >PA24 RX
-     *   树莓派 GPIO 15 RX >PA23 TX 
+     *   树莓派 GPIO14 TXD -> PA24 RX
+     *   树莓派 GPIO15 RXD <- PA23 TX
      *
      * LaunchPad status LED:
      *   PB22 -> status LED
@@ -167,6 +169,11 @@ int main(void)
             app_car_control_send_telemetry();
         }
 
+        if (gOdometryUpdatePending) {
+            gOdometryUpdatePending = false;
+            app_car_control_send_odometry();
+        }
+
         if (gHeartbeatUpdatePending) {
             gHeartbeatUpdatePending = false;
             app_car_control_send_heartbeat(gSysTickMs);
@@ -199,6 +206,9 @@ void SysTick_Handler(void)
     }
     if ((gSysTickMs % TELEMETRY_PERIOD_MS) == 0U) {
         gTelemetryUpdatePending = true;
+    }
+    if ((gSysTickMs % ODOMETRY_PERIOD_MS) == 0U) {
+        gOdometryUpdatePending = true;
     }
     if ((gSysTickMs % HEARTBEAT_PERIOD_MS) == 0U) {
         gHeartbeatUpdatePending = true;

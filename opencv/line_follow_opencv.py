@@ -316,7 +316,7 @@ def draw_debug(frame, mask, points, target, turn, message, mode, fps):
 def parse_args():
     parser = argparse.ArgumentParser(description="OpenCV line follower for Raspberry Pi")
     parser.add_argument("--device", default="/dev/video0", help="camera device")
-    parser.add_argument("--serial", default="/dev/ttyAMA10", help="serial port")
+    parser.add_argument("--serial", default="/dev/ttyAMA0", help="serial port")
     parser.add_argument("--baudrate", type=int, default=115200)
     parser.add_argument("--threshold", type=int, default=60, help="black line threshold")
     parser.add_argument("--show", dest="show", action="store_true", default=False, help="show debug windows")

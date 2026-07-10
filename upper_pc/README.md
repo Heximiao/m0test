@@ -45,3 +45,40 @@ PID 0.35 0.02 0.08
 BASE 8.0
 GET
 ```
+
+## Raw UART dump
+
+Use this to check whether a UART is receiving any bytes before debugging a
+higher-level parser or ROS2 node. This is useful for checking MCU UART2
+odometry before moving the wire to the Raspberry Pi.
+
+```powershell
+python uart_raw_dump.py --port COMx --baudrate 115200 --seconds 10
+```
+
+For MCU UART2 odometry, connect only:
+
+```text
+MCU PA23 / UART2 TX -> USB-TTL RX
+MCU GND             -> USB-TTL GND
+```
+
+Expected odometry lines look like:
+
+```text
+ODO L=1234 R=1230 LD=0 RD=0
+```
+
+After this works on the PC, the Raspberry Pi mapping side should use:
+
+```bash
+cd /home/heximiao/hexi/ros2/slam/lidar
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 launch lidar_py_pkg mapping.launch.py
+```
+
+The Raspberry Pi wiring for odometry is MCU PA23 / UART2 TX to GPIO15 RXD
+physical pin 10, plus common GND. For visual line following, Raspberry Pi
+GPIO14 TXD physical pin 8 can also connect to MCU PA24 / UART2 RX, but run the
+line-follow script and ROS2 odometry reader one mode at a time.

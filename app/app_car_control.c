@@ -5,6 +5,7 @@
 #include "app_util.h"
 #include "bsp/bsp_tb6612.h"
 #include "hw/hw_encoder.h"
+#include "hw/hw_openmv_uart.h"
 #include "hw/hw_uart.h"
 #include "mid/mid_pid.h"
 #include "ti_msp_dl_config.h"
@@ -381,11 +382,11 @@ void app_car_control_send_telemetry(void)
     EncoderCounts counts;
     int length;
 
+    counts = encoder_get_counts();
     if (!gTelemetryEnabled) {
         return;
     }
 
-    counts = encoder_get_counts();
     length = snprintf(message, sizeof(message),
         "L=%ld R=%ld LD=%ld RD=%ld ERR=%ld OUT=%ld LO=%ld RO=%ld LT=%ld RT=%ld KP=%ld KI=%ld KD=%ld BASE=%ld LINE=%ld LV=%d MM=%ld DG=%ld MO=%ld MB=%d\r\n",
         (long) counts.left_count, (long) counts.right_count,
@@ -408,6 +409,20 @@ void app_car_control_send_telemetry(void)
 
     if ((length > 0) && (length < (int) sizeof(message))) {
         uart_debug_write_string(message);
+    }
+}
+
+void app_car_control_send_odometry(void)
+{
+    char message[64];
+    EncoderCounts counts = encoder_get_counts();
+    int length = snprintf(message, sizeof(message),
+        "ODO L=%ld R=%ld LD=%ld RD=%ld\r\n",
+        (long) counts.left_count, (long) counts.right_count,
+        (long) gLastLeftDelta, (long) gLastRightDelta);
+
+    if ((length > 0) && (length < (int) sizeof(message))) {
+        uart_openmv_write_string(message);
     }
 }
 
