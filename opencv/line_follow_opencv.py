@@ -91,50 +91,30 @@ def output_error_from_x(x):
     return int(round((x - (FRAME_WIDTH // 2)) * ERROR_OUTPUT_WIDTH / FRAME_WIDTH))
 
 
+def runs_from_binary_line(line, offset, min_size):
+    active = line > 0
+    if not active.any():
+        return []
+
+    padded = np.concatenate(([False], active, [False]))
+    edges = np.flatnonzero(padded[1:] != padded[:-1])
+    starts = edges[0::2]
+    ends = edges[1::2] - 1
+    sizes = ends - starts + 1
+
+    return [
+        (int(start + offset), int(end + offset))
+        for start, end, size in zip(starts, ends, sizes)
+        if size >= min_size
+    ]
+
+
 def row_runs(mask, y, x0, w, min_width):
-    runs = []
-    run_start = -1
-    x_end = x0 + w
-
-    for x in range(x0, x_end):
-        if mask[y, x] > 0:
-            if run_start < 0:
-                run_start = x
-        elif run_start >= 0:
-            width = x - run_start
-            if width >= min_width:
-                runs.append((run_start, x - 1))
-            run_start = -1
-
-    if run_start >= 0:
-        width = x_end - run_start
-        if width >= min_width:
-            runs.append((run_start, x_end - 1))
-
-    return runs
+    return runs_from_binary_line(mask[y, x0 : x0 + w], x0, min_width)
 
 
 def column_runs(mask, x, y0, h, min_height):
-    runs = []
-    run_start = -1
-    y_end = y0 + h
-
-    for y in range(y0, y_end):
-        if mask[y, x] > 0:
-            if run_start < 0:
-                run_start = y
-        elif run_start >= 0:
-            height = y - run_start
-            if height >= min_height:
-                runs.append((run_start, y - 1))
-            run_start = -1
-
-    if run_start >= 0:
-        height = y_end - run_start
-        if height >= min_height:
-            runs.append((run_start, y_end - 1))
-
-    return runs
+    return runs_from_binary_line(mask[y0 : y0 + h, x], y0, min_height)
 
 
 def best_track_run(runs, last_x):
@@ -285,10 +265,11 @@ def make_mask(frame, threshold):
 
 def open_camera(device):
     cap = cv2.VideoCapture(device, cv2.CAP_V4L2)
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, FRAME_WIDTH)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT)
     cap.set(cv2.CAP_PROP_FPS, 30)
-    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
     return cap
 
 
@@ -335,10 +316,10 @@ def draw_debug(frame, mask, points, target, turn, message, mode, fps):
 def parse_args():
     parser = argparse.ArgumentParser(description="OpenCV line follower for Raspberry Pi")
     parser.add_argument("--device", default="/dev/video0", help="camera device")
-    parser.add_argument("--serial", default="/dev/ttyAMA0", help="serial port")
+    parser.add_argument("--serial", default="/dev/ttyAMA10", help="serial port")
     parser.add_argument("--baudrate", type=int, default=115200)
     parser.add_argument("--threshold", type=int, default=60, help="black line threshold")
-    parser.add_argument("--show", dest="show", action="store_true", default=True, help="show debug windows")
+    parser.add_argument("--show", dest="show", action="store_true", default=False, help="show debug windows")
     parser.add_argument("--no-show", dest="show", action="store_false", help="disable debug windows")
     parser.add_argument("--dry-run", action="store_true", help="print only, do not use serial")
     parser.add_argument("--no-rotate", action="store_true", help="disable 180 degree rotation")
@@ -374,7 +355,8 @@ def main():
                 time.sleep(0.02)
                 continue
 
-            frame = cv2.resize(frame, (FRAME_WIDTH, FRAME_HEIGHT))
+            if frame.shape[1] != FRAME_WIDTH or frame.shape[0] != FRAME_HEIGHT:
+                frame = cv2.resize(frame, (FRAME_WIDTH, FRAME_HEIGHT))
             if CAMERA_ROTATED_180 and not args.no_rotate:
                 frame = cv2.rotate(frame, cv2.ROTATE_180)
 

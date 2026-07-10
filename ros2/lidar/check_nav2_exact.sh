@@ -2,12 +2,12 @@
 set -eo pipefail
 
 for pattern in \
-  '^ros-lyrical-nav2-' \
-  '^ros-lyrical-.*amcl' \
-  '^ros-lyrical-.*map-server' \
-  '^ros-lyrical-slam-toolbox' \
-  '^ros-lyrical-cartographer' \
-  '^ros-lyrical-navigation2'
+  '^ros-jazzy-nav2-' \
+  '^ros-jazzy-.*amcl' \
+  '^ros-jazzy-.*map-server' \
+  '^ros-jazzy-slam-toolbox' \
+  '^ros-jazzy-cartographer' \
+  '^ros-jazzy-navigation2'
 do
   echo "=== ${pattern} ==="
   apt-cache search "${pattern}" || true

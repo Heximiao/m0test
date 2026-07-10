@@ -5,7 +5,7 @@
 #include <string.h>
 
 #define CONTROL_PERIOD_S (0.02f) /* 速度控制周期，单位：秒 */
-#define WHEEL_DIAMETER_MM (48.0f) /* 实测车轮直径，用于 mm/s 和编码器 counts 换算 */
+#define WHEEL_DIAMETER_MM (40.3f) /* 等效轮径，按 DIST 500 实测约 420 mm 标定 */
 #define WHEEL_BASE_MM (129.0f) /* 左右后驱轮中心距，原地转向角度按这个轴距换算 */
 #define MOTOR_ENCODER_PPR (11.0f) /* MG310 霍尔编码器电机轴每圈脉冲数 */
 #define MOTOR_REDUCTION_RATIO (20.0f) /* MG310 减速箱减速比，用于换算到车轮轴 */

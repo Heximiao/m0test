@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-cd /home/ubuntu/hexi/ros2/lidar
-source /opt/ros/lyrical/setup.bash
+cd /home/heximiao/hexi/ros2/slam/lidar
+source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 
 LOG=/tmp/lidar_py_node.log

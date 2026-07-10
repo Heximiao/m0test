@@ -1,7 +1,7 @@
 ******************************************************************************
             TI ARM Clang Linker PC v5.1.1                      
 ******************************************************************************
->> Linked Wed Jul  8 17:12:44 2026
+>> Linked Fri Jul 10 17:32:44 2026
 
 OUTPUT FILE NAME:   <gpio_toggle_output.out>
 ENTRY POINT SYMBOL: "_c_int00_noargs"  address: 0000d9e9

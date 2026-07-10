@@ -23,7 +23,7 @@ Visualization Manager:
       Name: TF
   Enabled: true
   Global Options:
-    Fixed Frame: map
+    Fixed Frame: laser
   Name: root
   Tools:
     - Class: rviz_default_plugins/Interact
