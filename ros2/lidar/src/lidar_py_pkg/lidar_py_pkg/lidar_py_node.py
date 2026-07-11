@@ -121,6 +121,8 @@ class SerialLidarNode(Node):
         self.declare_parameter("range_min", 0.05)
         self.declare_parameter("range_max", 8.0)
         self.declare_parameter("scan_size", 720)
+        self.declare_parameter("min_publish_period", 0.08)
+        self.declare_parameter("send_stop_on_shutdown", False)
 
         self.port = self.get_parameter("port").value
         self.baudrate = int(self.get_parameter("baudrate").value)
@@ -130,6 +132,12 @@ class SerialLidarNode(Node):
         self.range_min = float(self.get_parameter("range_min").value)
         self.range_max = float(self.get_parameter("range_max").value)
         self.scan_size = int(self.get_parameter("scan_size").value)
+        self.min_publish_period = float(
+            self.get_parameter("min_publish_period").value
+        )
+        self.send_stop_on_shutdown = bool(
+            self.get_parameter("send_stop_on_shutdown").value
+        )
 
         if serial is None:
             raise RuntimeError("python3-serial is required")
@@ -140,30 +148,72 @@ class SerialLidarNode(Node):
         self.scan_start_time = self.get_clock().now()
         self.scan_count = 0
         self.point_count = 0
+        self.last_publish_time = 0.0
+        self.last_packet_time = time.monotonic()
+        self.last_start_command_time = 0.0
         self.last_log = time.monotonic()
 
-        self.serial = serial.Serial(self.port, self.baudrate, timeout=0.02)
-        self.serial.reset_input_buffer()
-        self.serial.write(START_SCAN)
-        self.get_logger().info(
-            f"lidar started port={self.port} baudrate={self.baudrate} "
-            f"format={self.packet_format} topic=/{self.topic}"
-        )
+        self.serial = None
+        self.reconnect_after = 0.0
+        self.open_serial()
 
         self.timer = self.create_timer(0.005, self.read_serial)
+
+    def open_serial(self):
+        try:
+            self.serial = serial.Serial(self.port, self.baudrate, timeout=0.02)
+            self.serial.reset_input_buffer()
+            self.send_start_command()
+            self.get_logger().info(
+                f"lidar started port={self.port} baudrate={self.baudrate} "
+                f"format={self.packet_format} topic=/{self.topic}"
+            )
+            return True
+        except serial.SerialException as exc:
+            self.serial = None
+            self.reconnect_after = time.monotonic() + 1.0
+            self.get_logger().warning(f"lidar serial open failed: {exc}")
+            return False
 
     def destroy_node(self):
         try:
             if hasattr(self, "serial") and self.serial and self.serial.is_open:
-                self.serial.write(STOP_SCAN)
+                if self.send_stop_on_shutdown:
+                    self.serial.write(STOP_SCAN)
                 self.serial.close()
         finally:
             super().destroy_node()
 
+    def send_start_command(self):
+        self.serial.write(START_SCAN)
+        self.last_start_command_time = time.monotonic()
+
     def read_serial(self):
-        waiting = getattr(self.serial, "in_waiting", 0)
-        data = self.serial.read(max(1, min(waiting or 1, 4096)))
-        for packet in self.decoder.feed(data):
+        if self.serial is None or not self.serial.is_open:
+            if time.monotonic() >= self.reconnect_after:
+                self.open_serial()
+            return
+
+        try:
+            waiting = getattr(self.serial, "in_waiting", 0)
+            data = self.serial.read(max(1, min(waiting or 1, 4096)))
+        except serial.SerialException as exc:
+            self.get_logger().warning(f"lidar serial read failed; reconnecting: {exc}")
+            try:
+                if self.serial and self.serial.is_open:
+                    self.serial.close()
+            finally:
+                self.serial = None
+                self.reconnect_after = time.monotonic() + 1.0
+            return
+
+        packets = self.decoder.feed(data)
+        now = time.monotonic()
+        if not packets and now - self.last_packet_time > 1.0:
+            if now - self.last_start_command_time > 1.0:
+                self.send_start_command()
+        for packet in packets:
+            self.last_packet_time = now
             self.handle_packet(packet)
 
     def handle_packet(self, packet):
@@ -172,7 +222,10 @@ class SerialLidarNode(Node):
             return
 
         if packet["is_start"] and self.current_points:
-            self.publish_scan()
+            now = time.monotonic()
+            if now - self.last_publish_time >= self.min_publish_period:
+                self.publish_scan()
+                self.last_publish_time = now
             self.current_points = []
             self.scan_start_time = self.get_clock().now()
 

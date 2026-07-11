@@ -61,10 +61,8 @@ class WheelOdomNode(Node):
 
         self.odom_pub = self.create_publisher(Odometry, "odom", 20)
         self.tf_broadcaster = TransformBroadcaster(self)
-        self.serial = serial.Serial(self.port, self.baudrate, timeout=0.02)
-        self.serial.reset_input_buffer()
-        if self.start_telemetry:
-            self.serial.write(b"TELE 1\n")
+        self.serial = None
+        self.reconnect_after = 0.0
 
         self.buffer = bytearray()
         self.last_left = None
@@ -73,15 +71,32 @@ class WheelOdomNode(Node):
         self.x = 0.0
         self.y = 0.0
         self.yaw = 0.0
+        self.current_linear_velocity = 0.0
+        self.current_angular_velocity = 0.0
         self.frame_count = 0
         self.last_log = time.monotonic()
 
-        self.get_logger().info(
-            f"wheel odom started port={self.port} baudrate={self.baudrate} "
-            f"meters_per_count={self.meters_per_count:.7f} "
-            f"wheel_base={self.wheel_base_m:.3f}m"
-        )
+        self.open_serial()
         self.timer = self.create_timer(0.01, self.read_serial)
+        self.odom_timer = self.create_timer(0.05, self.publish_current_odom)
+
+    def open_serial(self):
+        try:
+            self.serial = serial.Serial(self.port, self.baudrate, timeout=0.02)
+            self.serial.reset_input_buffer()
+            if self.start_telemetry:
+                self.serial.write(b"TELE 1\n")
+            self.get_logger().info(
+                f"wheel odom started port={self.port} baudrate={self.baudrate} "
+                f"meters_per_count={self.meters_per_count:.7f} "
+                f"wheel_base={self.wheel_base_m:.3f}m"
+            )
+            return True
+        except serial.SerialException as exc:
+            self.serial = None
+            self.reconnect_after = time.monotonic() + 1.0
+            self.get_logger().warning(f"wheel odom serial open failed: {exc}")
+            return False
 
     def destroy_node(self):
         try:
@@ -91,8 +106,24 @@ class WheelOdomNode(Node):
             super().destroy_node()
 
     def read_serial(self):
-        waiting = getattr(self.serial, "in_waiting", 0)
-        data = self.serial.read(max(1, min(waiting or 1, 512)))
+        if self.serial is None or not self.serial.is_open:
+            if time.monotonic() >= self.reconnect_after:
+                self.open_serial()
+            return
+
+        try:
+            waiting = getattr(self.serial, "in_waiting", 0)
+            data = self.serial.read(max(1, min(waiting or 1, 512)))
+        except serial.SerialException as exc:
+            self.get_logger().warning(f"wheel odom serial read failed; reconnecting: {exc}")
+            try:
+                if self.serial and self.serial.is_open:
+                    self.serial.close()
+            finally:
+                self.serial = None
+                self.reconnect_after = time.monotonic() + 1.0
+            return
+
         if not data:
             return
 
@@ -123,6 +154,8 @@ class WheelOdomNode(Node):
             self.last_left = left
             self.last_right = right
             self.last_stamp = stamp
+            self.current_linear_velocity = 0.0
+            self.current_angular_velocity = 0.0
             self.publish_odom(stamp, 0.0, 0.0)
             return
 
@@ -139,6 +172,8 @@ class WheelOdomNode(Node):
         dt = (stamp - self.last_stamp).nanoseconds / 1e9
         linear_velocity = delta_center / dt if dt > 0.0 else 0.0
         angular_velocity = delta_yaw / dt if dt > 0.0 else 0.0
+        self.current_linear_velocity = linear_velocity
+        self.current_angular_velocity = angular_velocity
 
         self.last_left = left
         self.last_right = right
@@ -153,6 +188,14 @@ class WheelOdomNode(Node):
                 f"y={self.y:.3f} yaw={math.degrees(self.yaw):.1f}"
             )
             self.last_log = now
+
+    def publish_current_odom(self):
+        stamp = self.get_clock().now()
+        self.publish_odom(
+            stamp,
+            self.current_linear_velocity,
+            self.current_angular_velocity,
+        )
 
     def publish_odom(self, stamp, linear_velocity, angular_velocity):
         quat = yaw_to_quaternion(self.yaw)

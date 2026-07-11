@@ -8,6 +8,8 @@ Visualization Manager:
       Enabled: true
       Name: Grid
     - Class: rviz_default_plugins/Map
+      Alpha: 0.9
+      Draw Behind: false
       Enabled: true
       Name: Map
       Topic:
@@ -17,13 +19,14 @@ Visualization Manager:
       Name: LaserScan
       Topic:
         Value: /scan
-      Size (m): 0.03
+      Size (m): 0.06
     - Class: rviz_default_plugins/TF
-      Enabled: true
+      Enabled: false
       Name: TF
   Enabled: true
   Global Options:
-    Fixed Frame: laser
+    Frame Rate: 15
+    Fixed Frame: map
   Name: root
   Tools:
     - Class: rviz_default_plugins/Interact

@@ -65,6 +65,7 @@ def maybe_start_slam(context, *args, **kwargs):
             parameters=[
                 {
                     "autostart": True,
+                    "bond_timeout": 0.0,
                     "node_names": ["slam_toolbox"],
                 }
             ],
