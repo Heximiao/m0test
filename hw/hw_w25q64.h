@@ -11,8 +11,13 @@
 
 void w25q64_init(void);
 uint32_t w25q64_read_jedec_id(void);
+uint32_t w25q64_read_jedec_id_falling_sample(void);
 uint32_t w25q64_read_jedec_id_atomic(void);
 uint32_t w25q64_read_gpio_levels(void);
+void w25q64_force_cs_level(bool high);
+void w25q64_force_clk_level(bool high);
+void w25q64_force_mosi_level(bool high);
+bool w25q64_read_miso_level(void);
 void w25q64_probe_jedec_ids(uint32_t *normalId, uint32_t *swappedId);
 bool w25q64_is_valid_jedec_id(uint32_t id);
 bool w25q64_erase_sector(uint32_t address);

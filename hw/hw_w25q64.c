@@ -28,9 +28,12 @@
     DL_GPIO_setPins(GPIO_W25Q64_PORT, GPIO_W25Q64_W25_MOSI_PIN)
 
 static uint8_t w25q64_transfer(uint8_t value);
+static void w25q64_send_byte(uint8_t value);
+static uint8_t w25q64_receive_byte_falling_sample(void);
 static uint8_t w25q64_transfer_pins(uint8_t value, uint32_t mosiPin,
     uint32_t misoPin);
 static void w25q64_configure_pins(void);
+static void w25q64_configure_pins_keep_levels(void);
 static void w25q64_configure_probe_pins(bool swapped);
 static uint32_t w25q64_read_jedec_id_probe(bool swapped);
 static void w25q64_command(uint8_t command);
@@ -68,6 +71,19 @@ static void w25q64_configure_pins(void)
     W25Q64_MOSI_LOW();
 }
 
+static void w25q64_configure_pins_keep_levels(void)
+{
+    DL_GPIO_initDigitalOutput(GPIO_W25Q64_W25_CS_IOMUX);
+    DL_GPIO_initDigitalOutput(GPIO_W25Q64_W25_SCLK_IOMUX);
+    DL_GPIO_initDigitalOutput(GPIO_W25Q64_W25_MOSI_IOMUX);
+    DL_GPIO_initDigitalInputFeatures(GPIO_W25Q64_W25_MISO_IOMUX,
+        DL_GPIO_INVERSION_DISABLE, DL_GPIO_RESISTOR_PULL_UP,
+        DL_GPIO_HYSTERESIS_ENABLE, DL_GPIO_WAKEUP_DISABLE);
+    DL_GPIO_enableOutput(GPIO_W25Q64_PORT,
+        GPIO_W25Q64_W25_CS_PIN | GPIO_W25Q64_W25_SCLK_PIN |
+        GPIO_W25Q64_W25_MOSI_PIN);
+}
+
 uint32_t w25q64_read_jedec_id(void)
 {
     uint32_t id;
@@ -78,6 +94,21 @@ uint32_t w25q64_read_jedec_id(void)
     id = ((uint32_t) w25q64_transfer(0xFFU)) << 16;
     id |= ((uint32_t) w25q64_transfer(0xFFU)) << 8;
     id |= (uint32_t) w25q64_transfer(0xFFU);
+    W25Q64_CS_HIGH();
+
+    return id;
+}
+
+uint32_t w25q64_read_jedec_id_falling_sample(void)
+{
+    uint32_t id;
+
+    w25q64_configure_pins();
+    W25Q64_CS_LOW();
+    w25q64_send_byte(W25Q64_CMD_JEDEC_ID);
+    id = ((uint32_t) w25q64_receive_byte_falling_sample()) << 16;
+    id |= ((uint32_t) w25q64_receive_byte_falling_sample()) << 8;
+    id |= (uint32_t) w25q64_receive_byte_falling_sample();
     W25Q64_CS_HIGH();
 
     return id;
@@ -124,6 +155,43 @@ uint32_t w25q64_read_gpio_levels(void)
     }
 
     return levels;
+}
+
+void w25q64_force_cs_level(bool high)
+{
+    w25q64_configure_pins_keep_levels();
+    if (high) {
+        W25Q64_CS_HIGH();
+    } else {
+        W25Q64_CS_LOW();
+    }
+}
+
+void w25q64_force_clk_level(bool high)
+{
+    w25q64_configure_pins_keep_levels();
+    if (high) {
+        W25Q64_CLK_HIGH();
+    } else {
+        W25Q64_CLK_LOW();
+    }
+}
+
+void w25q64_force_mosi_level(bool high)
+{
+    w25q64_configure_pins_keep_levels();
+    if (high) {
+        W25Q64_MOSI_HIGH();
+    } else {
+        W25Q64_MOSI_LOW();
+    }
+}
+
+bool w25q64_read_miso_level(void)
+{
+    w25q64_configure_pins_keep_levels();
+    return (DL_GPIO_readPins(GPIO_W25Q64_PORT, GPIO_W25Q64_W25_MISO_PIN) &
+        GPIO_W25Q64_W25_MISO_PIN) != 0U;
 }
 
 void w25q64_probe_jedec_ids(uint32_t *normalId, uint32_t *swappedId)
@@ -232,6 +300,38 @@ static uint8_t w25q64_transfer(uint8_t value)
 {
     return w25q64_transfer_pins(value, GPIO_W25Q64_W25_MOSI_PIN,
         GPIO_W25Q64_W25_MISO_PIN);
+}
+
+static void w25q64_send_byte(uint8_t value)
+{
+    for (uint8_t mask = 0x80U; mask != 0U; mask >>= 1U) {
+        W25Q64_CLK_LOW();
+        delay_cycles(4U);
+        if ((value & mask) != 0U) {
+            W25Q64_MOSI_HIGH();
+        } else {
+            W25Q64_MOSI_LOW();
+        }
+        W25Q64_CLK_HIGH();
+        delay_cycles(4U);
+    }
+}
+
+static uint8_t w25q64_receive_byte_falling_sample(void)
+{
+    uint8_t received = 0U;
+
+    for (uint8_t mask = 0x80U; mask != 0U; mask >>= 1U) {
+        W25Q64_CLK_HIGH();
+        delay_cycles(4U);
+        W25Q64_CLK_LOW();
+        if ((DL_GPIO_readPins(GPIO_W25Q64_PORT, GPIO_W25Q64_W25_MISO_PIN) &
+            GPIO_W25Q64_W25_MISO_PIN) != 0U) {
+            received |= mask;
+        }
+    }
+
+    return received;
 }
 
 static uint8_t w25q64_transfer_pins(uint8_t value, uint32_t mosiPin,

@@ -88,9 +88,14 @@ static void send_page_ack(void);
 static void finish_image_write(void);
 static uint32_t crc32_update(uint32_t crc, uint8_t byte);
 static void send_flash_id(void);
+static void send_flash_id_falling_sample(void);
 static void send_flash_id_safe(void);
 static void send_flash_debug(void);
 static void send_flash_probe(void);
+static void force_flash_cs(bool high);
+static void force_flash_clk(bool high);
+static void force_flash_mosi(bool high);
+static void send_flash_miso(void);
 static bool check_flash_ready(void);
 static void show_image_id(uint8_t id);
 static void show_legacy_slot(uint8_t slot);
@@ -141,6 +146,11 @@ bool app_image_store_process_command(const char *command)
         return true;
     }
 
+    if (strcmp(command, "FLASHID_FALL") == 0) {
+        send_flash_id_falling_sample();
+        return true;
+    }
+
     if (strcmp(command, "FLASHID_SAFE") == 0) {
         send_flash_id_safe();
         return true;
@@ -153,6 +163,41 @@ bool app_image_store_process_command(const char *command)
 
     if (strcmp(command, "FLASHPROBE") == 0) {
         send_flash_probe();
+        return true;
+    }
+
+    if (strcmp(command, "FLASH_CS_LOW") == 0) {
+        force_flash_cs(false);
+        return true;
+    }
+
+    if (strcmp(command, "FLASH_CS_HIGH") == 0) {
+        force_flash_cs(true);
+        return true;
+    }
+
+    if (strcmp(command, "FLASH_CLK_LOW") == 0) {
+        force_flash_clk(false);
+        return true;
+    }
+
+    if (strcmp(command, "FLASH_CLK_HIGH") == 0) {
+        force_flash_clk(true);
+        return true;
+    }
+
+    if (strcmp(command, "FLASH_MOSI_LOW") == 0) {
+        force_flash_mosi(false);
+        return true;
+    }
+
+    if (strcmp(command, "FLASH_MOSI_HIGH") == 0) {
+        force_flash_mosi(true);
+        return true;
+    }
+
+    if (strcmp(command, "FLASH_MISO_READ") == 0) {
+        send_flash_miso();
         return true;
     }
 
@@ -490,6 +535,16 @@ static void send_flash_id(void)
     uart_debug_write_string(message);
 }
 
+static void send_flash_id_falling_sample(void)
+{
+    char message[56];
+    uint32_t id = w25q64_read_jedec_id_falling_sample();
+
+    snprintf(message, sizeof(message), "FLASH_FALL ID=%06lX\r\n",
+        (unsigned long) id);
+    uart_debug_write_string(message);
+}
+
 static void send_flash_id_safe(void)
 {
     char message[56];
@@ -527,6 +582,35 @@ static void send_flash_probe(void)
     snprintf(message, sizeof(message),
         "FLASHPROBE NORMAL=%06lX SWAP=%06lX\r\n",
         (unsigned long) normalId, (unsigned long) swappedId);
+    uart_debug_write_string(message);
+}
+
+static void force_flash_cs(bool high)
+{
+    w25q64_force_cs_level(high);
+    uart_debug_write_string(high ? "FLASH_CS HIGH\r\n" : "FLASH_CS LOW\r\n");
+}
+
+static void force_flash_clk(bool high)
+{
+    w25q64_force_clk_level(high);
+    uart_debug_write_string(high ? "FLASH_CLK HIGH\r\n" : "FLASH_CLK LOW\r\n");
+}
+
+static void force_flash_mosi(bool high)
+{
+    w25q64_force_mosi_level(high);
+    uart_debug_write_string(
+        high ? "FLASH_MOSI HIGH\r\n" : "FLASH_MOSI LOW\r\n");
+}
+
+static void send_flash_miso(void)
+{
+    char message[32];
+    bool high = w25q64_read_miso_level();
+
+    snprintf(message, sizeof(message), "FLASH_MISO LEVEL=%u\r\n",
+        high ? 1U : 0U);
     uart_debug_write_string(message);
 }
 
