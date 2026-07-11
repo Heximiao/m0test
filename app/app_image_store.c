@@ -88,6 +88,9 @@ static void send_page_ack(void);
 static void finish_image_write(void);
 static uint32_t crc32_update(uint32_t crc, uint8_t byte);
 static void send_flash_id(void);
+static void send_flash_id_safe(void);
+static void send_flash_debug(void);
+static void send_flash_probe(void);
 static bool check_flash_ready(void);
 static void show_image_id(uint8_t id);
 static void show_legacy_slot(uint8_t slot);
@@ -135,6 +138,21 @@ bool app_image_store_process_command(const char *command)
 
     if (strcmp(command, "FLASHID") == 0) {
         send_flash_id();
+        return true;
+    }
+
+    if (strcmp(command, "FLASHID_SAFE") == 0) {
+        send_flash_id_safe();
+        return true;
+    }
+
+    if (strcmp(command, "FLASHDBG") == 0) {
+        send_flash_debug();
+        return true;
+    }
+
+    if (strcmp(command, "FLASHPROBE") == 0) {
+        send_flash_probe();
         return true;
     }
 
@@ -469,6 +487,46 @@ static void send_flash_id(void)
     uint32_t id = w25q64_read_jedec_id();
     snprintf(message, sizeof(message), "FLASH ID=%06lX\r\n",
         (unsigned long) id);
+    uart_debug_write_string(message);
+}
+
+static void send_flash_id_safe(void)
+{
+    char message[56];
+    uint32_t id = w25q64_read_jedec_id_atomic();
+
+    snprintf(message, sizeof(message), "FLASH_SAFE ID=%06lX\r\n",
+        (unsigned long) id);
+    uart_debug_write_string(message);
+}
+
+static void send_flash_debug(void)
+{
+    char message[96];
+    uint32_t id = w25q64_read_jedec_id();
+    uint32_t levels = w25q64_read_gpio_levels();
+
+    snprintf(message, sizeof(message),
+        "FLASHDBG ID=%06lX CS=%lu CLK=%lu MOSI=%lu MISO=%lu OE=%03lX\r\n",
+        (unsigned long) id,
+        (unsigned long) ((levels >> 3) & 1UL),
+        (unsigned long) ((levels >> 2) & 1UL),
+        (unsigned long) ((levels >> 1) & 1UL),
+        (unsigned long) (levels & 1UL),
+        (unsigned long) ((levels >> 5) & 0x7UL));
+    uart_debug_write_string(message);
+}
+
+static void send_flash_probe(void)
+{
+    char message[80];
+    uint32_t normalId;
+    uint32_t swappedId;
+
+    w25q64_probe_jedec_ids(&normalId, &swappedId);
+    snprintf(message, sizeof(message),
+        "FLASHPROBE NORMAL=%06lX SWAP=%06lX\r\n",
+        (unsigned long) normalId, (unsigned long) swappedId);
     uart_debug_write_string(message);
 }
 

@@ -271,9 +271,9 @@ static void draw_page_row(MenuPage page, uint8_t row)
 
         if (count == 0U) {
             if (row == 0U) {
-                draw_line(row, "No images", false);
+                draw_line(row, "No image files", false);
             } else if (row == 1U) {
-                draw_line(row, "Send with upper_pc", false);
+                draw_line(row, "Use PC Upload", false);
             } else {
                 draw_line(row, "", false);
             }
