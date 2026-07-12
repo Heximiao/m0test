@@ -80,7 +80,7 @@ def generate_launch_description():
                 executable="rviz2",
                 name="rviz2",
                 output="screen",
-                arguments=["-d", os.path.join(get_package_share_directory("nav2_bringup"), "rviz", "nav2_default_view.rviz")],
+                arguments=["-d", os.path.join(package_share, "rviz", "nav2_low_load.rviz")],
                 condition=IfCondition(use_rviz),
             ),
         ]

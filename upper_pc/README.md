@@ -38,6 +38,8 @@ feedback lines should converge toward the target line.
 
 ## Commands sent to MCU
 
+连接 `serial_tuner.py` 后可使用方向键驾驶：上/下前进后退，左/右原地转向；松开全部方向键立即发送 `STOP`，组合按键支持斜向运动。
+
 The UI sends newline-terminated ASCII commands:
 
 ```text

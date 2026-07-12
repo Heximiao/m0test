@@ -91,7 +91,7 @@ class WheelOdomNode(Node):
 
     def open_serial(self):
         try:
-            self.serial = serial.Serial(self.port, self.baudrate, timeout=0.02)
+            self.serial = serial.Serial(self.port, self.baudrate, timeout=0.02, write_timeout=0.2)
             self.serial.reset_input_buffer()
             if self.start_telemetry:
                 self.serial.write(b"TELE 1\n")

@@ -116,6 +116,8 @@ class SerialTunerApp:
         self.mounted_attitude_var = tk.StringVar(value="Body: P 0.0  R 0.0  Y 0.0")
         self.zeroed_attitude_var = tk.StringVar(value="Zeroed: P 0.0  R 0.0  Y 0.0")
         self.nav_buttons = {}
+        self.drive_keys = set()
+        self.drive_job = None
         self.monitor_cube_canvas = None
         self.cal_cube_canvas = None
 
@@ -125,6 +127,9 @@ class SerialTunerApp:
         self.refresh_ports()
         self.root.after(100, self._draw_cube)
         self.root.after(50, self._poll_rx_queue)
+        self.root.bind_all("<KeyPress>", self._on_drive_key_press, add="+")
+        self.root.bind_all("<KeyRelease>", self._on_drive_key_release, add="+")
+        self.root.bind_all("<FocusOut>", self._on_drive_focus_out, add="+")
 
     def _build_ui(self):
         top = ttk.Frame(self.root, padding=8)
@@ -298,6 +303,51 @@ class SerialTunerApp:
         )
         ttk.Button(cmd_frame, text="发送", command=self.send_manual).pack(side=tk.LEFT, padx=(8, 0))
 
+        drive_frame = ttk.LabelFrame(parent, text="键盘驾驶（方向键）", padding=8)
+        drive_frame.pack(fill=tk.X, padx=8, pady=(0, 8))
+        ttk.Label(drive_frame, text="↑ 前进  ↓ 后退  ← 左转  → 右转；松开按键立即停车（需先连接串口）").pack(anchor=tk.W)
+
+    def _on_drive_key_press(self, event):
+        key = event.keysym.lower()
+        if key not in ("up", "down", "left", "right"):
+            return
+        self.drive_keys.add(key)
+        self._send_drive_command()
+        return "break"
+
+    def _on_drive_key_release(self, event):
+        key = event.keysym.lower()
+        if key not in ("up", "down", "left", "right"):
+            return
+        self.drive_keys.discard(key)
+        self._send_drive_command() if self.drive_keys else self._stop_keyboard_drive()
+        return "break"
+
+    def _on_drive_focus_out(self, _event):
+        self.drive_keys.clear()
+        self._stop_keyboard_drive()
+
+    def _send_drive_command(self):
+        if not self.serial_port or not self.serial_port.is_open:
+            return
+        linear = (60.0 if "up" in self.drive_keys else 0.0) - (60.0 if "down" in self.drive_keys else 0.0)
+        angular = (90.0 if "left" in self.drive_keys else 0.0) - (90.0 if "right" in self.drive_keys else 0.0)
+        self.send_line(f"DRIVE {linear:g} {angular:g}")
+        if self.drive_job is None:
+            self.drive_job = self.root.after(80, self._drive_keepalive)
+
+    def _drive_keepalive(self):
+        self.drive_job = None
+        if self.drive_keys:
+            self._send_drive_command()
+
+    def _stop_keyboard_drive(self):
+        if self.drive_job is not None:
+            self.root.after_cancel(self.drive_job)
+            self.drive_job = None
+        if self.serial_port and self.serial_port.is_open:
+            self.send_line("STOP")
+
     def _build_accel_page(self, parent):
         header = ttk.Frame(parent, padding=(18, 16, 18, 8))
         header.pack(fill=tk.X)
@@ -401,6 +451,8 @@ class SerialTunerApp:
         self.status_var.set(f"已连接 {port}")
 
     def disconnect(self):
+        self.drive_keys.clear()
+        self._stop_keyboard_drive()
         self.stop_event.set()
         if self.serial_port:
             try:
