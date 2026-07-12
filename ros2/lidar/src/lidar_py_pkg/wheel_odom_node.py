@@ -27,7 +27,7 @@ def yaw_to_quaternion(yaw):
 class WheelOdomNode(Node):
     def __init__(self):
         super().__init__("wheel_odom_node")
-        self.declare_parameter("port", "/dev/ttyAMA0")
+        self.declare_parameter("port", "/dev/ttyAMA10")
         self.declare_parameter("baudrate", 115200)
         self.declare_parameter("odom_frame", "odom")
         self.declare_parameter("base_frame", "base_link")

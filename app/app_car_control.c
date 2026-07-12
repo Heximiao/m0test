@@ -14,6 +14,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#define NAV_COMMAND_TIMEOUT_MS (400U)
+
 #define TELEMETRY_BUFFER_SIZE (256U) /* 串口遥测发送缓冲区字节数 */
 #define FIRMWARE_VERSION "diag-20260630-refactor" /* 上电时打印的固件版本 */
 
@@ -79,6 +81,8 @@ static bool gLTurnYawValid;
 static int32_t gLTurnStartLeftCount;
 static int32_t gLTurnStartRightCount;
 static uint32_t gLineFollowResumeMs;
+static uint32_t gNavCommandDeadlineMs;
+static bool gNavCommandActive;
 
 static void set_motor_duty(float leftDutyPercent, float rightDutyPercent);
 static bool parse_lturn_command(const char *command);
@@ -127,6 +131,14 @@ void app_car_control_update(uint32_t nowMs)
     int32_t rightDelta = counts.right_count - gPreviousRightCount;
 
     gLastUpdateMs = nowMs;
+    if (gNavCommandActive &&
+        ((int32_t) (nowMs - gNavCommandDeadlineMs) >= 0)) {
+        motion_control_init();
+        gNavCommandActive = false;
+        pid_reset(&gLeftSpeedPid);
+        pid_reset(&gRightSpeedPid);
+        set_motor_duty(0.0f, 0.0f);
+    }
     gPreviousLeftCount = counts.left_count;
     gPreviousRightCount = counts.right_count;
 
@@ -233,11 +245,40 @@ void app_car_control_process_command(char *command)
 {
     command = normalize_command(command);
 
-    if (parse_lturn_command(command)) {
+    if (strncmp(command, "NAV ", 4U) == 0) {
+        float linearMmS;
+        float angularDegS;
+        if (sscanf(command + 4, "%f %f", &linearMmS, &angularDegS) != 2) {
+            uart_debug_write_string("ERR NAV\r\n");
+            return;
+        }
+        gManualMotorMode = false;
+        gLTurnActive = false;
+        gTargetSpeedCounts = 0.0f;
+        gSpeedTargetCounts = 0.0f;
+        motion_control_set_velocity(linearMmS, angularDegS);
+        gNavCommandDeadlineMs = gLastUpdateMs + NAV_COMMAND_TIMEOUT_MS;
+        gNavCommandActive = true;
+    } else if (strncmp(command, "WHEELS ", 7U) == 0) {
+        float leftCounts;
+        float rightCounts;
+        if (sscanf(command + 7, "%f %f", &leftCounts, &rightCounts) != 2) {
+            uart_debug_write_string("ERR WHEELS\r\n");
+            return;
+        }
+        gManualMotorMode = false;
+        gLTurnActive = false;
+        gTargetSpeedCounts = 0.0f;
+        gSpeedTargetCounts = 0.0f;
+        motion_control_set_wheel_targets(leftCounts, rightCounts);
+        gNavCommandDeadlineMs = gLastUpdateMs + NAV_COMMAND_TIMEOUT_MS;
+        gNavCommandActive = true;
+    } else if (parse_lturn_command(command)) {
         return;
     } else if (line_follow_parse_command(command, gLastUpdateMs)) {
         return;
     } else if (motion_control_parse_command(command, encoder_get_counts())) {
+        gNavCommandActive = false;
         gTargetSpeedCounts = 0.0f;
         gSpeedTargetCounts = 0.0f;
         uart_debug_write_string("OK MOTION\r\n");
@@ -350,6 +391,7 @@ void app_car_control_process_command(char *command)
         uart_debug_write_string(gTelemetryEnabled ? "OK TELE 1\r\n" :
                                                     "OK TELE 0\r\n");
     } else if (strcmp(command, "STOP") == 0) {
+        gNavCommandActive = false;
         gManualMotorMode = false;
         gLTurnActive = false;
         motion_control_init();

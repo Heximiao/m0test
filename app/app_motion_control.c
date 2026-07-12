@@ -25,6 +25,7 @@ typedef enum {
     MOTION_MODE_DRIVE = 1,
     MOTION_MODE_DISTANCE = 2,
     MOTION_MODE_TURN = 3,
+    MOTION_MODE_WHEELS = 4,
 } MotionMode;
 
 static MotionMode gMode;
@@ -37,6 +38,8 @@ static bool gTurnYawValid;
 static int32_t gStartLeftCount;
 static int32_t gStartRightCount;
 static bool gBusy;
+static float gLeftTargetCounts;
+static float gRightTargetCounts;
 
 static int32_t abs_i32_local(int32_t value);
 static float counts_per_mm(void);
@@ -54,6 +57,26 @@ static float wrap_angle(float value);
 void motion_control_init(void)
 {
     stop_motion();
+}
+
+void motion_control_set_velocity(float linearMmS, float angularDegS)
+{
+    start_drive(linearMmS, angularDegS);
+}
+
+void motion_control_set_wheel_targets(float leftCountsPerPeriod,
+    float rightCountsPerPeriod)
+{
+    float maxCounts = mm_s_to_counts_per_period(MAX_LINEAR_SPEED_MM_S);
+
+    gMode = MOTION_MODE_WHEELS;
+    gLinearSpeedMmS = 0.0f;
+    gAngularSpeedDegS = 0.0f;
+    gLeftTargetCounts = app_clamp_float(leftCountsPerPeriod, -maxCounts,
+        maxCounts);
+    gRightTargetCounts = app_clamp_float(rightCountsPerPeriod, -maxCounts,
+        maxCounts);
+    gBusy = false;
 }
 
 bool motion_control_parse_command(const char *command, EncoderCounts counts)
@@ -104,6 +127,12 @@ void motion_control_update(EncoderCounts counts, float *leftTargetCounts,
     float *rightTargetCounts)
 {
     if (gMode == MOTION_MODE_IDLE) {
+        return;
+    }
+
+    if (gMode == MOTION_MODE_WHEELS) {
+        *leftTargetCounts = gLeftTargetCounts;
+        *rightTargetCounts = gRightTargetCounts;
         return;
     }
 
@@ -174,6 +203,16 @@ int32_t motion_control_get_target_deg_s(void)
     return (int32_t) gAngularSpeedDegS;
 }
 
+float motion_control_get_left_target_counts(void)
+{
+    return gLeftTargetCounts;
+}
+
+float motion_control_get_right_target_counts(void)
+{
+    return gRightTargetCounts;
+}
+
 static void start_drive(float linearMmS, float angularDegS)
 {
     gMode = MOTION_MODE_DRIVE;
@@ -231,6 +270,8 @@ static void stop_motion(void)
     gAngularSpeedDegS = 0.0f;
     gTargetCounts = 0.0f;
     gTargetAngleDeg = 0.0f;
+    gLeftTargetCounts = 0.0f;
+    gRightTargetCounts = 0.0f;
     gStartYawDeg = 0.0f;
     gTurnYawValid = false;
     gStartLeftCount = 0;

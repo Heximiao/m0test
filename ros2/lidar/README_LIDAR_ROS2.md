@@ -6,6 +6,18 @@
 
 ## 启动建图
 
+建图启动同时启动底盘驱动节点 `base_driver_node`。该节点从 `/dev/ttyAMA0` 读取
+`ODO`，发布 `/odom` 和 `odom -> base_link`，并把 Nav2 的 `/cmd_vel` 转换为
+MCU 的 `NAV <linear_mm_s> <angular_deg_s>` 命令。MCU 在约 400 ms 未收到新导航命令时自动停车。
+
+底盘协议也支持直接设置左右轮目标速度：
+
+```text
+NAV 50 0       # 线速度 50 mm/s，角速度 0 deg/s
+WHEELS 10 10   # 左右轮目标，单位 counts/20ms
+STOP           # 立即停止
+```
+
 在树莓派上运行：
 
 ```bash
@@ -61,6 +73,127 @@ ros2 run nav2_map_server map_saver_cli -f ~/hexi/ros2/slam/lidar/my_map
 my_map.yaml
 my_map.pgm
 ```
+
+当前已经保存并用于导航的地图是：
+
+```text
+/home/heximiao/hexi/ros2/slam/maps/my_first_map.yaml
+/home/heximiao/hexi/ros2/slam/maps/my_first_map.pgm
+```
+
+地图 YAML 中的 `image` 可以使用相对路径，因此 YAML 和 PGM 应放在同一目录，移动或复制时要一起操作。
+
+## 使用已有地图导航
+
+建图和导航是两个独立模式，不要同时运行：
+
+- 建图模式运行 `mapping.launch.py`，由 `slam_toolbox` 实时生成 `/map`。
+- 导航模式运行 `navigation.launch.py`，由 `map_server` 加载已经保存的地图，并由 AMCL 定位。
+
+完成建图和保存地图后，先在建图终端按 `Ctrl-C`，确认 `slam_toolbox` 已退出，再启动导航：
+
+```bash
+cd /home/heximiao/hexi/ros2/slam/lidar
+source /opt/ros/jazzy/setup.bash
+source install/setup.bash
+ros2 launch lidar_py_pkg navigation.launch.py
+```
+
+默认加载：
+
+```text
+/home/heximiao/hexi/ros2/slam/maps/my_first_map.yaml
+```
+
+加载其他地图时通过 `map` 参数指定 YAML 的绝对路径：
+
+```bash
+ros2 launch lidar_py_pkg navigation.launch.py \
+  map:=/home/heximiao/hexi/ros2/slam/maps/another_map.yaml
+```
+
+导航 launch 会同时启动：
+
+- 激光雷达节点，发布 `/scan`
+- 底盘驱动节点，发布 `/odom` 和 `odom -> base_link`，订阅 `/cmd_vel`
+- 静态 TF：`base_link -> laser`，雷达位于驱动轮轴线前方 `0.025 m`
+- `map_server`，加载 PGM/YAML 地图
+- AMCL，发布 `map -> odom`
+- Nav2 全局规划器、DWB 局部控制器、行为树和恢复行为
+- RViz
+
+### 在 RViz 中开始导航
+
+启动后按下面顺序操作：
+
+1. 等待地图、雷达点和机器人轮廓显示出来。
+2. 点击顶部的 `2D Pose Estimate`。
+3. 在地图中小车当前所在位置按住鼠标，向车头方向拖动后松开。
+4. 等待雷达轮廓与地图障碍大致重合。
+5. 点击顶部的 `Nav2 Goal`。
+6. 在地图可通行区域按住鼠标，拖出目标朝向后松开。
+
+初始位置未设置前出现以下日志是正常的：
+
+```text
+AMCL cannot publish a pose or update the transform.
+Please set the initial pose...
+```
+
+设置初始位置后，正常情况下会看到：
+
+```text
+Managed nodes are active
+```
+
+此时 TF 链路应为：
+
+```text
+map -> odom -> base_link -> laser
+```
+
+如果树莓派不需要打开 RViz，可以无界面启动：
+
+```bash
+ros2 launch lidar_py_pkg navigation.launch.py use_rviz:=false
+```
+
+### 导航参数与安全限制
+
+当前配置按实车尺寸使用：
+
+- 车体安全半径：`0.11 m`
+- 障碍膨胀半径：`0.20 m`
+- 最大线速度：`0.10 m/s`
+- 最大角速度：`1.2 rad/s`
+- 雷达相对驱动轮轴线：前方 `0.025 m`，位于中心线，零度朝车头
+- MCU 和树莓派驱动均带约 `0.4 s` 速度命令超时停车保护
+
+第一次落地导航应在空旷区域测试，目标先设置在车前方 `0.3～0.5 m`，并准备随时按
+`Ctrl-C` 或断开电机电源。
+
+### 导航状态检查
+
+保持 `navigation.launch.py` 运行，另开终端：
+
+```bash
+source /opt/ros/jazzy/setup.bash
+source /home/heximiao/hexi/ros2/slam/lidar/install/setup.bash
+
+ros2 topic echo --once /map
+ros2 topic hz /scan
+ros2 topic hz /odom
+ros2 topic info -v /cmd_vel
+ros2 run tf2_ros tf2_echo map base_link
+ros2 lifecycle get /map_server
+ros2 lifecycle get /amcl
+ros2 lifecycle get /controller_server
+ros2 lifecycle get /planner_server
+ros2 lifecycle get /bt_navigator
+```
+
+设置初始位置后，Nav2 生命周期节点应显示 `active [3]`。如果一直提示没有 `map` TF，说明还没有
+设置 `2D Pose Estimate`，或者 AMCL 没有收到 `/scan`。
 
 ## 只看雷达
 
