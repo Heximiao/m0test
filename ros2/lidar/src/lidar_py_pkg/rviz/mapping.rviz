@@ -15,17 +15,19 @@ Visualization Manager:
       Topic:
         Value: /map
     - Class: rviz_default_plugins/LaserScan
+      Decay Time: 0
       Enabled: true
       Name: LaserScan
+      Queue Size: 2
       Topic:
         Value: /scan
-      Size (m): 0.06
+      Size (m): 0.03
     - Class: rviz_default_plugins/TF
       Enabled: false
       Name: TF
   Enabled: true
   Global Options:
-    Frame Rate: 15
+    Frame Rate: 5
     Fixed Frame: map
   Name: root
   Tools:
