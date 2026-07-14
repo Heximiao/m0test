@@ -29,6 +29,37 @@ def angle_correct(distance_mm):
     return math.degrees(math.atan(value))
 
 
+def filter_isolated_points(points, level=4, min_distance_m=0.03):
+    if level <= 0 or len(points) < 3:
+        return list(points)
+
+    level = max(1, min(10, int(level)))
+    angle_window = max(0.6, 5.0 - level * 0.38)
+    distance_window_m = max(90.0, 760.0 - level * 62.0) / 1000.0
+    neighbor_radius = 1 + min(level // 2, 4)
+    min_neighbors = 1 if level <= 4 else 2 if level <= 8 else 3
+    candidates = [point for point in points if point[1] >= min_distance_m]
+    kept = []
+
+    for index, point in enumerate(candidates):
+        angle, distance = point
+        neighbors = 0
+        start = max(0, index - neighbor_radius)
+        stop = min(len(candidates), index + neighbor_radius + 1)
+        for other_index in range(start, stop):
+            if other_index == index:
+                continue
+            other_angle, other_distance = candidates[other_index]
+            angle_gap = abs((angle - other_angle + 180.0) % 360.0 - 180.0)
+            if angle_gap <= angle_window and abs(distance - other_distance) <= distance_window_m:
+                neighbors += 1
+                if neighbors >= min_neighbors:
+                    kept.append(point)
+                    break
+
+    return kept
+
+
 class LidarPacketDecoder:
     def __init__(self, packet_format=FORMAT_ROS2_3B):
         self.buffer = bytearray()
@@ -122,6 +153,8 @@ class SerialLidarNode(Node):
         self.declare_parameter("range_max", 8.0)
         self.declare_parameter("scan_size", 720)
         self.declare_parameter("min_publish_period", 0.08)
+        self.declare_parameter("filter_level", 4)
+        self.declare_parameter("filter_min_distance", 0.03)
         self.declare_parameter("send_stop_on_shutdown", False)
 
         self.port = self.get_parameter("port").value
@@ -134,6 +167,10 @@ class SerialLidarNode(Node):
         self.scan_size = int(self.get_parameter("scan_size").value)
         self.min_publish_period = float(
             self.get_parameter("min_publish_period").value
+        )
+        self.filter_level = int(self.get_parameter("filter_level").value)
+        self.filter_min_distance = float(
+            self.get_parameter("filter_min_distance").value
         )
         self.send_stop_on_shutdown = bool(
             self.get_parameter("send_stop_on_shutdown").value
@@ -148,6 +185,7 @@ class SerialLidarNode(Node):
         self.scan_start_time = self.get_clock().now()
         self.scan_count = 0
         self.point_count = 0
+        self.filtered_point_count = 0
         self.last_publish_time = 0.0
         self.last_packet_time = time.monotonic()
         self.last_start_command_time = 0.0
@@ -236,7 +274,8 @@ class SerialLidarNode(Node):
         if now - self.last_log >= 2.0:
             self.get_logger().info(
                 f"scans={self.scan_count} points={self.point_count} "
-                f"buffer={len(self.current_points)} bad_frames={self.decoder.bad_frames}"
+                f"filtered={self.filtered_point_count} buffer={len(self.current_points)} "
+                f"bad_frames={self.decoder.bad_frames}"
             )
             self.last_log = now
 
@@ -253,7 +292,14 @@ class SerialLidarNode(Node):
         scan.range_max = self.range_max
         scan.ranges = [math.inf] * self.scan_size
 
-        for angle_deg, distance_m in self.current_points:
+        filtered_points = filter_isolated_points(
+            self.current_points,
+            level=self.filter_level,
+            min_distance_m=self.filter_min_distance,
+        )
+        self.filtered_point_count += len(self.current_points) - len(filtered_points)
+
+        for angle_deg, distance_m in filtered_points:
             if distance_m < self.range_min or distance_m > self.range_max:
                 continue
             angle_rad = math.radians(angle_deg % 360.0)
