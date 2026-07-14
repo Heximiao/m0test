@@ -65,11 +65,10 @@ cd /home/heximiao/hexi/ros2/slam/lidar
 source /opt/ros/jazzy/setup.bash
 source install/setup.bash
 ros2 launch lidar_py_pkg navigation.launch.py \
-  map:=/home/heximiao/hexi/ros2/slam/maps/my_map1.yaml \
-  use_rviz:=true
+  map:=/home/heximiao/hexi/ros2/slam/maps/my_map1.yaml
 ```
 
-导航 launch 会启动雷达、底盘驱动、地图服务器、AMCL、Nav2 和 RViz。
+导航 launch 会启动雷达、底盘驱动、地图服务器、AMCL、Nav2 和 Foxglove Bridge。Foxglove Bridge 默认监听所有网卡的 TCP `8765` 端口，RViz 默认关闭。
 
 在 RViz 中按以下顺序操作：
 
@@ -94,13 +93,79 @@ ros2 launch lidar_py_pkg navigation.launch.py \
   use_rviz:=false
 ```
 
+如需恢复 RViz 并临时关闭 Foxglove Bridge：
+
+```bash
+ros2 launch lidar_py_pkg navigation.launch.py \
+  map:=/home/heximiao/hexi/ros2/slam/maps/my_map1.yaml \
+  use_rviz:=true \
+  use_foxglove:=false
+```
+
+## Foxglove 远程导航地图
+
+Windows 上的 Foxglove Studio 不需要 WSL，也不依赖 ROS 2 DDS 直接穿过热点。导航 launch 启动后，在 Foxglove 中添加 ROS 2 实时连接：
+
+树莓派需要安装 Jazzy 对应的 Bridge 包：
+
+```bash
+sudo apt install ros-jazzy-foxglove-bridge
+```
+
+本机已安装时无需重复执行。Foxglove Bridge 也可以单独启动：
+
+```bash
+source /opt/ros/jazzy/setup.bash
+ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
+```
+
+正常使用本工程时直接启动 `navigation.launch.py` 即可，不要再单独启动第二个 Bridge，否则会争用 `8765` 端口。
+
+在 Windows Foxglove 中输入：
+
+```text
+ws://192.168.137.53:8765
+```
+
+如果树莓派的 IP 地址改变，只需把地址中的 IP 替换为新 IP，例如：
+
+```text
+ws://192.168.137.88:8765
+```
+
+端口仍为 `8765`，除非同时修改了 `navigation.launch.py` 中 Foxglove Bridge 的 `port` 参数。可从 Windows 验证端口：
+
+```powershell
+Test-NetConnection 192.168.137.53 -Port 8765
+```
+
+在 Foxglove 的 3D 面板中：
+
+1. 将固定参考系设为 `map`。
+2. 显示 `/map`、`/scan`、`/tf`、`/odom`、`/plan` 和 `/local_plan`。
+3. 在“发布”中把 `2D 位姿估计` 的话题设为 `/initialpose`。
+4. 在小车实际位置按住鼠标，朝车头方向拖动后松开，发布初始位置和朝向。
+5. 初始位姿发布成功后，TF 链应变为 `map -> odom -> base_link -> laser`。
+
+`2D 位姿估计` 的 X/Y 偏差表示位置不确定度，方位角偏差表示朝向不确定度。默认的 `0.5`、`0.5`、`0.26179939`（约 15°）可以直接使用；人工定位较准确时可使用 `0.2`、`0.2`、`0.1`，不要全部设为零。
+
+Foxglove 的 `2D 位姿` 可以向 `/goal_pose` 发布 `geometry_msgs/msg/PoseStamped`，但当前 Nav2 导航入口是 `NavigateToPose` Action。未添加话题到 Action 的转发节点前，发布 `/goal_pose` 只会产生目标位姿消息，不保证车辆开始导航；此时使用 RViz 的 `Nav2 Goal`。
+
+如果 Foxglove 顶部连接变红，先确认导航 launch 仍在运行，再检查：
+
+```bash
+ss -lntp | grep 8765
+```
+
+Windows 热点重新连接或树莓派重启后，Foxglove 可能需要手动重新连接数据源。
+
 ## 远程桌面与低负载 RViz
 
 xrdp 通常使用软件渲染。Nav2 默认 RViz 配置可能占满一个以上 CPU 核心，导致远程桌面卡死。
 
 `navigation.launch.py` 已改为使用 `rviz/nav2_low_load.rviz`：
 
-- 帧率由 30 FPS 降为 10 FPS
+- 帧率由 30 FPS 降为 1 FPS
 - 关闭仅用于显示的 LaserScan 和 PointCloud2 图层
 - 保留地图、路径、机器人和 Navigation 面板
 - 不影响 Nav2 实际订阅雷达和执行避障

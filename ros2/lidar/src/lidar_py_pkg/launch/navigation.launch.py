@@ -15,6 +15,7 @@ def generate_launch_description():
 
     map_file = LaunchConfiguration("map")
     use_rviz = LaunchConfiguration("use_rviz")
+    use_foxglove = LaunchConfiguration("use_foxglove")
     lifecycle_nodes = [
         "map_server",
         "amcl",
@@ -29,7 +30,16 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument("map", default_value=default_map),
-            DeclareLaunchArgument("use_rviz", default_value="true"),
+            DeclareLaunchArgument("use_rviz", default_value="false"),
+            DeclareLaunchArgument("use_foxglove", default_value="true"),
+            Node(
+                package="foxglove_bridge",
+                executable="foxglove_bridge",
+                name="foxglove_bridge",
+                output="screen",
+                parameters=[{"address": "0.0.0.0", "port": 8765}],
+                condition=IfCondition(use_foxglove),
+            ),
             Node(
                 package="lidar_py_pkg",
                 executable="lidar_py_node",
