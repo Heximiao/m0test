@@ -94,7 +94,36 @@ def generate_launch_description():
             DeclareLaunchArgument("odom_frame", default_value="odom"),
             DeclareLaunchArgument("use_odom", default_value="true"),
             DeclareLaunchArgument("use_slam", default_value="true"),
-            DeclareLaunchArgument("use_rviz", default_value="true"),
+            DeclareLaunchArgument("use_rviz", default_value="false"),
+            DeclareLaunchArgument("use_foxglove", default_value="true"),
+            DeclareLaunchArgument("use_camera", default_value="true"),
+            DeclareLaunchArgument("camera_device", default_value="/dev/video0"),
+            DeclareLaunchArgument("camera_width", default_value="640"),
+            DeclareLaunchArgument("camera_height", default_value="480"),
+            DeclareLaunchArgument("camera_framerate", default_value="15.0"),
+            Node(
+                package="foxglove_bridge",
+                executable="foxglove_bridge",
+                name="foxglove_bridge",
+                output="screen",
+                condition=IfCondition(LaunchConfiguration("use_foxglove")),
+                parameters=[{"address": "0.0.0.0", "port": 8765}],
+            ),
+            Node(
+                package="lidar_py_pkg",
+                executable="camera_node",
+                name="camera",
+                output="screen",
+                condition=IfCondition(LaunchConfiguration("use_camera")),
+                parameters=[
+                    {
+                        "device": LaunchConfiguration("camera_device"),
+                        "width": LaunchConfiguration("camera_width"),
+                        "height": LaunchConfiguration("camera_height"),
+                        "framerate": LaunchConfiguration("camera_framerate"),
+                    }
+                ],
+            ),
             Node(
                 package="lidar_py_pkg",
                 executable="lidar_py_node",

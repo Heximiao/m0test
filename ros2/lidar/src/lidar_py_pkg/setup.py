@@ -27,6 +27,7 @@ setup(
             "uart_raw_dump = lidar_py_pkg.uart_raw_dump:main",
             "wheel_odom_node = lidar_py_pkg.wheel_odom_node:main",
             "base_driver_node = lidar_py_pkg.wheel_odom_node:main",
+            "camera_node = lidar_py_pkg.camera_node:main",
         ],
     },
 )
