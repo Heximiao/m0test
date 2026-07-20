@@ -36,11 +36,20 @@ bool line_follow_parse_command(const char *command, uint32_t nowMs)
         return true;
     }
 
-    gLineEnabled = true;
-    gLineValid = (valid != 0);
-    gLineError = clamp_line_error((int32_t) error);
-    gLastLineMs = nowMs;
+    line_follow_set_sample(valid != 0, (int32_t) error, nowMs);
     return true;
+}
+
+void line_follow_set_sample(bool valid, int32_t error, uint32_t nowMs)
+{
+    if (valid) {
+        gLineEnabled = true;
+        gLastLineMs = nowMs;
+    } else {
+        gLineEnabled = false;
+    }
+    gLineValid = valid;
+    gLineError = clamp_line_error(error);
 }
 
 float line_follow_get_turn_adjust(uint32_t nowMs)

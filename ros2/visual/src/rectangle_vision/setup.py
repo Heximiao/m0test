@@ -22,6 +22,7 @@ setup(
     entry_points={
         "console_scripts": [
             "rectangle_vision_node = rectangle_vision.rectangle_vision_node:main",
+            "gimbal_uart_node = rectangle_vision.gimbal_uart_node:main",
         ],
     },
 )

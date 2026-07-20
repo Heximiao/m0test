@@ -1,5 +1,6 @@
 #include "app_car_control.h"
 #include "app_attitude.h"
+#include "app_gray_track.h"
 #include "app_line_follow.h"
 #include "app_motion_control.h"
 #include "app_util.h"
@@ -86,6 +87,7 @@ static bool gNavCommandActive;
 
 static void set_motor_duty(float leftDutyPercent, float rightDutyPercent);
 static bool parse_lturn_command(const char *command);
+static void start_lturn(float angleDeg);
 static bool update_lturn(EncoderCounts counts, float *leftTargetSpeed,
     float *rightTargetSpeed);
 static void update_speed_target_ramp(void);
@@ -116,6 +118,7 @@ void app_car_control_init(void)
     pid_init(&gRightSpeedPid, 4.0f, 0.2f, 0.4f, PID_INTEGRAL_LIMIT,
         PID_OUTPUT_LIMIT);
     line_follow_init();
+    gray_track_init();
     motion_control_init();
 
     DL_GPIO_setPins(GPIO_STATUS_LED_PORT, GPIO_STATUS_LED_PB22_LED_PIN);
@@ -127,10 +130,15 @@ void app_car_control_init(void)
 void app_car_control_update(uint32_t nowMs)
 {
     EncoderCounts counts = encoder_get_counts();
+    GrayTrackResult grayTrack = gray_track_update(nowMs);
     int32_t leftDelta = counts.left_count - gPreviousLeftCount;
     int32_t rightDelta = counts.right_count - gPreviousRightCount;
 
     gLastUpdateMs = nowMs;
+    line_follow_set_sample(grayTrack.valid, grayTrack.error, nowMs);
+    if (grayTrack.turn_angle_deg != 0) {
+        start_lturn((float) grayTrack.turn_angle_deg);
+    }
     if (gNavCommandActive &&
         ((int32_t) (nowMs - gNavCommandDeadlineMs) >= 0)) {
         motion_control_init();
@@ -430,7 +438,7 @@ void app_car_control_send_telemetry(void)
     }
 
     length = snprintf(message, sizeof(message),
-        "L=%ld R=%ld LD=%ld RD=%ld ERR=%ld OUT=%ld LO=%ld RO=%ld LT=%ld RT=%ld KP=%ld KI=%ld KD=%ld BASE=%ld LINE=%ld LV=%d MM=%ld DG=%ld MO=%ld MB=%d\r\n",
+        "L=%ld R=%ld LD=%ld RD=%ld ERR=%ld OUT=%ld LO=%ld RO=%ld LT=%ld RT=%ld KP=%ld KI=%ld KD=%ld BASE=%ld LINE=%ld LV=%d GH=%u MM=%ld DG=%ld MO=%ld MB=%d\r\n",
         (long) counts.left_count, (long) counts.right_count,
         (long) gLastLeftDelta, (long) gLastRightDelta, (long) gLastPidError,
         (long) app_scale_float_100(gLastRightOutput - gLastLeftOutput),
@@ -444,6 +452,7 @@ void app_car_control_send_telemetry(void)
         (long) app_scale_float_100(gSpeedTargetCounts),
         (long) line_follow_get_error(),
         line_follow_is_valid(gLastUpdateMs) ? 1 : 0,
+        (unsigned int) gray_track_get_level_bits(),
         (long) motion_control_get_target_mm_s(),
         (long) motion_control_get_target_deg_s(),
         (long) motion_control_get_mode(),
@@ -525,7 +534,21 @@ static bool parse_lturn_command(const char *command)
         return true;
     }
 
-    EncoderCounts counts = encoder_get_counts();
+    start_lturn(angleDeg);
+    uart_debug_write_string("OK LTURN\r\n");
+    return true;
+}
+
+static void start_lturn(float angleDeg)
+{
+    EncoderCounts counts;
+
+    if (gLTurnActive ||
+        ((int32_t) (gLastUpdateMs - gLineFollowResumeMs) < 0)) {
+        return;
+    }
+
+    counts = encoder_get_counts();
     gManualMotorMode = false;
     motion_control_init();
     gTargetSpeedCounts = 0.0f;
@@ -541,8 +564,6 @@ static bool parse_lturn_command(const char *command)
     gLTurnStartRightCount = counts.right_count;
     pid_reset(&gLeftSpeedPid);
     pid_reset(&gRightSpeedPid);
-    uart_debug_write_string("OK LTURN\r\n");
-    return true;
 }
 
 static bool update_lturn(EncoderCounts counts, float *leftTargetSpeed,

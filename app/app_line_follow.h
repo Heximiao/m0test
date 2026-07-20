@@ -5,6 +5,7 @@
 #include <stdint.h>
 
 void line_follow_init(void);
+void line_follow_set_sample(bool valid, int32_t error, uint32_t nowMs);
 bool line_follow_parse_command(const char *command, uint32_t nowMs);
 float line_follow_get_turn_adjust(uint32_t nowMs);
 bool line_follow_is_active(uint32_t nowMs);

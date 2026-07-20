@@ -40,6 +40,8 @@ def generate_launch_description():
             DeclareLaunchArgument("processing_scale", default_value="0.5"),
             DeclareLaunchArgument("detection_interval", default_value="2"),
             DeclareLaunchArgument("publish_raw", default_value="false"),
+            DeclareLaunchArgument("uart_port", default_value="/dev/ttyAMA0"),
+            DeclareLaunchArgument("enable_motors", default_value="false"),
             DeclareLaunchArgument("use_foxglove", default_value="true"),
             Node(
                 package="rectangle_vision",
@@ -55,6 +57,20 @@ def generate_launch_description():
                         "processing_scale": LaunchConfiguration("processing_scale"),
                         "detection_interval": LaunchConfiguration("detection_interval"),
                         "publish_raw": LaunchConfiguration("publish_raw"),
+                    }
+                ],
+            ),
+            Node(
+                package="rectangle_vision",
+                executable="gimbal_uart_node",
+                name="gimbal_uart",
+                output="screen",
+                parameters=[
+                    {
+                        "port": LaunchConfiguration("uart_port"),
+                        "image_width": LaunchConfiguration("width"),
+                        "image_height": LaunchConfiguration("height"),
+                        "enable_motors": LaunchConfiguration("enable_motors"),
                     }
                 ],
             ),

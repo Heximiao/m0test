@@ -108,6 +108,19 @@ int main(void)
      *   PA16 -> menu up, key connects PA16 to GND when pressed
      *   PA17 -> menu down, key connects PA17 to GND when pressed
      *   PA21 -> short press back, long press confirm
+     *
+     * 五路灰度寻迹（从车头朝前看，由左到右）：
+     *   PA7  -> 左外侧灰度传感器
+     *   PA18 -> 左内侧灰度传感器
+     *   PA26 -> 中间灰度传感器
+     *   PB24 -> 右内侧灰度传感器
+     *   PB25 -> 右外侧灰度传感器
+     *   默认低电平表示检测到黑线，传感器与单片机必须共地。
+     *
+     * 灰度转向逻辑：
+     *   检测并确认左右转角后锁存转向方向，继续沿线前进；确认转角后
+     *   灰度全部丢线时，立即执行对应的 -90 度或 +90 度原地转向。
+     *   没有确认转角时，普通丢线立即停车。
      */
     encoder_init();
     uart_debug_init();

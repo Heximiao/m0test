@@ -120,6 +120,8 @@ class SerialTunerApp:
         self.drive_job = None
         self.monitor_cube_canvas = None
         self.cal_cube_canvas = None
+        self.gray_lamps = []
+        self.gray_status_var = tk.StringVar(value="等待灰度遥测数据")
 
         self._load_settings()
         self._build_ui()
@@ -173,11 +175,13 @@ class SerialTunerApp:
         self._add_nav_button(sidebar, "monitor", "PID 监视")
         self._add_nav_button(sidebar, "accel", "姿态校准")
         self._add_nav_button(sidebar, "lidar", "雷达显示")
+        self._add_nav_button(sidebar, "gray", "灰度寻迹测试")
 
         self.content_frame = ttk.Frame(body)
         self.content_frame.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.monitor_page = ttk.Frame(self.content_frame)
         self.accel_page = ttk.Frame(self.content_frame)
+        self.gray_page = ttk.Frame(self.content_frame)
         self.lidar_page = LidarPage(
             self.content_frame,
             send_line=self.send_line,
@@ -186,6 +190,7 @@ class SerialTunerApp:
 
         self._build_monitor_page(self.monitor_page)
         self._build_accel_page(self.accel_page)
+        self._build_gray_page(self.gray_page)
         self.lidar_page.pack_forget()
         self._show_page("monitor")
 
@@ -209,12 +214,15 @@ class SerialTunerApp:
 
     def _show_page(self, page):
         self.page_var.set(page)
-        for frame in (self.monitor_page, self.accel_page, self.lidar_page):
+        for frame in (self.monitor_page, self.accel_page, self.lidar_page, self.gray_page):
             frame.pack_forget()
         if page == "accel":
             self.accel_page.pack(fill=tk.BOTH, expand=True)
         elif page == "lidar":
             self.lidar_page.pack(fill=tk.BOTH, expand=True)
+        elif page == "gray":
+            self.gray_page.pack(fill=tk.BOTH, expand=True)
+            self.send_line("TELE 1")
         else:
             self.monitor_page.pack(fill=tk.BOTH, expand=True)
         for name, button in self.nav_buttons.items():
@@ -399,6 +407,55 @@ class SerialTunerApp:
         preview.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         self.cal_cube_canvas = tk.Canvas(preview, bg="#f8fafc", highlightthickness=0)
         self.cal_cube_canvas.pack(fill=tk.BOTH, expand=True)
+
+    def _build_gray_page(self, parent):
+        header = ttk.Frame(parent, padding=(24, 20, 24, 8))
+        header.pack(fill=tk.X)
+        ttk.Label(header, text="五路灰度寻迹输入测试", font=("Segoe UI", 18)).pack(
+            anchor=tk.W
+        )
+        ttk.Label(
+            header,
+            text="灯亮表示单片机引脚为高电平，灯灭表示低电平；顺序为车头从左到右。",
+        ).pack(anchor=tk.W, pady=(8, 0))
+
+        lamps = ttk.Frame(parent, padding=(24, 32))
+        lamps.pack(fill=tk.X)
+        labels = (
+            "左外\nPA7",
+            "左内\nPA18",
+            "中间\nPA26",
+            "右内\nPB24",
+            "右外\nPB25",
+        )
+        for label_text in labels:
+            box = ttk.Frame(lamps)
+            box.pack(side=tk.LEFT, expand=True, fill=tk.X, padx=12)
+            lamp = tk.Canvas(box, width=92, height=92, highlightthickness=0)
+            lamp.pack()
+            oval = lamp.create_oval(10, 10, 82, 82, fill="#343a40", outline="#15191c", width=3)
+            ttk.Label(box, text=label_text, anchor=tk.CENTER, justify=tk.CENTER).pack(
+                pady=(10, 0)
+            )
+            self.gray_lamps.append((lamp, oval))
+
+        ttk.Label(parent, textvariable=self.gray_status_var, font=("Consolas", 12)).pack(
+            pady=(8, 0)
+        )
+
+    def _update_gray_lamps(self, level_bits):
+        names = ("左外", "左内", "中间", "右内", "右外")
+        bit_masks = (0x10, 0x08, 0x04, 0x02, 0x01)
+        states = []
+        for (lamp, oval), name, mask in zip(self.gray_lamps, names, bit_masks):
+            high = (level_bits & mask) != 0
+            lamp.itemconfig(
+                oval,
+                fill="#35d04f" if high else "#343a40",
+                outline="#147526" if high else "#15191c",
+            )
+            states.append(f"{name}={'高' if high else '低'}")
+        self.gray_status_var.set("  ".join(states) + f"    GH=0x{level_bits:02X}")
 
     def refresh_ports(self):
         if serial is None:
@@ -683,6 +740,9 @@ class SerialTunerApp:
         for key, label in self.value_labels.items():
             if key in pairs:
                 label.config(text=f"{pairs[key]:.3g}")
+
+        if "GH" in pairs:
+            self._update_gray_lamps(int(pairs["GH"]) & 0x1F)
 
         if all(key in pairs for key in ("PITCH", "ROLL", "YAW")):
             self._update_attitude(pairs, self._parse_source(line))
