@@ -39,10 +39,15 @@ def diagonal_intersection(corners: np.ndarray) -> tuple[int, int]:
 
 def _quad_from_contour(contour: np.ndarray, epsilon_ratio: float) -> np.ndarray | None:
     perimeter = cv2.arcLength(contour, True)
-    approximation = cv2.approxPolyDP(contour, epsilon_ratio * perimeter, True)
-    if len(approximation) != 4 or not cv2.isContourConvex(approximation):
+    ratios = (epsilon_ratio, 0.015, 0.02, 0.03, 0.04, 0.055, 0.075)
+    candidates = []
+    for ratio in ratios:
+        approximation = cv2.approxPolyDP(contour, ratio * perimeter, True)
+        if len(approximation) == 4 and cv2.isContourConvex(approximation):
+            candidates.append(order_corners(approximation.reshape(4, 2)))
+    if not candidates:
         return None
-    return order_corners(approximation.reshape(4, 2))
+    return max(candidates, key=lambda quad: abs(cv2.contourArea(quad)))
 
 
 def _corner_alignment(outer: np.ndarray, inner: np.ndarray) -> float:
@@ -201,6 +206,77 @@ def _detect_from_inner_region(
     return best_detection
 
 
+def _detect_from_closed_edges(
+    blurred: np.ndarray,
+    minimum_area_ratio: float,
+    maximum_area_ratio: float,
+) -> RectangleDetection | None:
+    edges = cv2.Canny(blurred, 20, 80)
+    closed_edges = cv2.morphologyEx(
+        edges, cv2.MORPH_CLOSE, np.ones((3, 3), dtype=np.uint8)
+    )
+    contours, _ = cv2.findContours(
+        closed_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+    )
+    image_area = blurred.shape[0] * blurred.shape[1]
+    best_detection = None
+
+    for contour in contours:
+        contour_area = abs(cv2.contourArea(contour))
+        area_ratio = contour_area / image_area
+        if not minimum_area_ratio <= area_ratio <= min(maximum_area_ratio, 0.88):
+            continue
+
+        quad = _quad_from_contour(contour, 0.025)
+        if quad is None:
+            continue
+        quad_area = abs(cv2.contourArea(quad))
+        if quad_area <= 0.0 or contour_area / quad_area < 0.72:
+            continue
+
+        edge_lengths = np.linalg.norm(np.roll(quad, -1, axis=0) - quad, axis=1)
+        if np.min(edge_lengths) < min(blurred.shape) * 0.12:
+            continue
+        if np.max(edge_lengths) / np.min(edge_lengths) > 5.0:
+            continue
+
+        height, width = blurred.shape
+        near_boundary = (
+            (quad[:, 0] < width * 0.025)
+            | (quad[:, 0] > width * 0.975)
+            | (quad[:, 1] < height * 0.025)
+            | (quad[:, 1] > height * 0.975)
+        )
+        if int(np.count_nonzero(near_boundary)) >= 3:
+            continue
+
+        center = quad.mean(axis=0)
+        inner_quad = center + (quad - center) * 0.72
+        interior_mask = np.zeros_like(blurred)
+        cv2.fillConvexPoly(
+            interior_mask, np.rint(inner_quad).astype(np.int32), 255
+        )
+        interior_values = blurred[interior_mask != 0]
+        if interior_values.size == 0:
+            continue
+        interior_mean = float(np.mean(interior_values))
+        interior_std = float(np.std(interior_values))
+        overexposed_fraction = float(np.mean(interior_values >= 248))
+        if not 75.0 <= interior_mean <= 242.0:
+            continue
+        if interior_std < 7.0 or overexposed_fraction > 0.72:
+            continue
+
+        score = area_ratio * min(1.0, interior_std / 45.0)
+        if best_detection is None or score > best_detection.score:
+            best_detection = RectangleDetection(
+                corners=quad,
+                center=diagonal_intersection(quad),
+                score=score,
+            )
+    return best_detection
+
+
 def detect_black_rectangle(
     frame: np.ndarray,
     minimum_area_ratio: float = 0.08,
@@ -261,10 +337,16 @@ def detect_black_rectangle(
         minimum_area_ratio,
         maximum_area_ratio,
     )
-    if fallback is not None and (
-        best_detection is None or fallback.score > best_detection.score
-    ):
-        return fallback
+    edge_detection = _detect_from_closed_edges(
+        blurred,
+        minimum_area_ratio,
+        maximum_area_ratio,
+    )
+    for candidate in (fallback, edge_detection):
+        if candidate is not None and (
+            best_detection is None or candidate.score > best_detection.score
+        ):
+            best_detection = candidate
     return best_detection
 
 
@@ -289,10 +371,12 @@ class RectangleTracker:
         height, width = gray.shape
         border_values = []
         interior_values = []
+        side_black_fractions = []
 
         for edge_index in range(4):
             start = corners[edge_index]
             end = corners[(edge_index + 1) % 4]
+            side_values = []
             for fraction in np.linspace(0.12, 0.88, 13):
                 border_point = start + fraction * (end - start)
                 interior_point = border_point * 0.76 + center * 0.24
@@ -302,17 +386,27 @@ class RectangleTracker:
                 ):
                     sample = np.rint(point).astype(int)
                     if 0 <= sample[0] < width and 0 <= sample[1] < height:
-                        values.append(int(blurred[sample[1], sample[0]]))
+                        value = int(blurred[sample[1], sample[0]])
+                        values.append(value)
+                        if values is border_values:
+                            side_values.append(value)
+            if side_values:
+                side_black_fractions.append(
+                    float(np.mean(np.asarray(side_values) < threshold))
+                )
 
         if len(border_values) < 30 or len(interior_values) < 30:
             return False
         black_border_fraction = np.mean(np.asarray(border_values) < threshold)
-        bright_interior_fraction = np.mean(
-            np.asarray(interior_values) > max(95.0, threshold)
-        )
+        border_mean = float(np.mean(border_values))
+        interior_mean = float(np.mean(interior_values))
+        bright_interior_fraction = np.mean(np.asarray(interior_values) > 95.0)
         return bool(
-            black_border_fraction >= 0.43
-            and bright_interior_fraction >= 0.48
+            black_border_fraction >= 0.62
+            and len(side_black_fractions) == 4
+            and min(side_black_fractions) >= 0.46
+            and bright_interior_fraction >= 0.65
+            and interior_mean >= border_mean + 12.0
         )
 
     def _valid_corners(self, corners: np.ndarray, frame_shape) -> bool:
@@ -511,6 +605,17 @@ def draw_detection(
     center_radius: int = 7,
 ) -> np.ndarray:
     annotated = frame.copy()
+    height, width = annotated.shape[:2]
+    image_center = (width // 2, height // 2)
+    cv2.drawMarker(
+        annotated,
+        image_center,
+        (255, 255, 0),
+        cv2.MARKER_CROSS,
+        28,
+        2,
+        cv2.LINE_AA,
+    )
     if detection is None:
         cv2.putText(
             annotated,
@@ -527,4 +632,18 @@ def draw_detection(
     corners = np.rint(detection.corners).astype(np.int32)
     cv2.polylines(annotated, [corners], True, (0, 255, 0), line_thickness, cv2.LINE_AA)
     cv2.circle(annotated, detection.center, center_radius, (0, 0, 255), -1, cv2.LINE_AA)
+    cv2.line(
+        annotated, image_center, detection.center, (0, 255, 255), 2, cv2.LINE_AA
+    )
+    distance = float(np.linalg.norm(np.asarray(detection.center) - image_center))
+    cv2.putText(
+        annotated,
+        f"error: {distance:.1f}px",
+        (16, 64),
+        cv2.FONT_HERSHEY_SIMPLEX,
+        0.7,
+        (0, 255, 255),
+        2,
+        cv2.LINE_AA,
+    )
     return annotated

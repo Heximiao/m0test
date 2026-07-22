@@ -13,6 +13,7 @@
 #define GRAY_RIGHT_OUTER_BIT (1U << 0)
 
 static bool gTurnArmed;
+static bool gEnabled;
 static bool gTurnPending;
 static int16_t gPendingTurnAngleDeg;
 static uint8_t gJunctionConfirmCount;
@@ -26,6 +27,13 @@ static int16_t detect_turn(uint8_t bits);
 
 void gray_track_init(void)
 {
+    gEnabled = true;
+    gray_track_set_enabled(true);
+}
+
+void gray_track_set_enabled(bool enabled)
+{
+    gEnabled = enabled;
     gTurnArmed = true;
     gTurnPending = false;
     gPendingTurnAngleDeg = 0;
@@ -34,12 +42,21 @@ void gray_track_init(void)
     gLastError = 0;
 }
 
+bool gray_track_is_enabled(void)
+{
+    return gEnabled;
+}
+
 GrayTrackResult gray_track_update(uint32_t nowMs)
 {
     GrayTrackResult result = {0};
     int16_t detectedTurn;
 
     (void) nowMs;
+
+    if (!gEnabled) {
+        return result;
+    }
 
     result.sensor_bits = read_sensor_bits();
     result.error = calculate_error(result.sensor_bits, &result.valid);
@@ -78,6 +95,9 @@ GrayTrackResult gray_track_update(uint32_t nowMs)
 
 uint8_t gray_track_get_level_bits(void)
 {
+    if (!gEnabled) {
+        return 0U;
+    }
     return (uint8_t) (~read_sensor_bits()) & 0x1FU;
 }
 

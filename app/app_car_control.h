@@ -1,6 +1,7 @@
 #ifndef APP_CAR_CONTROL_H
 #define APP_CAR_CONTROL_H
 
+#include <stdbool.h>
 #include <stdint.h>
 
 void app_car_control_init(void);
@@ -10,5 +11,7 @@ void app_car_control_send_telemetry(void);
 void app_car_control_send_odometry(void);
 void app_car_control_send_heartbeat(uint32_t nowMs);
 void app_car_control_toggle_status_led(void);
+bool app_car_control_is_line_follow_running(void);
+bool app_car_control_is_navigation_active(void);
 
 #endif

@@ -15,15 +15,17 @@ class GimbalUartNode(Node):
         self.declare_parameter("baudrate", 115200)
         self.declare_parameter("image_width", 640)
         self.declare_parameter("image_height", 480)
-        self.declare_parameter("deadband_pixels", 6.0)
+        self.declare_parameter("deadband_pixels", 4.0)
         self.declare_parameter("yaw_gain", 0.25)
-        self.declare_parameter("pitch_gain", 0.25)
-        self.declare_parameter("maximum_rate_deg_s", 90.0)
+        self.declare_parameter("pitch_gain", 0.40)
+        self.declare_parameter("maximum_rate_deg_s", 180.0)
+        self.declare_parameter("control_period_sec", 0.02)
         self.declare_parameter("yaw_direction", 1.0)
         self.declare_parameter("pitch_direction", 1.0)
         self.declare_parameter("yaw_limit_deg", 180.0)
         self.declare_parameter("pitch_limit_deg", 90.0)
         self.declare_parameter("target_timeout_sec", 0.30)
+        self.declare_parameter("diagnostic_interval_sec", 0.20)
         self.declare_parameter("enable_motors", False)
 
         port = str(self.get_parameter("port").value)
@@ -36,11 +38,22 @@ class GimbalUartNode(Node):
         self.sequence = 0
         self.yaw_target = 0.0
         self.pitch_target = 0.0
+        self.actual_yaw = None
+        self.actual_pitch = None
+        self.tracking_was_valid = False
+        self.last_error_x = None
+        self.last_error_y = None
+        self.last_yaw_rate = 0.0
+        self.last_pitch_rate = 0.0
+        self.last_diagnostic_time = 0.0
+        self.previous_diagnostic_distance = None
         self.rx_buffer = bytearray()
 
         self.create_subscription(Bool, "/rectangle/detected", self.on_detected, 5)
         self.create_subscription(PointStamped, "/rectangle/center", self.on_center, 5)
-        self.timer = self.create_timer(0.05, self.control_tick)
+        self.timer = self.create_timer(
+            float(self.get_parameter("control_period_sec").value), self.control_tick
+        )
         self.get_logger().info(
             f"Gimbal UART opened on {port} at {baudrate}; "
             f"enable_motors={bool(self.get_parameter('enable_motors').value)}"
@@ -67,7 +80,19 @@ class GimbalUartNode(Node):
             and now - self.last_center_time <= timeout
         )
         if not tracking_valid:
+            self.tracking_was_valid = False
+            self.last_error_x = None
+            self.last_error_y = None
+            self.last_yaw_rate = 0.0
+            self.last_pitch_rate = 0.0
             return False
+
+        if not self.tracking_was_valid:
+            if self.actual_yaw is not None:
+                self.yaw_target = self.actual_yaw
+            if self.actual_pitch is not None:
+                self.pitch_target = self.actual_pitch
+            self.tracking_was_valid = True
 
         center_x, center_y = self.center
         error_x = center_x - float(self.get_parameter("image_width").value) * 0.5
@@ -93,6 +118,10 @@ class GimbalUartNode(Node):
             -maximum_rate,
             maximum_rate,
         )
+        self.last_error_x = error_x
+        self.last_error_y = error_y
+        self.last_yaw_rate = yaw_rate
+        self.last_pitch_rate = pitch_rate
         yaw_limit = float(self.get_parameter("yaw_limit_deg").value)
         pitch_limit = min(90.0, float(self.get_parameter("pitch_limit_deg").value))
         self.yaw_target = self.clamp(
@@ -144,10 +173,42 @@ class GimbalUartNode(Node):
             if checksum != packet[8]:
                 continue
             _, _, sequence, status, yaw, pitch = struct.unpack(">BBBBhh", packet[:8])
+            self.actual_yaw = yaw / 10.0
+            self.actual_pitch = pitch / 10.0
             self.get_logger().debug(
                 f"MCU ACK seq={sequence} status={status} "
-                f"yaw={yaw / 10.0:.1f} pitch={pitch / 10.0:.1f}"
+                f"yaw={self.actual_yaw:.1f} pitch={self.actual_pitch:.1f}"
             )
+
+    def log_diagnostics(self, now, tracking_valid):
+        interval = float(self.get_parameter("diagnostic_interval_sec").value)
+        if now - self.last_diagnostic_time < interval:
+            return
+        self.last_diagnostic_time = now
+        if not tracking_valid or self.last_error_x is None:
+            self.previous_diagnostic_distance = None
+            self.get_logger().info(
+                f"TRACK valid=0 detected={int(self.detected)} "
+                f"center={self.center} actual=({self.actual_yaw},{self.actual_pitch})"
+            )
+            return
+
+        distance = (self.last_error_x**2 + self.last_error_y**2) ** 0.5
+        distance_change = 0.0
+        if self.previous_diagnostic_distance is not None:
+            distance_change = distance - self.previous_diagnostic_distance
+        self.previous_diagnostic_distance = distance
+        yaw_direction = float(self.get_parameter("yaw_direction").value)
+        pitch_direction = float(self.get_parameter("pitch_direction").value)
+        self.get_logger().info(
+            f"TRACK valid=1 error=({self.last_error_x:+.1f},"
+            f"{self.last_error_y:+.1f}) distance={distance:.1f} "
+            f"delta={distance_change:+.1f} direction=({yaw_direction:+.0f},"
+            f"{pitch_direction:+.0f}) rate=({self.last_yaw_rate:+.1f},"
+            f"{self.last_pitch_rate:+.1f}) target=({self.yaw_target:+.1f},"
+            f"{self.pitch_target:+.1f}) actual=({self.actual_yaw},"
+            f"{self.actual_pitch})"
+        )
 
     def control_tick(self):
         now = time.monotonic()
@@ -157,6 +218,7 @@ class GimbalUartNode(Node):
             self.serial.write(packet)
             self.sequence = (self.sequence + 1) & 0xFF
             self.read_status()
+            self.log_diagnostics(now, tracking_valid)
         except serial.SerialException as error:
             self.get_logger().error(f"UART failure: {error}")
 

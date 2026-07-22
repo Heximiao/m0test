@@ -23,6 +23,7 @@ typedef struct {
 } AttitudeMatrix;
 
 static bool gJy61Ready;
+static bool gAttitudeEnabled = true;
 static AttitudeMatrix gAttitudeZeroMatrix;
 static bool gAttitudeZeroValid;
 static Jy61Angles gBodyAngles;
@@ -47,7 +48,23 @@ static float wrap_angle(float value);
 
 void app_attitude_init(void)
 {
+    gAttitudeEnabled = true;
     retry_jy61_init();
+}
+
+void app_attitude_set_enabled(bool enabled)
+{
+    gAttitudeEnabled = enabled;
+    if (!enabled) {
+        gAttitudeZeroValid = false;
+        gBodyAnglesValid = false;
+        gFilteredYawValid = false;
+    }
+}
+
+bool app_attitude_is_enabled(void)
+{
+    return gAttitudeEnabled;
 }
 
 bool app_attitude_process_command(const char *command)
@@ -99,14 +116,14 @@ bool app_attitude_process_command(const char *command)
 
 void app_attitude_poll(void)
 {
-    if (gJy61Ready) {
+    if (gJy61Ready && gAttitudeEnabled) {
         jy61_poll();
     }
 }
 
 bool app_attitude_read_yaw(float *yawDeg)
 {
-    if ((yawDeg == NULL) || !gBodyAnglesValid) {
+    if ((yawDeg == NULL) || !gAttitudeEnabled || !gBodyAnglesValid) {
         return false;
     }
 
@@ -127,7 +144,7 @@ void app_attitude_send(uint32_t nowMs)
 
     (void) nowMs;
 
-    if (!gJy61Ready) {
+    if (!gJy61Ready || !gAttitudeEnabled) {
         return;
     }
     if (!jy61_read_angles(&angles)) {

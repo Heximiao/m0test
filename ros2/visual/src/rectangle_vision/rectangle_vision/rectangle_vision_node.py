@@ -31,6 +31,10 @@ class RectangleVisionNode(Node):
         self.declare_parameter("processing_scale", 0.5)
         self.declare_parameter("detection_interval", 2)
         self.declare_parameter("publish_raw", False)
+        self.declare_parameter("auto_exposure", False)
+        self.declare_parameter("exposure", 100.0)
+        self.declare_parameter("gain", -1.0)
+        self.declare_parameter("brightness", -1.0)
 
         device = str(self.get_parameter("device").value)
         width = int(self.get_parameter("width").value)
@@ -52,6 +56,7 @@ class RectangleVisionNode(Node):
         self.capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         if not self.capture.isOpened():
             raise RuntimeError(f"Unable to open camera {device}")
+        self._configure_camera()
 
         self.tracker = RectangleTracker(
             maximum_missed_frames=int(
@@ -78,6 +83,41 @@ class RectangleVisionNode(Node):
         self.timer = self.create_timer(1.0 / self.framerate, self.process_frame)
         self.get_logger().info(
             f"Reading {device} at {width}x{height}, {self.framerate:.1f} FPS"
+        )
+
+    def _set_camera_property(self, property_id, value, name):
+        if value < 0.0:
+            return
+        accepted = self.capture.set(property_id, value)
+        actual = self.capture.get(property_id)
+        self.get_logger().info(
+            f"Camera {name}: requested={value:g}, actual={actual:g}, "
+            f"accepted={accepted}"
+        )
+
+    def _configure_camera(self):
+        auto_exposure = bool(self.get_parameter("auto_exposure").value)
+        auto_exposure_value = 0.75 if auto_exposure else 0.25
+        self._set_camera_property(
+            cv2.CAP_PROP_AUTO_EXPOSURE,
+            auto_exposure_value,
+            "auto_exposure",
+        )
+        if not auto_exposure:
+            self._set_camera_property(
+                cv2.CAP_PROP_EXPOSURE,
+                float(self.get_parameter("exposure").value),
+                "exposure",
+            )
+        self._set_camera_property(
+            cv2.CAP_PROP_GAIN,
+            float(self.get_parameter("gain").value),
+            "gain",
+        )
+        self._set_camera_property(
+            cv2.CAP_PROP_BRIGHTNESS,
+            float(self.get_parameter("brightness").value),
+            "brightness",
         )
 
     def _compressed_message(self, frame, stamp):

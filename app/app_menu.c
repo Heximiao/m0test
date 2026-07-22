@@ -1,6 +1,8 @@
 #include "app_menu.h"
 
 #include "app/app_car_control.h"
+#include "app/app_attitude.h"
+#include "app/app_gray_track.h"
 #include "app/app_image_store.h"
 #include "app/app_motion_control.h"
 #include "hw/hw_encoder.h"
@@ -12,6 +14,7 @@
 #include <string.h>
 
 #define MENU_LONG_PRESS_MS (800U)
+#define MENU_KEY_DEBOUNCE_MS (100U)
 #define MENU_STATUS_REFRESH_MS (500U)
 #define MENU_LINE_HEIGHT (24U)
 #define MENU_VISIBLE_ROWS (5U)
@@ -26,7 +29,9 @@ typedef enum {
 
 typedef struct {
     bool pressed;
+    bool rawPressed;
     bool longSent;
+    uint32_t rawChangedMs;
     uint32_t pressStartMs;
 } MenuKeyState;
 
@@ -51,8 +56,8 @@ static void select_previous(uint8_t *selected, uint8_t count);
 static void select_next(uint8_t *selected, uint8_t count);
 static void run_control_action(const MenuControlAction *action);
 static bool is_key_pressed(uint32_t pin);
-static void update_back_ok_key(MenuKeyState *key, bool pressed,
-    uint32_t nowMs);
+static bool update_key(MenuKeyState *key, bool rawPressed, uint32_t nowMs,
+    bool *pressedEvent, bool *releasedEvent);
 static void copy_command(char *dest, size_t destSize, const char *source);
 
 static const char *const gRootItems[] = {
@@ -62,6 +67,12 @@ static const char *const gRootItems[] = {
 };
 
 static const MenuControlAction gControlActions[] = {
+    {"Start Line Follow", "LINESTART"},
+    {"Stop Line Follow", "LINESTOP"},
+    {"Gray Input Use", "GRAY 1"},
+    {"Gray Input Ignore", "GRAY 0"},
+    {"Gyro Input Use", "GYRO 1"},
+    {"Gyro Input Ignore", "GYRO 0"},
     {"Stop Motors", "STOP"},
     {"Encoder Zero", "ENCZERO"},
     {"Base Stop", "BASE 0"},
@@ -78,6 +89,8 @@ static uint8_t gControlSelected;
 static bool gDirty = true;
 static uint32_t gLastStatusRefreshMs;
 static MenuKeyState gBackOkKey;
+static MenuKeyState gUpKey;
+static MenuKeyState gDownKey;
 static char gMessage[32];
 static MenuPage gRenderedPage = MENU_PAGE_IMAGE_VIEW;
 static MenuPage gRenderPage = MENU_PAGE_ROOT;
@@ -93,8 +106,14 @@ void app_menu_init(uint32_t nowMs)
     gControlSelected = 0U;
     gLastStatusRefreshMs = nowMs;
     gBackOkKey.pressed = false;
+    gBackOkKey.rawPressed = is_key_pressed(GPIO_MENU_KEYS_KEY_BACK_OK_PIN);
     gBackOkKey.longSent = false;
+    gBackOkKey.rawChangedMs = nowMs;
     gBackOkKey.pressStartMs = 0U;
+    gUpKey = gBackOkKey;
+    gUpKey.rawPressed = is_key_pressed(GPIO_MENU_KEYS_KEY_UP_PIN);
+    gDownKey = gBackOkKey;
+    gDownKey.rawPressed = is_key_pressed(GPIO_MENU_KEYS_KEY_DOWN_PIN);
     gRenderedPage = MENU_PAGE_IMAGE_VIEW;
     gRenderPage = MENU_PAGE_ROOT;
     gRenderStep = 0U;
@@ -109,19 +128,32 @@ void app_menu_update(uint32_t nowMs)
     bool upPressed = is_key_pressed(GPIO_MENU_KEYS_KEY_UP_PIN);
     bool downPressed = is_key_pressed(GPIO_MENU_KEYS_KEY_DOWN_PIN);
     bool backOkPressed = is_key_pressed(GPIO_MENU_KEYS_KEY_BACK_OK_PIN);
-    static bool previousUpPressed;
-    static bool previousDownPressed;
+    bool upEvent;
+    bool downEvent;
+    bool backPressedEvent;
+    bool backReleasedEvent;
+    bool ignoredEvent;
 
-    if (upPressed && !previousUpPressed) {
+    update_key(&gUpKey, upPressed, nowMs, &upEvent, &ignoredEvent);
+    update_key(&gDownKey, downPressed, nowMs, &downEvent, &ignoredEvent);
+    update_key(&gBackOkKey, backOkPressed, nowMs, &backPressedEvent,
+        &backReleasedEvent);
+
+    if (upEvent) {
         handle_up();
     }
-    if (downPressed && !previousDownPressed) {
+    if (downEvent) {
         handle_down();
     }
-    previousUpPressed = upPressed;
-    previousDownPressed = downPressed;
-
-    update_back_ok_key(&gBackOkKey, backOkPressed, nowMs);
+    if (backReleasedEvent && !gBackOkKey.longSent) {
+        handle_back();
+    }
+    if (gBackOkKey.pressed && !gBackOkKey.longSent &&
+        ((uint32_t) (nowMs - gBackOkKey.pressStartMs) >=
+            MENU_LONG_PRESS_MS)) {
+        gBackOkKey.longSent = true;
+        handle_confirm();
+    }
 
     if ((gPage == MENU_PAGE_STATUS) &&
         ((uint32_t) (nowMs - gLastStatusRefreshMs) >=
@@ -317,9 +349,15 @@ static void draw_page_row(MenuPage page, uint8_t row)
                 (long) motion_control_get_target_deg_s());
             draw_line(row, line, false);
         } else if (row == 3U) {
-            draw_line(row, "PWM L:PA8 R:PB4", false);
+            snprintf(line, sizeof(line), "Line:%s Nav:%s",
+                app_car_control_is_line_follow_running() ? "RUN" : "STOP",
+                app_car_control_is_navigation_active() ? "RUN" : "IDLE");
+            draw_line(row, line, false);
         } else {
-            draw_line(row, "LCD SCLK:PB9", false);
+            snprintf(line, sizeof(line), "Gray:%s Gyro:%s",
+                gray_track_is_enabled() ? "USE" : "IGNORE",
+                app_attitude_is_enabled() ? "USE" : "IGNORE");
+            draw_line(row, line, false);
         }
     } else {
         uint8_t count =
@@ -420,30 +458,33 @@ static bool is_key_pressed(uint32_t pin)
     return (DL_GPIO_readPins(GPIO_MENU_KEYS_PORT, pin) & pin) == 0U;
 }
 
-static void update_back_ok_key(MenuKeyState *key, bool pressed,
-    uint32_t nowMs)
+static bool update_key(MenuKeyState *key, bool rawPressed, uint32_t nowMs,
+    bool *pressedEvent, bool *releasedEvent)
 {
-    if ((key == NULL) || (pressed == key->pressed)) {
-        if (pressed && !key->longSent &&
-            ((uint32_t) (nowMs - key->pressStartMs) >=
-                MENU_LONG_PRESS_MS)) {
-            key->longSent = true;
-            handle_confirm();
-        }
-        return;
+    if ((key == NULL) || (pressedEvent == NULL) || (releasedEvent == NULL)) {
+        return false;
+    }
+    *pressedEvent = false;
+    *releasedEvent = false;
+
+    if (rawPressed != key->rawPressed) {
+        key->rawPressed = rawPressed;
+        key->rawChangedMs = nowMs;
+    }
+    if ((rawPressed == key->pressed) ||
+        ((uint32_t) (nowMs - key->rawChangedMs) < MENU_KEY_DEBOUNCE_MS)) {
+        return false;
     }
 
-    if (pressed) {
-        key->pressed = true;
+    key->pressed = rawPressed;
+    if (rawPressed) {
         key->longSent = false;
         key->pressStartMs = nowMs;
-        return;
+        *pressedEvent = true;
+    } else {
+        *releasedEvent = true;
     }
-
-    if (!key->longSent) {
-        handle_back();
-    }
-    key->pressed = false;
+    return true;
 }
 
 static void copy_command(char *dest, size_t destSize, const char *source)

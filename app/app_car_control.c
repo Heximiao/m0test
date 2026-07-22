@@ -1,5 +1,6 @@
 #include "app_car_control.h"
 #include "app_attitude.h"
+#include "app_control_policy.h"
 #include "app_gray_track.h"
 #include "app_line_follow.h"
 #include "app_motion_control.h"
@@ -83,9 +84,9 @@ static int32_t gLTurnStartLeftCount;
 static int32_t gLTurnStartRightCount;
 static uint32_t gLineFollowResumeMs;
 static uint32_t gNavCommandDeadlineMs;
-static bool gNavCommandActive;
 
 static void set_motor_duty(float leftDutyPercent, float rightDutyPercent);
+static void stop_line_follow_output(void);
 static bool parse_lturn_command(const char *command);
 static void start_lturn(float angleDeg);
 static bool update_lturn(EncoderCounts counts, float *leftTargetSpeed,
@@ -120,6 +121,7 @@ void app_car_control_init(void)
     line_follow_init();
     gray_track_init();
     motion_control_init();
+    control_policy_init();
 
     DL_GPIO_setPins(GPIO_STATUS_LED_PORT, GPIO_STATUS_LED_PB22_LED_PIN);
 
@@ -135,14 +137,16 @@ void app_car_control_update(uint32_t nowMs)
     int32_t rightDelta = counts.right_count - gPreviousRightCount;
 
     gLastUpdateMs = nowMs;
-    line_follow_set_sample(grayTrack.valid, grayTrack.error, nowMs);
-    if (grayTrack.turn_angle_deg != 0) {
+    line_follow_set_sample(control_policy_can_run_line_follow() &&
+        grayTrack.valid, grayTrack.error, nowMs);
+    if (control_policy_can_run_line_follow() &&
+        !motion_control_is_active() && (grayTrack.turn_angle_deg != 0)) {
         start_lturn((float) grayTrack.turn_angle_deg);
     }
-    if (gNavCommandActive &&
+    if (control_policy_is_navigation_active() &&
         ((int32_t) (nowMs - gNavCommandDeadlineMs) >= 0)) {
         motion_control_init();
-        gNavCommandActive = false;
+        control_policy_set_navigation_active(false);
         pid_reset(&gLeftSpeedPid);
         pid_reset(&gRightSpeedPid);
         set_motor_duty(0.0f, 0.0f);
@@ -196,7 +200,8 @@ void app_car_control_update(uint32_t nowMs)
         motion_control_update(counts, &leftTargetSpeed, &rightTargetSpeed);
     }
 
-    if (lineFollowAllowed && line_follow_is_active(nowMs) &&
+    if (control_policy_can_run_line_follow() && lineFollowAllowed &&
+        line_follow_is_active(nowMs) &&
         !motion_control_is_active() &&
         !gLTurnActive &&
         (leftTargetSpeed == 0.0f) && (rightTargetSpeed == 0.0f)) {
@@ -206,7 +211,8 @@ void app_car_control_update(uint32_t nowMs)
     }
 
     /* 显式运动命令执行期间不叠加巡线修正，保证 ANGLE/TURN 能独立转完。 */
-    if (lineFollowAllowed && line_follow_is_valid(nowMs) && !gLTurnActive &&
+    if (control_policy_can_run_line_follow() && lineFollowAllowed &&
+        line_follow_is_valid(nowMs) && !gLTurnActive &&
         !motion_control_is_active()) {
         /*
          * Positive correction should speed up the left wheel and slow down
@@ -222,7 +228,8 @@ void app_car_control_update(uint32_t nowMs)
                 rightTargetSpeed = LINE_FOLLOW_MIN_FORWARD_COUNTS;
             }
         }
-    } else if (lineFollowAllowed && line_follow_is_active(nowMs) &&
+    } else if (control_policy_can_run_line_follow() && lineFollowAllowed &&
+        line_follow_is_active(nowMs) &&
         !motion_control_is_active()) {
         leftTargetSpeed *= LINE_LOST_SPEED_SCALE;
         rightTargetSpeed *= LINE_LOST_SPEED_SCALE;
@@ -266,7 +273,40 @@ void app_car_control_process_command(char *command)
         gSpeedTargetCounts = 0.0f;
         motion_control_set_velocity(linearMmS, angularDegS);
         gNavCommandDeadlineMs = gLastUpdateMs + NAV_COMMAND_TIMEOUT_MS;
-        gNavCommandActive = true;
+        control_policy_set_navigation_active(true);
+    } else if (strcmp(command, "LINESTART") == 0) {
+        if (control_policy_start_line_follow()) {
+            uart_debug_write_string("OK LINESTART\r\n");
+        } else {
+            uart_debug_write_string("ERR LINESTART GRAY_IGNORED\r\n");
+        }
+    } else if (strcmp(command, "LINESTOP") == 0) {
+        bool lineHadControl = control_policy_can_run_line_follow();
+        control_policy_stop_line_follow();
+        line_follow_init();
+        if (lineHadControl) {
+            stop_line_follow_output();
+        }
+        uart_debug_write_string("OK LINESTOP\r\n");
+    } else if (strncmp(command, "GRAY ", 5U) == 0) {
+        bool enabled = strtol(command + 5, NULL, 10) != 0;
+        bool lineHadControl = control_policy_can_run_line_follow();
+        control_policy_set_gray_enabled(enabled);
+        gray_track_set_enabled(enabled);
+        if (!enabled) {
+            line_follow_init();
+            if (lineHadControl) {
+                stop_line_follow_output();
+            }
+        }
+        uart_debug_write_string(enabled ? "OK GRAY 1\r\n" :
+                                           "OK GRAY 0\r\n");
+    } else if (strncmp(command, "GYRO ", 5U) == 0) {
+        bool enabled = strtol(command + 5, NULL, 10) != 0;
+        control_policy_set_gyro_enabled(enabled);
+        app_attitude_set_enabled(enabled);
+        uart_debug_write_string(enabled ? "OK GYRO 1\r\n" :
+                                           "OK GYRO 0\r\n");
     } else if (strncmp(command, "WHEELS ", 7U) == 0) {
         float leftCounts;
         float rightCounts;
@@ -280,13 +320,13 @@ void app_car_control_process_command(char *command)
         gSpeedTargetCounts = 0.0f;
         motion_control_set_wheel_targets(leftCounts, rightCounts);
         gNavCommandDeadlineMs = gLastUpdateMs + NAV_COMMAND_TIMEOUT_MS;
-        gNavCommandActive = true;
+        control_policy_set_navigation_active(true);
     } else if (parse_lturn_command(command)) {
         return;
     } else if (line_follow_parse_command(command, gLastUpdateMs)) {
         return;
     } else if (motion_control_parse_command(command, encoder_get_counts())) {
-        gNavCommandActive = false;
+        control_policy_set_navigation_active(false);
         gTargetSpeedCounts = 0.0f;
         gSpeedTargetCounts = 0.0f;
         uart_debug_write_string("OK MOTION\r\n");
@@ -399,9 +439,11 @@ void app_car_control_process_command(char *command)
         uart_debug_write_string(gTelemetryEnabled ? "OK TELE 1\r\n" :
                                                     "OK TELE 0\r\n");
     } else if (strcmp(command, "STOP") == 0) {
-        gNavCommandActive = false;
+        control_policy_set_navigation_active(false);
         gManualMotorMode = false;
         gLTurnActive = false;
+        control_policy_stop_line_follow();
+        line_follow_init();
         motion_control_init();
         gTargetSpeedCounts = 0.0f;
         gSpeedTargetCounts = 0.0f;
@@ -537,6 +579,26 @@ static bool parse_lturn_command(const char *command)
     start_lturn(angleDeg);
     uart_debug_write_string("OK LTURN\r\n");
     return true;
+}
+
+bool app_car_control_is_line_follow_running(void)
+{
+    return control_policy_is_line_follow_requested();
+}
+
+bool app_car_control_is_navigation_active(void)
+{
+    return control_policy_is_navigation_active();
+}
+
+static void stop_line_follow_output(void)
+{
+    gLTurnActive = false;
+    gTargetSpeedCounts = 0.0f;
+    gSpeedTargetCounts = 0.0f;
+    pid_reset(&gLeftSpeedPid);
+    pid_reset(&gRightSpeedPid);
+    set_motor_duty(0.0f, 0.0f);
 }
 
 static void start_lturn(float angleDeg)

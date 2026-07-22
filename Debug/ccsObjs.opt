@@ -3,6 +3,7 @@
 "./main.o"
 "./app/app_attitude.o"
 "./app/app_car_control.o"
+"./app/app_control_policy.o"
 "./app/app_gray_track.o"
 "./app/app_image_store.o"
 "./app/app_line_follow.o"

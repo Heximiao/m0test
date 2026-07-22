@@ -8,6 +8,7 @@ SHELL = cmd.exe
 C_SRCS += \
 ../app/app_attitude.c \
 ../app/app_car_control.c \
+../app/app_control_policy.c \
 ../app/app_gray_track.c \
 ../app/app_image_store.c \
 ../app/app_line_follow.c \
@@ -17,6 +18,7 @@ C_SRCS += \
 C_DEPS += \
 ./app/app_attitude.d \
 ./app/app_car_control.d \
+./app/app_control_policy.d \
 ./app/app_gray_track.d \
 ./app/app_image_store.d \
 ./app/app_line_follow.d \
@@ -26,6 +28,7 @@ C_DEPS += \
 OBJS += \
 ./app/app_attitude.o \
 ./app/app_car_control.o \
+./app/app_control_policy.o \
 ./app/app_gray_track.o \
 ./app/app_image_store.o \
 ./app/app_line_follow.o \
@@ -35,6 +38,7 @@ OBJS += \
 OBJS__QUOTED += \
 "app\app_attitude.o" \
 "app\app_car_control.o" \
+"app\app_control_policy.o" \
 "app\app_gray_track.o" \
 "app\app_image_store.o" \
 "app\app_line_follow.o" \
@@ -44,6 +48,7 @@ OBJS__QUOTED += \
 C_DEPS__QUOTED += \
 "app\app_attitude.d" \
 "app\app_car_control.d" \
+"app\app_control_policy.d" \
 "app\app_gray_track.d" \
 "app\app_image_store.d" \
 "app\app_line_follow.d" \
@@ -53,6 +58,7 @@ C_DEPS__QUOTED += \
 C_SRCS__QUOTED += \
 "../app/app_attitude.c" \
 "../app/app_car_control.c" \
+"../app/app_control_policy.c" \
 "../app/app_gray_track.c" \
 "../app/app_image_store.c" \
 "../app/app_line_follow.c" \
